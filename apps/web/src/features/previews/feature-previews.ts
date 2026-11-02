@@ -541,31 +541,6 @@ export const featurePreviews: FeaturePreview[] = [
     capabilities: ["Per-key scopes and expiry", "Usage metrics per key", "Instant revoke", "OpenAPI spec and SDKs for Go, Python, and TypeScript"],
   },
   {
-    slug: "audit-log",
-    title: "Audit log",
-    description: "An append-only record of who did what and when: sign-ins, role changes, scans, and configuration changes.",
-    phase: 1,
-    phaseName: "SaaS core",
-    primaryAction: "Export log",
-    stats: [
-      { label: "Events (30d)", value: "4,812", hint: "retained 1 year" },
-      { label: "Actors", value: "9", hint: "people and API keys" },
-      { label: "Scans logged", value: "29", hint: "with scope and target" },
-      { label: "Tamper-evident", value: "Yes", hint: "hash-chained", tone: "good" },
-    ],
-    table: {
-      title: "Recent events",
-      columns: ["Time", "Actor", "Action", "Target", "IP"],
-      rows: [
-        [c("20:41"), "Ayesha R.", "Changed role", "Tanvir K. → Admin", c("103.4.x.x")],
-        [c("19:02"), "Terraform CI", "Created monitor", "Checkout", c("API key")],
-        [c("17:55"), "Mitu S.", "Started scan", "Weekly external · Tier 1", c("27.147.x.x")],
-        [c("09:10"), "Tanvir K.", "Signed in", "Password + TOTP", c("103.4.x.x")],
-      ],
-    },
-    capabilities: ["Every security-relevant action recorded", "Filter by actor, action, and target", "CSV and SIEM export", "Retention per plan"],
-  },
-  {
     slug: "sso",
     title: "SSO & SCIM",
     description: "Sign in through your identity provider and keep membership in sync automatically.",

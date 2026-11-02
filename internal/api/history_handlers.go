@@ -258,6 +258,12 @@ func (srv *Server) handleHistoryExport(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 		return
 	}
+	label := host
+	if port > 0 {
+		label = fmt.Sprintf("%s:%d", host, port)
+	}
+	srv.recordAudit(r, user.WorkspaceID, user.User, "history.exported", auditTarget{Type: "target", ID: label, Label: label},
+		map[string]any{"protocol": reqType, "format": format, "destination": destination, "points": len(points)})
 
 	if destination == "s3" {
 		if srv.objects == nil {

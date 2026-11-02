@@ -130,6 +130,7 @@ func (srv *Server) handleAccountPassword(w http.ResponseWriter, r *http.Request)
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: "could not change password"})
 		return
 	}
+	srv.recordAudit(r, 0, user, "account.password_changed", auditTarget{}, nil)
 	writeJSON(w, http.StatusOK, authMessageResponse{OK: true, Message: "Password changed. Other sessions were signed out."})
 }
 
@@ -169,6 +170,7 @@ func (srv *Server) handleAccountSessions(w http.ResponseWriter, r *http.Request)
 			writeJSON(w, http.StatusInternalServerError, apiError{Error: "could not sign out other sessions"})
 			return
 		}
+		srv.recordAudit(r, 0, user, "account.sessions_revoked", auditTarget{}, map[string]any{"count": n})
 		writeJSON(w, http.StatusOK, authMessageResponse{OK: true, Message: fmt.Sprintf("Signed out %d other %s.", n, plural(n, "session", "sessions"))})
 	case req.ID > 0:
 		if err := srv.store.DeleteUserSession(ctx, user.ID, req.ID); err != nil {
@@ -179,6 +181,7 @@ func (srv *Server) handleAccountSessions(w http.ResponseWriter, r *http.Request)
 			writeJSON(w, http.StatusInternalServerError, apiError{Error: "could not sign out session"})
 			return
 		}
+		srv.recordAudit(r, 0, user, "account.session_revoked", idTarget("session", req.ID, ""), nil)
 		writeJSON(w, http.StatusOK, authMessageResponse{OK: true, Message: "Session signed out."})
 	default:
 		writeJSON(w, http.StatusBadRequest, apiError{Error: "pass a session id or others: true"})

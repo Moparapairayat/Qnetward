@@ -197,7 +197,8 @@ func (srv *Server) handlePortScan(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
 		return
 	}
-	if _, ok := srv.requireAuthenticatedUser(w, r); !ok {
+	user, ok := srv.requireActor(w, r)
+	if !ok {
 		return
 	}
 	if !srv.isAllowedRequestOrigin(r) {
@@ -216,7 +217,7 @@ func (srv *Server) handlePortScan(w http.ResponseWriter, r *http.Request) {
 		timeout = time.Duration(req.TimeoutMs) * time.Millisecond
 	}
 
-	host, _, cfg, err := probe.NormalizePortScanRequest(req.Host, req.Ports, timeout, req.Concurrency)
+	host, ports, cfg, err := probe.NormalizePortScanRequest(req.Host, req.Ports, timeout, req.Concurrency)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, apiError{Error: err.Error()})
 		return
@@ -228,6 +229,7 @@ func (srv *Server) handlePortScan(w http.ResponseWriter, r *http.Request) {
 	}
 	defer release()
 
+	srv.recordAudit(r, user.WorkspaceID, user.User, "scan.portscan", auditTarget{Type: "host", ID: host, Label: host}, map[string]any{"ports": len(ports), "spec": req.Ports})
 	cfg.AddrCheck = srv.targetPolicy.CheckIP
 	rep, err := portscan.RunContext(r.Context(), host, cfg)
 	if err != nil {

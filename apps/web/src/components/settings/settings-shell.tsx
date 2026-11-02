@@ -51,6 +51,7 @@ const workspaceNav: NavGroup[] = [
     items: [
       { href: "/workspace/team", label: "Team", icon: Users },
       { href: "/workspace/billing", label: "Billing and plan", icon: CreditCard },
+      { href: "/workspace/audit-log", label: "Audit log", icon: FileClock },
     ],
   },
   {
@@ -58,7 +59,6 @@ const workspaceNav: NavGroup[] = [
     items: [
       { href: "/integrations", label: "Integrations", icon: Plug, soon: true },
       { href: "/api-keys", label: "API keys", icon: KeyRound, soon: true },
-      { href: "/audit-log", label: "Audit log", icon: FileClock, soon: true },
       { href: "/sso", label: "SSO and SCIM", icon: Bot, soon: true },
     ],
   },

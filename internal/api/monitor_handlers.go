@@ -91,9 +91,13 @@ func (srv *Server) handleMonitors(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		status := http.StatusOK
+		action := "monitor.updated"
 		if req.ID == 0 {
 			status = http.StatusCreated
+			action = "monitor.created"
 		}
+		srv.recordAudit(r, user.WorkspaceID, user.User, action, idTarget("monitor", saved.ID, saved.Name),
+			map[string]any{"target": monitorTargetLabel(saved), "protocol": saved.Protocol, "interval_seconds": saved.IntervalSeconds, "enabled": saved.Enabled})
 		writeJSON(w, status, saved)
 	case http.MethodDelete:
 		if !srv.isAllowedRequestOrigin(r) {
@@ -115,6 +119,7 @@ func (srv *Server) handleMonitors(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 			return
 		}
+		srv.recordAudit(r, user.WorkspaceID, user.User, "monitor.deleted", idTarget("monitor", id, ""), nil)
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "id": id})
 	default:
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
@@ -191,6 +196,10 @@ func (srv *Server) RunMonitors(ctx context.Context) {
 			pruneCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 			if err := srv.store.PruneMonitorChecks(pruneCtx, time.Now().Add(-monitorCheckRetention)); err != nil {
 				log.Printf("monitor check pruning failed: %v", err)
+			}
+			// The hourly maintenance pass also trims the audit log to its retention.
+			if err := srv.store.PruneAuditEvents(pruneCtx, time.Now().Add(-store.AuditRetention)); err != nil {
+				log.Printf("audit log pruning failed: %v", err)
 			}
 			cancel()
 		case <-poll.C:

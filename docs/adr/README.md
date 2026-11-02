@@ -25,3 +25,4 @@ patterns don't.
 | [0009](0009-row-level-security-via-tenant-role.md) | Row-level security through a restricted tenant role | Accepted |
 | [0010](0010-uptime-monitors-run-in-process.md) | Uptime monitors run inside the API process | Accepted |
 | [0011](0011-ai-through-an-openai-compatible-api-key.md) | AI features call a hosted model through an OpenAI-compatible API | Accepted |
+| [0012](0012-append-only-audit-log.md) | An append-only audit log in PostgreSQL | Accepted |

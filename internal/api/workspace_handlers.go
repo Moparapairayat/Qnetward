@@ -221,6 +221,7 @@ func (srv *Server) handleWorkspaceTeam(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		srv.recordAudit(r, workspace.ID, user, "member.invited", idTarget("invitation", invitation.ID, invitation.Email), map[string]any{"role": invitation.Role})
 		writeJSON(w, http.StatusCreated, authMessageResponse{
 			OK:      true,
 			Message: fmt.Sprintf("Invitation queued for %s as %s.", invitation.Email, invitation.Role),
@@ -270,6 +271,7 @@ func (srv *Server) handleWorkspaceTeam(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		srv.recordAudit(r, workspace.ID, user, "member.role_changed", idTarget("user", member.UserID, member.Email), map[string]any{"role": member.Role})
 		writeJSON(w, http.StatusOK, authMessageResponse{
 			OK:      true,
 			Message: fmt.Sprintf("Updated %s to %s.", member.Email, member.Role),
@@ -318,6 +320,7 @@ func (srv *Server) handleWorkspaceTeam(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			srv.recordAudit(r, workspace.ID, user, "member.invitation_revoked", idTarget("invitation", invitation.ID, invitation.Email), nil)
 			writeJSON(w, http.StatusOK, authMessageResponse{
 				OK:      true,
 				Message: fmt.Sprintf("Revoked invitation for %s.", invitation.Email),
@@ -338,6 +341,7 @@ func (srv *Server) handleWorkspaceTeam(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		srv.recordAudit(r, workspace.ID, user, "member.removed", idTarget("user", req.UserID, ""), nil)
 		writeJSON(w, http.StatusOK, authMessageResponse{
 			OK:      true,
 			Message: "Workspace member removed.",
@@ -407,6 +411,7 @@ func (srv *Server) handleWorkspaceInvitations(w http.ResponseWriter, r *http.Req
 			return
 		}
 
+		srv.recordAudit(r, invitation.WorkspaceID, user, "member.joined", idTarget("user", user.ID, user.Email), map[string]any{"role": invitation.Role})
 		writeJSON(w, http.StatusOK, authMessageResponse{
 			OK:      true,
 			Message: fmt.Sprintf("Joined %s as %s.", invitation.WorkspaceName, invitation.Role),

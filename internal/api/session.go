@@ -38,6 +38,8 @@ func (srv *Server) requireAuthenticatedUser(w http.ResponseWriter, r *http.Reque
 type actor struct {
 	store.User
 	WorkspaceID int64
+	// Role is the user's role in that workspace: owner, admin, member, or viewer.
+	Role string
 }
 
 // requireActor authenticates the request and resolves the session's active
@@ -63,7 +65,7 @@ func (srv *Server) requireActor(w http.ResponseWriter, r *http.Request) (actor, 
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 		return actor{}, false
 	}
-	return actor{User: user, WorkspaceID: workspace.ID}, true
+	return actor{User: user, WorkspaceID: workspace.ID, Role: workspace.Role}, true
 }
 
 func (srv *Server) requirePlatformAdmin(w http.ResponseWriter, r *http.Request) (store.User, bool) {

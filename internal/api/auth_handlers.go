@@ -165,6 +165,7 @@ func (srv *Server) handleAuthDemoLogin(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 		return
 	}
+	srv.recordAudit(r, 0, user, "auth.login", auditTarget{}, map[string]any{"demo": true})
 	clearLegacyDemoCookie(w, r)
 	clearLegacyPreviewCookie(w, r)
 	writeJSON(w, http.StatusOK, authMessageResponse{
@@ -295,6 +296,8 @@ func (srv *Server) handleAuthLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.Password)); err != nil {
+		// Recorded on the account so its owner can see attempts on it.
+		srv.recordAudit(r, 0, user, "auth.login_failed", auditTarget{}, nil)
 		writeJSON(w, http.StatusUnauthorized, apiError{Error: "invalid email or password"})
 		return
 	}
@@ -312,6 +315,7 @@ func (srv *Server) handleAuthLogin(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 		return
 	}
+	srv.recordAudit(r, 0, user, "auth.login", auditTarget{}, nil)
 
 	writeJSON(w, http.StatusOK, authSessionResponse{
 		Authenticated: true,
@@ -332,7 +336,12 @@ func (srv *Server) handleAuthLogout(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusServiceUnavailable, apiError{Error: "storage not available"})
 		return
 	}
-	if tokenHash, err := sessionTokenHashFromRequest(r); err == nil && tokenHash != "" {
+	if user, tokenHash, err := srv.currentSessionUser(r); err == nil {
+		srv.recordAudit(r, 0, user, "auth.logout", auditTarget{}, nil)
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		_ = srv.store.DeleteSession(ctx, tokenHash)
+		cancel()
+	} else if tokenHash, err := sessionTokenHashFromRequest(r); err == nil && tokenHash != "" {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		_ = srv.store.DeleteSession(ctx, tokenHash)
 		cancel()
@@ -482,6 +491,7 @@ func (srv *Server) handleAuthVerifyEmail(w http.ResponseWriter, r *http.Request)
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 		return
 	}
+	srv.recordAudit(r, 0, user, "auth.email_verified", auditTarget{}, nil)
 
 	if srv.mailer != nil {
 		welcomeCtx, welcomeCancel := context.WithTimeout(context.Background(), 8*time.Second)

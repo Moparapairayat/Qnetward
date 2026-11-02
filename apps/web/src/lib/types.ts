@@ -385,6 +385,25 @@ export type AlertRulePayload = {
   enabled: boolean;
 };
 
+export type AuditEvent = {
+  id: number;
+  occurred_at: string;
+  actor_user_id?: number;
+  actor_email?: string;
+  action: string;
+  target_type?: string;
+  target_id?: string;
+  target_label?: string;
+  ip_address?: string;
+  user_agent?: string;
+  metadata?: Record<string, unknown>;
+};
+
+export type AuditPage = {
+  events: AuditEvent[];
+  next_before?: number;
+};
+
 export type MonitorCheck = {
   checked_at: string;
   ok: boolean;

@@ -182,7 +182,10 @@ func (srv *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 		case "portscan":
 			if !session.start(user, req) {
 				_ = session.writer.WriteEvent(wsEvent{Type: "error", Error: "a run is already in progress"})
+				continue
 			}
+			host := strings.TrimSpace(req.Host)
+			srv.recordAudit(r, user.WorkspaceID, user.User, "scan.portscan", auditTarget{Type: "host", ID: host, Label: host}, map[string]any{"spec": req.Ports, "via": "websocket"})
 		default:
 			_ = session.writer.WriteEvent(wsEvent{Type: "error", Error: "unknown type"})
 		}

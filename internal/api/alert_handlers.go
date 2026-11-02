@@ -82,9 +82,12 @@ func (srv *Server) handleAlertRules(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		status := http.StatusOK
+		action := "alert_rule.updated"
 		if req.ID == 0 {
 			status = http.StatusCreated
+			action = "alert_rule.created"
 		}
+		srv.recordAudit(r, user.WorkspaceID, user.User, action, idTarget("alert_rule", saved.ID, saved.Name), map[string]any{"target": alertTargetLabel(saved), "enabled": saved.Enabled})
 		writeJSON(w, status, saved)
 	case http.MethodDelete:
 		if !srv.isAllowedRequestOrigin(r) {
@@ -107,6 +110,7 @@ func (srv *Server) handleAlertRules(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
+		srv.recordAudit(r, user.WorkspaceID, user.User, "alert_rule.deleted", idTarget("alert_rule", ruleID, ""), nil)
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "id": ruleID})
 	default:
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
