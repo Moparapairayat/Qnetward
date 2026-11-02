@@ -271,10 +271,11 @@ func parseScopeArray(value string) []string {
 
 // WorkspaceUsage counts what a workspace has against its plan limits.
 type WorkspaceUsage struct {
-	Monitors           int `json:"monitors"`
-	APIKeys            int `json:"api_keys"`
-	Members            int `json:"members"`
-	PendingInvitations int `json:"pending_invitations"`
+	DataRegion         string `json:"data_region"`
+	Monitors           int    `json:"monitors"`
+	APIKeys            int    `json:"api_keys"`
+	Members            int    `json:"members"`
+	PendingInvitations int    `json:"pending_invitations"`
 }
 
 // GetWorkspaceUsage runs as the login role because members and invitations
@@ -283,11 +284,12 @@ func (s *Store) GetWorkspaceUsage(ctx context.Context, workspaceID int64) (Works
 	var u WorkspaceUsage
 	err := s.db.QueryRowContext(ctx, `
 		SELECT
+			(SELECT data_region FROM workspaces WHERE id = $1),
 			(SELECT COUNT(*) FROM monitors WHERE workspace_id = $1),
 			(SELECT COUNT(*) FROM api_keys WHERE workspace_id = $1 AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at > NOW())),
 			(SELECT COUNT(*) FROM workspace_members WHERE workspace_id = $1),
 			(SELECT COUNT(*) FROM workspace_invitations WHERE workspace_id = $1 AND status = 'pending' AND expires_at > NOW())
-	`, workspaceID).Scan(&u.Monitors, &u.APIKeys, &u.Members, &u.PendingInvitations)
+	`, workspaceID).Scan(&u.DataRegion, &u.Monitors, &u.APIKeys, &u.Members, &u.PendingInvitations)
 	return u, err
 }
 

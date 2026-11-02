@@ -37,7 +37,7 @@ func TestWorkspaceQuotasAndPlans(t *testing.T) {
 	}
 
 	got := usage()
-	if got.Plan.ID != plans.Free || got.Usage.Members != 1 || got.Usage.ScansLastHour != 0 || len(got.Plans) != len(plans.IDs) {
+	if got.Plan.ID != plans.Free || got.Usage.Members != 1 || got.Usage.ScansLastHour != 0 || len(got.Plans) != len(plans.IDs) || got.Usage.DataRegion != "ap-southeast-1" {
 		t.Fatalf("unexpected usage for a new workspace: %+v", got)
 	}
 

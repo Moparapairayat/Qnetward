@@ -86,6 +86,12 @@ function UsageMeter({ label, used, limit, detail, href }: { label: string; used:
   );
 }
 
+const REGION_NAMES: Record<string, string> = {
+  "ap-southeast-1": "Singapore",
+  "eu-central-1": "Frankfurt",
+  "us-east-1": "N. Virginia",
+};
+
 function limitLines(limits?: PlanLimits) {
   if (!limits) return [];
   return [
@@ -152,6 +158,12 @@ export function BillingWorkspace() {
           </div>
           <p className="max-w-xs text-[12px] leading-relaxed text-[var(--lp-subtle)]">{plan.blurb}</p>
         </div>
+        {usage?.data_region ? (
+          <p className="mt-3 text-[12px] text-[var(--lp-subtle)]">
+            Data stored in <span className="text-[var(--lp-muted)]">{REGION_NAMES[usage.data_region] ?? usage.data_region}</span>{" "}
+            <span className="lp-mono">({usage.data_region})</span>
+          </p>
+        ) : null}
       </SettingsCard>
 
       <SettingsCard

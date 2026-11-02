@@ -41,3 +41,6 @@ security underneath for workspace-owned tables (see
   new connection per run, so a switch applies from the next run.
 - Store helpers named `...ByUserID` pick the user's own workspace implicitly.
   They exist for tests only; handlers must pass an explicit workspace ID.
+- Each workspace has a `data_region` (migration 0011), `ap-southeast-1` for
+  all of them today. Data residency can be added later by routing on it,
+  without changing how tenants are shaped.

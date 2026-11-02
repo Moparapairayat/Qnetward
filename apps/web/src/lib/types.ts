@@ -408,6 +408,7 @@ export type WorkspaceUsageResponse = {
   plan: Plan;
   plans: Plan[];
   usage: {
+    data_region: string;
     monitors: number;
     api_keys: number;
     members: number;

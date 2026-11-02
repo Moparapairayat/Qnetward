@@ -70,3 +70,97 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  # Playwright against a real API (scripts/e2e-backend.sh) and a production
+  # build of the web app, both on this runner.
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: timescale/timescaledb:latest-pg16
+        env:
+          POSTGRES_USER: qnetward
+          POSTGRES_PASSWORD: qnetward
+          POSTGRES_DB: qnetward_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U qnetward"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      QNETWARD_TEST_POSTGRES_DSN: postgres://qnetward:qnetward@127.0.0.1:5432/qnetward_e2e?sslmode=disable
+      ENV_FILE: /dev/null
+      E2E_API_PORT: "8090"
+      E2E_WEB_ORIGIN: http://127.0.0.1:3002
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+
+      # ICMP ping opens a raw socket, which needs CAP_NET_RAW on Linux.
+      - name: Build API
+        run: |
+          mkdir -p .tmp
+          go build -o .tmp/qnetward ./cmd/qnetward
+          sudo setcap cap_net_raw+ep .tmp/qnetward
+
+      - name: Start API
+        run: |
+          scripts/e2e-backend.sh > .tmp/api.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8090/healthz > /dev/null && exit 0; sleep 1; done
+          cat .tmp/api.log; exit 1
+
+      - name: Install web dependencies and browser
+        working-directory: apps/web
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Build web
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_QNETWARD_WS_URL: ws://127.0.0.1:8090/ws
+        run: pnpm build
+
+      - name: Start web
+        working-directory: apps/web
+        env:
+          QNETWARD_BACKEND_URL: http://127.0.0.1:8090
+        run: |
+          pnpm start --hostname 127.0.0.1 --port 3002 > ../../.tmp/web.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:3002/ > /dev/null && exit 0; sleep 1; done
+          cat ../../.tmp/web.log; exit 1
+
+      - name: Playwright
+        working-directory: apps/web
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3002
+        run: pnpm test:e2e
+
+      - name: Server logs
+        if: failure()
+        run: |
+          echo "::group::API"; cat .tmp/api.log || true; echo "::endgroup::"
+          echo "::group::Web"; cat .tmp/web.log || true; echo "::endgroup::"
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
