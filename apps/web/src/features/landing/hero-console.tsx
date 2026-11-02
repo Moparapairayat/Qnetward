@@ -20,22 +20,14 @@ export function HeroConsole() {
           <span className="lp-mono ml-4 truncate text-[11px] text-[var(--lp-subtle)]">console.qnetward.io/overview</span>
         </div>
 
-        {/*
-          At full width on a phone the dashboard text is too small to read, so
-          below sm the frame shows a zoomed crop: the stat cards and the top of
-          the charts, without the sidebar, fading out at the bottom.
-        */}
-        <div className="relative aspect-[5/4] overflow-hidden sm:aspect-auto">
-          <Image
-            src={dashboard}
-            alt="The Qnetward Overview: target count, average latency, packet loss, and alert rules, a response time chart per target, target health, and the targets table."
-            sizes="(max-width: 640px) 240vw, (max-width: 1140px) 100vw, 1100px"
-            placeholder="blur"
-            priority
-            className="absolute left-[-45%] top-0 h-auto w-[235%] max-w-none sm:static sm:block sm:w-full sm:max-w-full"
-          />
-          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#17171b] to-transparent sm:hidden" />
-        </div>
+        <Image
+          src={dashboard}
+          alt="The Qnetward Overview: target count, average latency, packet loss, and alert rules, a response time chart per target, target health, and the targets table."
+          sizes="(max-width: 1140px) 100vw, 1100px"
+          placeholder="blur"
+          priority
+          className="block h-auto w-full"
+        />
       </div>
     </div>
   );
