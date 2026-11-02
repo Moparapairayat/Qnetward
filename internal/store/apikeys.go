@@ -12,11 +12,8 @@ import (
 
 var (
 	ErrAPIKeyNotFound = errors.New("api key not found")
-	ErrAPIKeyLimit    = fmt.Errorf("a workspace can have at most %d active API keys", MaxAPIKeysPerWorkspace)
+	ErrAPIKeyLimit    = errors.New("this workspace has reached its plan's API key limit")
 )
-
-// MaxAPIKeysPerWorkspace caps active (unrevoked) keys per workspace.
-const MaxAPIKeysPerWorkspace = 20
 
 // API key scopes. read covers GET requests, write covers changes to monitors
 // and alert rules, and probe allows running diagnostics such as ping and
@@ -42,6 +39,8 @@ type APIKey struct {
 	LastUsedAt  *time.Time `json:"last_used_at,omitempty"`
 	LastUsedIP  string     `json:"last_used_ip,omitempty"`
 	CreatedAt   time.Time  `json:"created_at"`
+	// WorkspacePlan is filled in by AuthenticateAPIKey, for rate limits.
+	WorkspacePlan string `json:"-"`
 }
 
 // HasScope reports whether the key grants scope.
@@ -50,8 +49,9 @@ func (k APIKey) HasScope(scope string) bool {
 }
 
 // CreateAPIKey stores a new key. tokenHash is the SHA-256 of the token, which
-// the caller generates and shows to the user once.
-func (s *Store) CreateAPIKey(ctx context.Context, k APIKey, tokenHash string) (APIKey, error) {
+// the caller generates and shows to the user once. limit caps the
+// workspace's active keys; 0 means no cap.
+func (s *Store) CreateAPIKey(ctx context.Context, k APIKey, tokenHash string, limit int) (APIKey, error) {
 	if s == nil {
 		return APIKey{}, errors.New("store is not available")
 	}
@@ -71,7 +71,7 @@ func (s *Store) CreateAPIKey(ctx context.Context, k APIKey, tokenHash string) (A
 	if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM api_keys WHERE workspace_id = $1 AND revoked_at IS NULL`, k.WorkspaceID).Scan(&active); err != nil {
 		return APIKey{}, err
 	}
-	if active >= MaxAPIKeysPerWorkspace {
+	if limit > 0 && active >= limit {
 		return APIKey{}, ErrAPIKeyLimit
 	}
 
@@ -197,6 +197,9 @@ func (s *Store) AuthenticateAPIKey(ctx context.Context, tokenHash, ip string) (A
 	if err != nil {
 		return APIKey{}, err
 	}
+	if err := s.db.QueryRowContext(ctx, `SELECT plan FROM workspaces WHERE id = $1`, k.WorkspaceID).Scan(&k.WorkspacePlan); err != nil {
+		return APIKey{}, err
+	}
 	if k.LastUsedAt == nil || time.Since(*k.LastUsedAt) > time.Minute || k.LastUsedIP != ip {
 		_, _ = s.db.ExecContext(ctx, `UPDATE api_keys SET last_used_at = NOW(), last_used_ip = $2 WHERE id = $1`, k.ID, truncate(ip, 64))
 	}
@@ -265,3 +268,39 @@ func parseScopeArray(value string) []string {
 	}
 	return strings.Split(value, ",")
 }
+
+// WorkspaceUsage counts what a workspace has against its plan limits.
+type WorkspaceUsage struct {
+	Monitors           int `json:"monitors"`
+	APIKeys            int `json:"api_keys"`
+	Members            int `json:"members"`
+	PendingInvitations int `json:"pending_invitations"`
+}
+
+// GetWorkspaceUsage runs as the login role because members and invitations
+// sit outside the tenant role's grants; every count is filtered by workspace.
+func (s *Store) GetWorkspaceUsage(ctx context.Context, workspaceID int64) (WorkspaceUsage, error) {
+	var u WorkspaceUsage
+	err := s.db.QueryRowContext(ctx, `
+		SELECT
+			(SELECT COUNT(*) FROM monitors WHERE workspace_id = $1),
+			(SELECT COUNT(*) FROM api_keys WHERE workspace_id = $1 AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at > NOW())),
+			(SELECT COUNT(*) FROM workspace_members WHERE workspace_id = $1),
+			(SELECT COUNT(*) FROM workspace_invitations WHERE workspace_id = $1 AND status = 'pending' AND expires_at > NOW())
+	`, workspaceID).Scan(&u.Monitors, &u.APIKeys, &u.Members, &u.PendingInvitations)
+	return u, err
+}
+
+// SetWorkspacePlan changes a workspace's plan. Callers validate the plan ID.
+func (s *Store) SetWorkspacePlan(ctx context.Context, workspaceID int64, plan string) error {
+	res, err := s.db.ExecContext(ctx, `UPDATE workspaces SET plan = $2 WHERE id = $1`, workspaceID, plan)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrWorkspaceNotFound
+	}
+	return nil
+}
+
+var ErrWorkspaceNotFound = errors.New("workspace not found")

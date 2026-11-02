@@ -72,6 +72,27 @@ func (rl *rateLimiter) Allow(key string, cfg rateLimitConfig) (bool, time.Durati
 	return true, 0
 }
 
+// Count returns how many hits key has within window, without adding one.
+func (rl *rateLimiter) Count(key string, window time.Duration) int {
+	if rl == nil {
+		return 0
+	}
+	cutoff := time.Now().Add(-window)
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	bucket := rl.buckets[key]
+	if bucket == nil {
+		return 0
+	}
+	n := 0
+	for _, hit := range bucket.hits {
+		if hit.After(cutoff) {
+			n++
+		}
+	}
+	return n
+}
+
 func (rl *rateLimiter) sweep(now time.Time) {
 	cutoff := now.Add(-rateLimitBucketTTL)
 	for key, bucket := range rl.buckets {

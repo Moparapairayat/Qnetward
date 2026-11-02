@@ -25,11 +25,11 @@ func TestAPIKeyLifecycle(t *testing.T) {
 	otherWorkspaceID := mustOwnedWorkspaceID(t, st, other.ID)
 	hash := "hash-" + testEmail("token")
 
-	if _, err := st.CreateAPIKey(ctx, APIKey{WorkspaceID: workspaceID, Name: "ci", Prefix: "qnw_x", Scopes: []string{"admin"}}, hash); err == nil {
+	if _, err := st.CreateAPIKey(ctx, APIKey{WorkspaceID: workspaceID, Name: "ci", Prefix: "qnw_x", Scopes: []string{"admin"}}, hash, 0); err == nil {
 		t.Fatal("expected an unknown scope to be rejected")
 	}
 
-	key, err := st.CreateAPIKey(ctx, APIKey{WorkspaceID: workspaceID, CreatedBy: user.ID, Name: " CI deploys ", Prefix: "qnw_abcdef", Scopes: []string{"probe", "read", "read"}}, hash)
+	key, err := st.CreateAPIKey(ctx, APIKey{WorkspaceID: workspaceID, CreatedBy: user.ID, Name: " CI deploys ", Prefix: "qnw_abcdef", Scopes: []string{"probe", "read", "read"}}, hash, 0)
 	if err != nil {
 		t.Fatalf("CreateAPIKey returned error: %v", err)
 	}
@@ -64,7 +64,7 @@ func TestAPIKeyLifecycle(t *testing.T) {
 	// An expired key stops working too.
 	expiredHash := hash + "-expired"
 	soon := time.Now().Add(2 * time.Second)
-	if _, err := st.CreateAPIKey(ctx, APIKey{WorkspaceID: workspaceID, Name: "short", Prefix: "qnw_short", Scopes: []string{"read"}, ExpiresAt: &soon}, expiredHash); err != nil {
+	if _, err := st.CreateAPIKey(ctx, APIKey{WorkspaceID: workspaceID, Name: "short", Prefix: "qnw_short", Scopes: []string{"read"}, ExpiresAt: &soon}, expiredHash, 0); err != nil {
 		t.Fatalf("CreateAPIKey (expiring) returned error: %v", err)
 	}
 	if _, err := st.db.ExecContext(ctx, `UPDATE api_keys SET expires_at = NOW() - INTERVAL '1 minute' WHERE token_hash = $1`, expiredHash); err != nil {

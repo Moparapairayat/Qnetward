@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import { apiRequest, ApiError } from "@/lib/api";
-import type { AlertRule, RecentHistoryTarget, SessionResponse, WorkspaceTeamResponse } from "@/lib/types";
+import type { PlanLimits, SessionResponse, WorkspaceTeamResponse, WorkspaceUsageResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Notice, SettingsCard, SettingsPageTitle } from "@/components/settings/settings-ui";
 
@@ -17,14 +17,14 @@ const PLANS: { id: PlanId; name: string; price: string; blurb: string; features:
     name: "Free",
     price: "$0 during beta",
     blurb: "Everything that works today, for you and your team.",
-    features: ["All four diagnostic tools", "Live results and history", "Email alert rules", "Workspaces, roles, invitations", "CSV and JSON export"],
+    features: ["All four diagnostic tools", "HTTP(S), TCP, and ping monitors", "Email alerts and alert rules", "API keys, audit log, roles", "CSV and JSON export"],
   },
   {
     id: "pro",
     name: "Pro",
     price: "Coming soon",
     blurb: "Continuous monitoring from more places.",
-    features: ["Probe agents for private networks", "Multi-region probing", "Longer history", "Slack, Telegram, Discord, webhooks"],
+    features: ["Everything in Free, with higher limits", "Probe agents for private networks", "Multi-region probing", "Slack, Telegram, Discord, webhooks"],
   },
   {
     id: "enterprise",
@@ -55,27 +55,45 @@ function statusLabel(status?: string) {
   }
 }
 
-function UsageRow({ label, value, detail, href }: { label: string; value: number | string; detail: string; href?: string }) {
+/** One limit: how much is used, the plan's cap, and a bar that warms up near the cap. */
+function UsageMeter({ label, used, limit, detail, href }: { label: string; used: number; limit: number; detail: string; href?: string }) {
+  const share = limit > 0 ? Math.min(1, used / limit) : 0;
+  const tone = share >= 1 ? "#ff3d7f" : share >= 0.8 ? "#fbbf24" : "#4ade80";
   const body = (
     <>
-      <div className="min-w-0 flex-1">
+      <div className="flex items-baseline justify-between gap-3">
         <p className="text-[13px]">{label}</p>
-        <p className="text-[12px] text-[var(--lp-subtle)]">{detail}</p>
+        <p className="lp-mono text-[13px]">
+          {used.toLocaleString()} <span className="text-[var(--lp-subtle)]">/ {limit.toLocaleString()}</span>
+        </p>
       </div>
-      <span className="lp-mono text-[15px]">{value}</span>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]" role="meter" aria-valuemin={0} aria-valuemax={limit} aria-valuenow={used} aria-label={label}>
+        <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${Math.max(share * 100, used > 0 ? 2 : 0)}%`, background: tone }} />
+      </div>
+      <p className="mt-1.5 text-[12px] text-[var(--lp-subtle)]">{detail}</p>
     </>
   );
   return (
     <li>
       {href ? (
-        <Link href={href} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/[0.02]">
+        <Link href={href} className="block px-4 py-3 transition-colors hover:bg-white/[0.02]">
           {body}
         </Link>
       ) : (
-        <div className="flex items-center gap-3 px-4 py-3">{body}</div>
+        <div className="px-4 py-3">{body}</div>
       )}
     </li>
   );
+}
+
+function limitLines(limits?: PlanLimits) {
+  if (!limits) return [];
+  return [
+    `${limits.monitors.toLocaleString()} monitors`,
+    `${limits.members.toLocaleString()} members`,
+    `${limits.api_keys.toLocaleString()} API keys`,
+    `${limits.probes_per_hour.toLocaleString()} probes and ${limits.scans_per_hour.toLocaleString()} port scans an hour`,
+  ];
 }
 
 export function BillingWorkspace() {
@@ -86,22 +104,16 @@ export function BillingWorkspace() {
     queryFn: () => apiRequest<WorkspaceTeamResponse>("/api/workspace/team"),
     enabled: authenticated,
   });
-  const targetsQuery = useQuery({
-    queryKey: ["recent-history-targets", 50],
-    queryFn: () => apiRequest<RecentHistoryTarget[]>("/api/history/recent-targets?limit=50"),
+  const usageQuery = useQuery({
+    queryKey: ["workspace-usage"],
+    queryFn: () => apiRequest<WorkspaceUsageResponse>("/api/workspace/usage"),
     enabled: authenticated,
-  });
-  const rulesQuery = useQuery({
-    queryKey: ["alert-rules"],
-    queryFn: () => apiRequest<AlertRule[]>("/api/alerts/rules"),
-    enabled: authenticated,
+    refetchInterval: 30_000,
   });
 
   const workspace = teamQuery.data?.workspace;
-  const members = teamQuery.data?.members ?? [];
-  const pendingSeats = (teamQuery.data?.invitations ?? []).filter((i) => i.status === "pending").length;
-  const targets = targetsQuery.data ?? [];
-  const activeRules = (rulesQuery.data ?? []).filter((r) => r.enabled).length;
+  const usage = usageQuery.data?.usage;
+  const limits = usageQuery.data?.plan.limits;
   const current = planFor(workspace?.plan);
   const status = statusLabel(workspace?.billing_status);
   const plan = PLANS.find((p) => p.id === current) ?? PLANS[0];
@@ -142,22 +154,30 @@ export function BillingWorkspace() {
         </div>
       </SettingsCard>
 
-      <SettingsCard id="usage" title="Usage" description="What this workspace uses today. Plan limits will be measured against these.">
-        <ul className="divide-y divide-[var(--lp-border)] rounded-lg border border-[var(--lp-border)]">
-          <UsageRow
-            label="Seats"
-            value={members.length}
-            detail={pendingSeats ? `${pendingSeats} more invited, not yet joined` : "Members of this workspace"}
-            href="/workspace/team"
-          />
-          <UsageRow
-            label="Monitored targets"
-            value={targetsQuery.isLoading ? "…" : targets.length >= 50 ? "50+" : targets.length}
-            detail="Targets with stored results"
-            href="/history"
-          />
-          <UsageRow label="Active alert rules" value={rulesQuery.isLoading ? "…" : activeRules} detail="Rules checked after every probe" href="/alerts" />
-        </ul>
+      <SettingsCard
+        id="usage"
+        title="Usage"
+        description={`What this workspace uses against the ${usageQuery.data?.plan.name ?? "current"} plan's limits. Hourly counts cover the last 60 minutes.`}
+      >
+        {usageQuery.isError ? (
+          <Notice tone="error">{(usageQuery.error as ApiError).message || "Couldn't load usage."}</Notice>
+        ) : !usage || !limits ? (
+          <p className="text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+        ) : (
+          <ul className="grid divide-y divide-[var(--lp-border)] rounded-lg border border-[var(--lp-border)] sm:grid-cols-2 sm:divide-y-0 [&>li]:border-[var(--lp-border)] sm:[&>li:nth-child(n+3)]:border-t sm:[&>li:nth-child(even)]:border-l">
+            <UsageMeter
+              label="Members"
+              used={usage.members + usage.pending_invitations}
+              limit={limits.members}
+              detail={usage.pending_invitations ? `${usage.members} joined, ${usage.pending_invitations} invited` : "Pending invitations count too"}
+              href="/workspace/team"
+            />
+            <UsageMeter label="Monitors" used={usage.monitors} limit={limits.monitors} detail="Scheduled checks" href="/monitors" />
+            <UsageMeter label="API keys" used={usage.api_keys} limit={limits.api_keys} detail="Active keys" href="/workspace/api-keys" />
+            <UsageMeter label="Probes this hour" used={usage.probes_last_hour} limit={limits.probes_per_hour} detail="Ping, TCP ping, and DNS runs" />
+            <UsageMeter label="Port scans this hour" used={usage.scans_last_hour} limit={limits.scans_per_hour} detail="Every scan is in the audit log" href="/workspace/audit-log" />
+          </ul>
+        )}
       </SettingsCard>
 
       <SettingsCard id="plans" title="Plans" description="Pro and Enterprise aren't available to buy yet.">
@@ -178,7 +198,7 @@ export function BillingWorkspace() {
                 </div>
                 <p className="mt-0.5 text-[12px] text-[var(--lp-subtle)]">{p.price}</p>
                 <ul className="mt-3 grid gap-1.5 text-[12px] text-[var(--lp-muted)]">
-                  {p.features.map((f) => (
+                  {[...p.features, ...limitLines(usageQuery.data?.plans.find((plan) => plan.id === p.id)?.limits)].map((f) => (
                     <li key={f} className="flex items-start gap-1.5">
                       <Check className="mt-0.5 h-3 w-3 shrink-0 text-[var(--lp-subtle)]" />
                       {f}

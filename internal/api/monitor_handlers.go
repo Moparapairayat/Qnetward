@@ -78,7 +78,7 @@ func (srv *Server) handleMonitors(w http.ResponseWriter, r *http.Request) {
 		}
 		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		defer cancel()
-		saved, err := srv.store.SaveMonitor(ctx, monitor)
+		saved, err := srv.store.SaveMonitor(ctx, monitor, user.Plan.Limits.Monitors)
 		if err != nil {
 			switch {
 			case errors.Is(err, store.ErrMonitorNotFound):

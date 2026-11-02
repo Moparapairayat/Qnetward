@@ -97,6 +97,9 @@ func (srv *Server) handlePing(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, apiError{Error: err.Error()})
 		return
 	}
+	if !srv.enforceWorkspaceQuota(w, user, quotaProbe) {
+		return
+	}
 	release, ok := srv.tryAcquireProbeSlot()
 	if !ok {
 		writeJSON(w, http.StatusTooManyRequests, apiError{Error: "server busy, try again"})
@@ -170,6 +173,9 @@ func (srv *Server) handleTCPPing(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, apiError{Error: err.Error()})
 		return
 	}
+	if !srv.enforceWorkspaceQuota(w, user, quotaProbe) {
+		return
+	}
 	release, ok := srv.tryAcquireProbeSlot()
 	if !ok {
 		writeJSON(w, http.StatusTooManyRequests, apiError{Error: "server busy, try again"})
@@ -222,6 +228,9 @@ func (srv *Server) handlePortScan(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, apiError{Error: err.Error()})
 		return
 	}
+	if !srv.enforceWorkspaceQuota(w, user, quotaScan) {
+		return
+	}
 	release, ok := srv.tryAcquireProbeSlot()
 	if !ok {
 		writeJSON(w, http.StatusTooManyRequests, apiError{Error: "server busy, try again"})
@@ -245,7 +254,8 @@ func (srv *Server) handleDNSLookup(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
 		return
 	}
-	if _, ok := srv.requireActorFor(w, r, store.ScopeProbe); !ok {
+	user, ok := srv.requireActorFor(w, r, store.ScopeProbe)
+	if !ok {
 		return
 	}
 	if !srv.isAllowedRequestOrigin(r) {
@@ -274,6 +284,9 @@ func (srv *Server) handleDNSLookup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !srv.enforceWorkspaceQuota(w, user, quotaProbe) {
+		return
+	}
 	release, ok := srv.tryAcquireProbeSlot()
 	if !ok {
 		writeJSON(w, http.StatusTooManyRequests, apiError{Error: "server busy, try again"})

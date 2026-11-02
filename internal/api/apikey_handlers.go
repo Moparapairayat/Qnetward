@@ -84,7 +84,7 @@ func (srv *Server) handleWorkspaceAPIKeys(w http.ResponseWriter, r *http.Request
 		}
 		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		defer cancel()
-		saved, err := srv.store.CreateAPIKey(ctx, key, hashOpaqueToken(token))
+		saved, err := srv.store.CreateAPIKey(ctx, key, hashOpaqueToken(token), user.Plan.Limits.APIKeys)
 		if err != nil {
 			status := http.StatusBadRequest
 			if errors.Is(err, store.ErrAPIKeyLimit) {

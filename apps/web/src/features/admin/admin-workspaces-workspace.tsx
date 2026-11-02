@@ -1,17 +1,43 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { AdminWorkspacesResponse } from "@/lib/types";
 import { PageHeader, Panel, StatStrip } from "@/components/tools/probe-ui";
 import { initialsFor } from "@/components/settings/settings-ui";
-import { HeadRow, Pill, SearchBox, Segmented, TableShell, Td, Th, timeAgo } from "@/features/admin/admin-ui";
+import { HeadRow, SearchBox, Segmented, TableShell, Td, Th, timeAgo } from "@/features/admin/admin-ui";
 
 type Filter = "all" | "shared" | "solo" | "invites";
 
-function planLabel(plan: string) {
-  return plan === "starter" || !plan ? "Free" : plan[0].toUpperCase() + plan.slice(1);
+function planId(plan: string) {
+  return plan === "pro" || plan === "enterprise" ? plan : "free";
+}
+
+/** Plan picker. Until payments exist, a platform admin sets plans by hand; each change is audited. */
+function PlanSelect({ workspaceId, plan, name }: { workspaceId: number; plan: string; name: string }) {
+  const queryClient = useQueryClient();
+  const change = useMutation({
+    mutationFn: (next: string) =>
+      apiRequest("/api/admin/workspaces/plan", { method: "POST", body: JSON.stringify({ workspace_id: workspaceId, plan: next }) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-workspaces"] }),
+  });
+  return (
+    <span className="inline-flex items-center gap-2">
+      <select
+        aria-label={`Plan for ${name}`}
+        className="h-7 rounded-md border border-[var(--lp-border-strong)] bg-white/[0.03] px-1.5 text-[12px]"
+        value={planId(plan)}
+        disabled={change.isPending}
+        onChange={(e) => change.mutate(e.target.value)}
+      >
+        <option value="free">Free</option>
+        <option value="pro">Pro</option>
+        <option value="enterprise">Enterprise</option>
+      </select>
+      {change.isError ? <span className="text-[11px] text-[#ff8fb3]" title={(change.error as ApiError).message}>Failed</span> : null}
+    </span>
+  );
 }
 
 export function AdminWorkspacesWorkspace() {
@@ -102,7 +128,7 @@ export function AdminWorkspacesWorkspace() {
                     <p className="lp-mono truncate text-[12px] text-[var(--lp-subtle)]">{w.owner_email}</p>
                   </Td>
                   <Td>
-                    <Pill>{planLabel(w.plan)}</Pill>
+                    <PlanSelect workspaceId={w.id} plan={w.plan} name={w.name} />
                   </Td>
                   <Td align="right" className="lp-mono">
                     {w.member_count}

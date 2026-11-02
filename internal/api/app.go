@@ -55,7 +55,9 @@ type Server struct {
 	// monitorRootCAs overrides the system roots for HTTPS monitors; tests only.
 	monitorRootCAs *x509.CertPool
 
-	probeLimiter   chan struct{}
+	probeLimiter chan struct{}
+	// quotaLimiter counts per-workspace and per-key usage against plan limits.
+	quotaLimiter   *rateLimiter
 	rejectedProbes atomic.Uint64
 	authLimiter    *rateLimiter
 }
@@ -77,6 +79,7 @@ func New(deps Deps, opts Options) *Server {
 		targetPolicy:   opts.TargetPolicy,
 		probeLimiter:   make(chan struct{}, maxConcurrentProbes),
 		authLimiter:    newRateLimiter(),
+		quotaLimiter:   newRateLimiter(),
 	}
 	if srv.demoEnabled {
 		if srv.demoName == "" {
@@ -117,9 +120,11 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/workspace/invitations", srv.handleWorkspaceInvitations)
 	mux.HandleFunc("/api/workspace/audit", srv.handleWorkspaceAudit)
 	mux.HandleFunc("/api/workspace/api-keys", srv.handleWorkspaceAPIKeys)
+	mux.HandleFunc("/api/workspace/usage", srv.handleWorkspaceUsage)
 	mux.HandleFunc("/api/admin/overview", srv.handleAdminOverview)
 	mux.HandleFunc("/api/admin/users", srv.handleAdminUsers)
 	mux.HandleFunc("/api/admin/workspaces", srv.handleAdminWorkspaces)
+	mux.HandleFunc("/api/admin/workspaces/plan", srv.handleAdminWorkspacePlan)
 	mux.HandleFunc("/api/admin/system", srv.handleAdminSystem)
 	mux.HandleFunc("/api/ping", srv.handlePing)
 	mux.HandleFunc("/api/tcpping", srv.handleTCPPing)

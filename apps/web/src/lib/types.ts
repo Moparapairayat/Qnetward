@@ -385,6 +385,30 @@ export type AlertRulePayload = {
   enabled: boolean;
 };
 
+export type PlanLimits = {
+  monitors: number;
+  api_keys: number;
+  members: number;
+  probes_per_hour: number;
+  scans_per_hour: number;
+  api_requests_per_minute: number;
+};
+
+export type Plan = { id: "free" | "pro" | "enterprise"; name: string; limits: PlanLimits };
+
+export type WorkspaceUsageResponse = {
+  plan: Plan;
+  plans: Plan[];
+  usage: {
+    monitors: number;
+    api_keys: number;
+    members: number;
+    pending_invitations: number;
+    probes_last_hour: number;
+    scans_last_hour: number;
+  };
+};
+
 export type APIKey = {
   id: number;
   created_by?: number;

@@ -172,17 +172,20 @@ func (srv *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			if !session.stop() {
 				_ = session.writer.WriteEvent(wsEvent{Type: "error", Error: "no active run"})
 			}
-		case "ping":
-			if !session.start(user, req) {
-				_ = session.writer.WriteEvent(wsEvent{Type: "error", Error: "a run is already in progress"})
+		case "ping", "tcpping", "portscan":
+			bucket := quotaProbe
+			if req.Type == "portscan" {
+				bucket = quotaScan
 			}
-		case "tcpping":
-			if !session.start(user, req) {
-				_ = session.writer.WriteEvent(wsEvent{Type: "error", Error: "a run is already in progress"})
+			if allowed, retry, limit := srv.allowWorkspaceQuota(user, bucket); !allowed {
+				_ = session.writer.WriteEvent(wsEvent{Type: "error", Error: fmt.Sprintf("this workspace has used its %d runs of this kind for the hour on the %s plan; try again in %s", limit, user.Plan.Name, retry.Round(time.Minute))})
+				continue
 			}
-		case "portscan":
 			if !session.start(user, req) {
 				_ = session.writer.WriteEvent(wsEvent{Type: "error", Error: "a run is already in progress"})
+				continue
+			}
+			if req.Type != "portscan" {
 				continue
 			}
 			host := strings.TrimSpace(req.Host)

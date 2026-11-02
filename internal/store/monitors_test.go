@@ -33,7 +33,7 @@ func TestMonitorLifecycle(t *testing.T) {
 		IntervalSeconds: 60,
 		NotifyEmail:     owner.Email,
 		Enabled:         true,
-	})
+	}, 0)
 	if err != nil {
 		t.Fatalf("SaveMonitor returned error: %v", err)
 	}
@@ -43,13 +43,18 @@ func TestMonitorLifecycle(t *testing.T) {
 
 	if _, err := st.SaveMonitor(ctx, Monitor{
 		WorkspaceID: workspaceID, Protocol: "tcpping", Target: "monitor.example", Port: intPtr(443), IntervalSeconds: 300,
-	}); !errors.Is(err, ErrMonitorDuplicate) {
+	}, 0); !errors.Is(err, ErrMonitorDuplicate) {
 		t.Fatalf("expected ErrMonitorDuplicate, got %v", err)
 	}
 	if _, err := st.SaveMonitor(ctx, Monitor{
 		WorkspaceID: workspaceID, Protocol: "ping", Target: "x.example", IntervalSeconds: 45,
-	}); err == nil {
+	}, 0); err == nil {
 		t.Fatal("expected an unsupported interval to be rejected")
+	}
+	if _, err := st.SaveMonitor(ctx, Monitor{
+		WorkspaceID: workspaceID, Protocol: "ping", Target: "limit.example", IntervalSeconds: 300,
+	}, 1); !errors.Is(err, ErrMonitorLimit) {
+		t.Fatalf("expected ErrMonitorLimit at a limit of one, got %v", err)
 	}
 
 	// A brand-new monitor is due at once; claiming pushes it an interval ahead.
@@ -101,7 +106,7 @@ func TestMonitorLifecycle(t *testing.T) {
 	}
 	hijack := got
 	hijack.WorkspaceID = otherWorkspaceID
-	if _, err := st.SaveMonitor(ctx, hijack); !errors.Is(err, ErrMonitorNotFound) {
+	if _, err := st.SaveMonitor(ctx, hijack, 0); !errors.Is(err, ErrMonitorNotFound) {
 		t.Fatalf("expected ErrMonitorNotFound updating from another workspace, got %v", err)
 	}
 	if err := st.DeleteMonitor(ctx, otherWorkspaceID, got.ID); !errors.Is(err, ErrMonitorNotFound) {
@@ -110,7 +115,7 @@ func TestMonitorLifecycle(t *testing.T) {
 
 	// Pointing it at a new target resets the status and checks it right away.
 	got.Target = "moved.example"
-	moved, err := st.SaveMonitor(ctx, got)
+	moved, err := st.SaveMonitor(ctx, got, 0)
 	if err != nil {
 		t.Fatalf("SaveMonitor update returned error: %v", err)
 	}
@@ -168,7 +173,7 @@ func TestMonitorWarnsOncePerExpiringCertificate(t *testing.T) {
 		Target:          "https://cert.example/health",
 		IntervalSeconds: 300,
 		Enabled:         true,
-	})
+	}, 0)
 	if err != nil {
 		t.Fatalf("SaveMonitor returned error: %v", err)
 	}

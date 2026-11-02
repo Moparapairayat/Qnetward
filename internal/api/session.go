@@ -10,9 +10,11 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
+	"qnetward/internal/plans"
 	"qnetward/internal/store"
 )
 
@@ -44,6 +46,8 @@ type actor struct {
 	Role string
 	// APIKey is set when the request authenticated with a key.
 	APIKey *store.APIKey
+	// Plan is the workspace's plan, which sets its limits.
+	Plan plans.Plan
 }
 
 // apiKeyPrefix starts every API key, so keys are easy to recognise and to
@@ -91,7 +95,7 @@ func (srv *Server) requireActorFor(w http.ResponseWriter, r *http.Request, scope
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 		return actor{}, false
 	}
-	return actor{User: user, WorkspaceID: workspace.ID, Role: workspace.Role}, true
+	return actor{User: user, WorkspaceID: workspace.ID, Role: workspace.Role, Plan: plans.For(workspace.Plan)}, true
 }
 
 func (srv *Server) authenticateAPIKey(w http.ResponseWriter, r *http.Request, token, scope string) (actor, bool) {
@@ -114,7 +118,16 @@ func (srv *Server) authenticateAPIKey(w http.ResponseWriter, r *http.Request, to
 		writeJSON(w, http.StatusForbidden, apiError{Error: fmt.Sprintf("this API key lacks the %s scope", scope)})
 		return actor{}, false
 	}
+	plan := plans.For(key.WorkspacePlan)
+	// Each key gets its own per-minute budget, so one busy script can't
+	// starve the others or the console.
+	if allowed, retry := srv.quotaLimiter.Allow(fmt.Sprintf("key:%d", key.ID), rateLimitConfig{Limit: plan.Limits.APIRequestsPerMinute, Window: time.Minute}); !allowed {
+		w.Header().Set("Retry-After", strconv.Itoa(int(retry.Seconds())))
+		writeJSON(w, http.StatusTooManyRequests, apiError{Error: fmt.Sprintf("this API key is limited to %d requests a minute", plan.Limits.APIRequestsPerMinute)})
+		return actor{}, false
+	}
 	return actor{
+		Plan: plan,
 		// The key acts on behalf of whoever created it; the audit log names the key.
 		User:        store.User{ID: key.CreatedBy, Email: "API key: " + key.Name},
 		WorkspaceID: key.WorkspaceID,

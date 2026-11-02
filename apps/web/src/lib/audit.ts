@@ -52,6 +52,8 @@ export function describeAuditEvent(event: AuditEvent): string {
       return `Created API key ${label}`;
     case "apikey.revoked":
       return `Revoked API key ${label}`;
+    case "workspace.plan_changed":
+      return `Changed the plan to ${typeof meta.plan === "string" ? meta.plan : "another plan"}`;
     default:
       return event.action;
   }

@@ -13,12 +13,9 @@ import (
 
 var (
 	ErrMonitorNotFound  = errors.New("monitor not found")
-	ErrMonitorLimit     = fmt.Errorf("a workspace can have at most %d monitors", MaxMonitorsPerWorkspace)
+	ErrMonitorLimit     = errors.New("this workspace has reached its plan's monitor limit")
 	ErrMonitorDuplicate = errors.New("this target is already monitored")
 )
-
-// MaxMonitorsPerWorkspace caps scheduled checks while every plan is free.
-const MaxMonitorsPerWorkspace = 20
 
 // MonitorIntervals are the check intervals a monitor can use, in seconds.
 var MonitorIntervals = []int{60, 300, 600, 1800, 3600}
@@ -80,8 +77,9 @@ const monitorColumns = `id, workspace_id, COALESCE(user_id, 0), name, protocol, 
 	expected_status, last_status_code, tls_expires_at`
 
 // SaveMonitor creates a monitor, or updates one in the same workspace. A new
-// or re-pointed monitor is checked right away.
-func (s *Store) SaveMonitor(ctx context.Context, m Monitor) (Monitor, error) {
+// or re-pointed monitor is checked right away. limit caps how many monitors
+// the workspace may have; 0 means no cap.
+func (s *Store) SaveMonitor(ctx context.Context, m Monitor, limit int) (Monitor, error) {
 	if s == nil {
 		return Monitor{}, errors.New("store is not available")
 	}
@@ -97,12 +95,14 @@ func (s *Store) SaveMonitor(ctx context.Context, m Monitor) (Monitor, error) {
 
 	var saved Monitor
 	if m.ID == 0 {
-		var count int
-		if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM monitors WHERE workspace_id = $1`, m.WorkspaceID).Scan(&count); err != nil {
-			return Monitor{}, err
-		}
-		if count >= MaxMonitorsPerWorkspace {
-			return Monitor{}, ErrMonitorLimit
+		if limit > 0 {
+			var count int
+			if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM monitors WHERE workspace_id = $1`, m.WorkspaceID).Scan(&count); err != nil {
+				return Monitor{}, err
+			}
+			if count >= limit {
+				return Monitor{}, ErrMonitorLimit
+			}
 		}
 		err = scanMonitor(tx.QueryRowContext(ctx, `
 			INSERT INTO monitors (workspace_id, user_id, name, protocol, target, port, interval_seconds, notify_email, enabled, expected_status)

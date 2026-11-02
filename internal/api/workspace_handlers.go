@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"qnetward/internal/plans"
 	"qnetward/internal/store"
 )
 
@@ -203,6 +204,14 @@ func (srv *Server) handleWorkspaceTeam(w http.ResponseWriter, r *http.Request) {
 		workspace, err := srv.resolveActiveWorkspace(ctx, user, activeWorkspaceID)
 		if err != nil {
 			writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
+			return
+		}
+
+		// Pending invitations count toward the member limit, so a plan can't be
+		// overrun by inviting more people than it allows.
+		plan := plans.For(workspace.Plan)
+		if usage, err := srv.store.GetWorkspaceUsage(ctx, workspace.ID); err == nil && usage.Members+usage.PendingInvitations >= plan.Limits.Members {
+			writeJSON(w, http.StatusConflict, apiError{Error: fmt.Sprintf("the %s plan allows %d members, counting pending invitations", plan.Name, plan.Limits.Members)})
 			return
 		}
 
