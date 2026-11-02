@@ -30,7 +30,8 @@ test("owner can add a monitor, create an API key, and see both in the audit log"
   await page.goto("/workspace/api-keys");
   await page.getByPlaceholder("GitHub Actions deploy checks").fill("e2e reader");
   await page.getByRole("button", { name: "Create key" }).click();
-  const token = (await page.locator("code").filter({ hasText: /^qnw_/ }).innerText()).trim();
+  // The full token, not the short prefix shown in the key list.
+  const token = (await page.locator("code").filter({ hasText: /^qnw_[A-Za-z0-9_-]{40,}$/ }).innerText()).trim();
   expect(token).toMatch(/^qnw_[A-Za-z0-9_-]{40,}$/);
 
   const listed = await request.get("/api/monitors", { headers: { Authorization: `Bearer ${token}` } });
