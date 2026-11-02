@@ -73,7 +73,8 @@ const steps = [
 
 
 const securityToday = [
-  "Passwords hashed with bcrypt; sessions and reset tokens stored only as hashes",
+  "Passwords hashed with bcrypt; sessions, reset tokens, and API keys stored only as hashes",
+  "Two-factor sign-in with an authenticator app, and an append-only audit log",
   "Rate limits on sign-in, verification, and probe endpoints",
   "Strict origin checks on the API and live WebSocket",
   "Workspace data kept apart by row-level security in the database",

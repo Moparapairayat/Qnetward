@@ -77,8 +77,10 @@ export const roadmap: RoadmapTheme[] = [
     summary: "Run it with your team, your way.",
     items: [
       { name: "Workspaces and roles", body: "Invitations, owner, admin, member, and viewer roles, and workspace switching.", horizon: "now" },
-      { name: "Account security", body: "Password changes, session management, and account deletion.", horizon: "now" },
-      { name: "SSO, SCIM, and audit log", body: "Enterprise sign-in, user provisioning, and an exportable audit trail.", horizon: "later" },
+      { name: "Account security", body: "Two-factor sign-in with recovery codes, password changes, sessions, and account deletion.", horizon: "now" },
+      { name: "Audit log", body: "An append-only record of sign-ins, member changes, monitors, scans, and exports.", horizon: "now" },
+      { name: "API keys", body: "Scoped workspace keys for scripts, CI, and Terraform, with an OpenAPI spec.", horizon: "now" },
+      { name: "SSO and SCIM", body: "Enterprise sign-in and user provisioning.", horizon: "later" },
       { name: "Root-cause hints", body: "Point at the most likely cause when a storm of alerts arrives.", horizon: "later" },
     ],
   },
