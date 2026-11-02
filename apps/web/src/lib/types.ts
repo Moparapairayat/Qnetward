@@ -385,6 +385,14 @@ export type AlertRulePayload = {
   enabled: boolean;
 };
 
+export type MFAChallengeResponse = { mfa_required: true; mfa_token: string; message: string };
+
+export type MFAStatus = { enabled: boolean; enabled_at?: string; recovery_codes_left: number };
+
+export type MFASetupResponse = { secret: string; otpauth_url: string; qr_code: string };
+
+export type MFARecoveryResponse = { recovery_codes: string[] };
+
 export type PlanLimits = {
   monitors: number;
   api_keys: number;

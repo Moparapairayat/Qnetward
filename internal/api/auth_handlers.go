@@ -310,6 +310,13 @@ func (srv *Server) handleAuthLogin(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	if mfa, _, err := srv.store.GetMFA(ctx, user.ID); err != nil {
+		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
+		return
+	} else if mfa.Enabled {
+		srv.startMFAChallenge(w, ctx, user)
+		return
+	}
 
 	if err := srv.issueSession(w, r, ctx, user); err != nil {
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})

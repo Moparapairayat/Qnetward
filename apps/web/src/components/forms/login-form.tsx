@@ -1,16 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LockKeyhole, Mail } from "lucide-react";
+import { KeyRound, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 import { AlternateSignIn } from "@/components/auth/alternate-sign-in";
 import { AuthInputField } from "@/components/auth/auth-input-field";
 import { apiRequest, ApiError } from "@/lib/api";
-import { SessionResponse } from "@/lib/types";
+import type { MFAChallengeResponse, SessionResponse } from "@/lib/types";
 
 const schema = z.object({
   email: z.email("Enter a valid email address"),
@@ -19,9 +20,82 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+/** The second sign-in step for accounts with two-factor sign-in on. */
+function MFAStep({ token, onBack, onDone }: { token: string; onBack: () => void; onDone: () => Promise<void> }) {
+  const [code, setCode] = useState("");
+  const [useRecovery, setUseRecovery] = useState(false);
+  const verify = useMutation({
+    mutationFn: () => apiRequest<SessionResponse>("/api/auth/mfa", { method: "POST", body: JSON.stringify({ mfa_token: token, code: code.trim() }) }),
+    onSuccess: onDone,
+  });
+  const ready = useRecovery ? code.replace(/[-\s]/g, "").length === 10 : /^\d{6}$/.test(code.trim());
+
+  return (
+    <form
+      className="grid gap-3.5"
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (ready) verify.mutate();
+      }}
+    >
+      <div className="flex items-start gap-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[var(--lp-border-strong)] bg-white/[0.03]">
+          <ShieldCheck className="h-4 w-4 text-[var(--lp-accent)]" aria-hidden="true" />
+        </span>
+        <p className="text-[13px] leading-relaxed text-[var(--lp-muted)]">
+          {useRecovery ? "Enter one of the recovery codes you saved when you turned on two-factor sign-in. Each works once." : "Enter the 6-digit code from your authenticator app."}
+        </p>
+      </div>
+      <AuthInputField
+        key={useRecovery ? "recovery" : "totp"}
+        id="login-mfa-code"
+        label={useRecovery ? "Recovery code" : "Authentication code"}
+        icon={KeyRound}
+        inputProps={{
+          autoComplete: "one-time-code",
+          inputMode: useRecovery ? "text" : "numeric",
+          maxLength: useRecovery ? 11 : 6,
+          autoFocus: true,
+          value: code,
+          onChange: (e) => setCode(e.target.value),
+        }}
+      />
+      {verify.isError ? (
+        <p className="auth-notice-error" role="alert">
+          {(verify.error as ApiError).message}
+        </p>
+      ) : null}
+      <button className="auth-primary-button mt-1" type="submit" disabled={!ready || verify.isPending}>
+        {verify.isPending ? "Checking…" : "Verify and sign in"}
+      </button>
+      <div className="flex items-center justify-between text-[13px]">
+        <button
+          type="button"
+          className="auth-inline-link"
+          onClick={() => {
+            setUseRecovery((v) => !v);
+            setCode("");
+          }}
+        >
+          {useRecovery ? "Use your authenticator app" : "Use a recovery code"}
+        </button>
+        <button type="button" className="text-[var(--lp-subtle)] hover:text-[var(--lp-text)]" onClick={onBack}>
+          Start over
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export function LoginForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [mfaToken, setMFAToken] = useState<string | null>(null);
+  const finish = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["session"] });
+    router.replace("/overview");
+  };
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -31,15 +105,32 @@ export function LoginForm() {
   });
 
   const login = useMutation({
-    mutationFn: (values: FormValues) => apiRequest<SessionResponse>("/api/auth/login", { method: "POST", body: JSON.stringify(values) }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["session"] });
-      router.replace("/overview");
+    mutationFn: (values: FormValues) =>
+      apiRequest<SessionResponse | MFAChallengeResponse>("/api/auth/login", { method: "POST", body: JSON.stringify(values) }),
+    onSuccess: async (resp) => {
+      if ("mfa_required" in resp && resp.mfa_required) {
+        setMFAToken(resp.mfa_token);
+        return;
+      }
+      await finish();
     },
     onError: (error: ApiError) => {
       form.setError("root", { message: error.message });
     },
   });
+
+  if (mfaToken) {
+    return (
+      <MFAStep
+        token={mfaToken}
+        onDone={finish}
+        onBack={() => {
+          setMFAToken(null);
+          form.resetField("password");
+        }}
+      />
+    );
+  }
 
   return (
     <form className="grid gap-3.5" noValidate onSubmit={form.handleSubmit((values) => login.mutate(values))}>

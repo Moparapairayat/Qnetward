@@ -127,6 +127,23 @@ func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) 
 	return user, nil
 }
 
+// GetUserByID looks a user up by ID.
+func (s *Store) GetUserByID(ctx context.Context, userID int64) (User, error) {
+	var user User
+	err := s.db.QueryRowContext(ctx, `
+		SELECT id, name, email, verification_required, email_verified_at, created_at
+		FROM users
+		WHERE id = $1
+	`, userID).Scan(&user.ID, &user.Name, &user.Email, &user.VerificationRequired, &user.EmailVerifiedAt, &user.CreatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return User{}, ErrUserNotFound
+	}
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
+
 func (s *Store) UpdateUserProfile(ctx context.Context, userID int64, name, email string) (User, bool, error) {
 	email, err := NormalizeEmail(email)
 	if err != nil {

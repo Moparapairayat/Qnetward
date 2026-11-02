@@ -22,6 +22,16 @@ export function describeAuditEvent(event: AuditEvent): string {
     }
     case "account.session_revoked":
       return "Signed out a session";
+    case "account.mfa_enabled":
+      return "Turned on two-factor sign-in";
+    case "account.mfa_disabled":
+      return "Turned off two-factor sign-in";
+    case "account.recovery_codes_replaced":
+      return "Created new recovery codes";
+    case "auth.mfa_failed":
+      return "Wrong two-factor code";
+    case "auth.recovery_code_used":
+      return "Signed in with a recovery code";
     case "member.invited":
       return `Invited ${label}${role ? ` as ${role}` : ""}`;
     case "member.invitation_revoked":

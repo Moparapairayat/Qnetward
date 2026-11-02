@@ -28,3 +28,4 @@ patterns don't.
 | [0012](0012-append-only-audit-log.md) | An append-only audit log in PostgreSQL | Accepted |
 | [0013](0013-workspace-api-keys.md) | Workspace API keys with scopes | Accepted |
 | [0014](0014-plans-and-quotas.md) | Plans and per-workspace quotas | Accepted |
+| [0015](0015-totp-two-factor-sign-in.md) | Two-factor sign-in with TOTP | Accepted |

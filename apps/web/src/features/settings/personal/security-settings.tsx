@@ -7,6 +7,7 @@ import { Eye, EyeOff, KeyRound, LogOut, Monitor, Smartphone } from "lucide-react
 import { apiRequest, ApiError } from "@/lib/api";
 import type { AccountSession, AuditPage, AuthMessageResponse, SessionResponse } from "@/lib/types";
 import { describeAuditEvent, shortUserAgent } from "@/lib/audit";
+import { MFACard } from "@/features/settings/personal/mfa-card";
 import { formatDate, Notice, SaveState, SettingsCard, SettingsPageTitle } from "@/components/settings/settings-ui";
 
 const PASSWORD_MIN = 8;
@@ -249,7 +250,7 @@ function ActivityCard() {
       ) : (
         <ul className="divide-y divide-[var(--lp-border)] rounded-lg border border-[var(--lp-border)]">
           {visible.map((event) => {
-            const failed = event.action === "auth.login_failed";
+            const failed = event.action === "auth.login_failed" || event.action === "auth.mfa_failed";
             return (
               <li key={event.id} className="flex items-start justify-between gap-3 px-4 py-2.5">
                 <div className="min-w-0">
@@ -277,9 +278,10 @@ export function SecuritySettings() {
 
   return (
     <div className="grid grid-cols-1 gap-5">
-      <SettingsPageTitle title="Password and sessions" description="How you sign in, and where you're signed in." />
+      <SettingsPageTitle title="Password and sessions" description="How you sign in, the second step after your password, and where you're signed in." />
       {isDemo ? <Notice tone="info">This is the shared demo account, so password and session changes are turned off.</Notice> : null}
       <ChangePasswordCard email={session?.user?.email} disabled={isDemo} />
+      <MFACard disabled={isDemo} />
       <SessionsCard disabled={isDemo} />
       <ActivityCard />
     </div>

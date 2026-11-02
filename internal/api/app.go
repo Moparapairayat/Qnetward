@@ -11,6 +11,7 @@ import (
 	"qnetward/internal/platform/mailer"
 	"qnetward/internal/platform/netguard"
 	"qnetward/internal/platform/objectstore"
+	"qnetward/internal/platform/secretbox"
 	"qnetward/internal/store"
 )
 
@@ -21,6 +22,9 @@ type Deps struct {
 	Cache   *cache.Cache
 	Objects *objectstore.Client
 	Mailer  *mailer.Client
+	// Secrets encrypts stored secrets such as TOTP seeds. Nil stores them
+	// unencrypted, which is only acceptable in development.
+	Secrets *secretbox.Box
 }
 
 // Options are the request-handling settings read from flags or the environment.
@@ -43,6 +47,7 @@ type Server struct {
 	cache   *cache.Cache
 	objects *objectstore.Client
 	mailer  *mailer.Client
+	secrets *secretbox.Box
 
 	publicBaseURL  string
 	allowedOrigins map[string]struct{}
@@ -69,6 +74,7 @@ func New(deps Deps, opts Options) *Server {
 		cache:          deps.Cache,
 		objects:        deps.Objects,
 		mailer:         deps.Mailer,
+		secrets:        deps.Secrets,
 		publicBaseURL:  strings.TrimRight(strings.TrimSpace(opts.PublicBaseURL), "/"),
 		allowedOrigins: opts.AllowedOrigins,
 		adminEmails:    opts.AdminEmails,
@@ -113,6 +119,12 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/account/sessions", srv.handleAccountSessions)
 	mux.HandleFunc("/api/account/avatar", srv.handleAccountAvatar)
 	mux.HandleFunc("/api/account/activity", srv.handleAccountActivity)
+	mux.HandleFunc("/api/account/mfa", srv.handleAccountMFA)
+	mux.HandleFunc("/api/account/mfa/setup", srv.handleAccountMFASetup)
+	mux.HandleFunc("/api/account/mfa/enable", srv.handleAccountMFAEnable)
+	mux.HandleFunc("/api/account/mfa/disable", srv.handleAccountMFADisable)
+	mux.HandleFunc("/api/account/mfa/recovery-codes", srv.handleAccountMFARecovery)
+	mux.HandleFunc("/api/auth/mfa", srv.handleAuthMFA)
 	mux.HandleFunc("/api/account", srv.handleAccountDelete)
 	mux.HandleFunc("GET /api/avatars/{id}", srv.handleAvatarImage)
 	mux.HandleFunc("/api/workspaces", srv.handleWorkspaces)

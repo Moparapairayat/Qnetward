@@ -15,6 +15,7 @@ import (
 	"qnetward/internal/platform/mailer"
 	"qnetward/internal/platform/netguard"
 	"qnetward/internal/platform/objectstore"
+	"qnetward/internal/platform/secretbox"
 	"qnetward/internal/store"
 )
 
@@ -53,6 +54,7 @@ func runServe(args []string) {
 	demoName := fs.String("demo-name", envString("QNETWARD_DEMO_NAME", "Contributor Demo"), "display name for demo access")
 	demoEmail := fs.String("demo-email", envString("QNETWARD_DEMO_EMAIL", "demo@qnetward.local"), "display email for demo access")
 	allowPrivateTargets := fs.Bool("allow-private-targets", envBool("QNETWARD_ALLOW_PRIVATE_TARGETS", false), "allow probes to loopback, private, and link-local addresses (self-hosted LAN monitoring); cloud metadata endpoints stay blocked")
+	encryptionKey := fs.String("encryption-key", envString("QNETWARD_ENCRYPTION_KEY", ""), "base64 32-byte key that encrypts stored secrets such as TOTP seeds (required in production)")
 	runMonitors := fs.Bool("monitors", envBool("QNETWARD_MONITORS", true), "run scheduled uptime monitor checks in this process")
 	adminEmailsRaw := fs.String("admin-emails", envString("QNETWARD_ADMIN_EMAILS", ""), "comma-separated platform admin emails")
 
@@ -140,8 +142,16 @@ func runServe(args []string) {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	secrets, err := secretbox.New(*encryptionKey)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "invalid encryption key: %v\n", err)
+		os.Exit(1)
+	}
+	if !secrets.Encrypts() {
+		fmt.Println("Warning: QNETWARD_ENCRYPTION_KEY is not set; two-factor secrets are stored unencrypted. Set it in production.")
+	}
 	apiServer := api.New(
-		api.Deps{Store: st, Cache: rc, Objects: objStore, Mailer: emailClient},
+		api.Deps{Store: st, Cache: rc, Objects: objStore, Mailer: emailClient, Secrets: secrets},
 		api.Options{
 			PublicBaseURL:  *publicBaseURL,
 			AllowedOrigins: allowedOrigins,

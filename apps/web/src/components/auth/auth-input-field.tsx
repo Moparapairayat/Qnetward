@@ -24,6 +24,8 @@ const PLACEHOLDERS: Record<string, string> = {
   "First name": "Ada",
   "Last name": "Lovelace",
   "Verification code": "6-digit code",
+  "Authentication code": "6-digit code",
+  "Recovery code": "xxxxx-xxxxx",
 };
 
 /**
