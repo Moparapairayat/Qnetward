@@ -15,6 +15,7 @@ import (
 	"qnetward/internal/engine/report"
 	"qnetward/internal/engine/tcpping"
 	"qnetward/internal/probe"
+	"qnetward/internal/store"
 
 	"github.com/gorilla/websocket"
 )
@@ -128,7 +129,7 @@ func (srv *Server) wsUpgrader() *websocket.Upgrader {
 }
 
 func (srv *Server) handleWS(w http.ResponseWriter, r *http.Request) {
-	user, ok := srv.requireActor(w, r)
+	user, ok := srv.requireActorFor(w, r, store.ScopeProbe)
 	if !ok {
 		return
 	}

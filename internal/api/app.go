@@ -116,6 +116,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/workspace/team", srv.handleWorkspaceTeam)
 	mux.HandleFunc("/api/workspace/invitations", srv.handleWorkspaceInvitations)
 	mux.HandleFunc("/api/workspace/audit", srv.handleWorkspaceAudit)
+	mux.HandleFunc("/api/workspace/api-keys", srv.handleWorkspaceAPIKeys)
 	mux.HandleFunc("/api/admin/overview", srv.handleAdminOverview)
 	mux.HandleFunc("/api/admin/users", srv.handleAdminUsers)
 	mux.HandleFunc("/api/admin/workspaces", srv.handleAdminWorkspaces)

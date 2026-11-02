@@ -48,6 +48,10 @@ export function describeAuditEvent(event: AuditEvent): string {
       return `Port-scanned ${label}`;
     case "history.exported":
       return `Exported history for ${label}`;
+    case "apikey.created":
+      return `Created API key ${label}`;
+    case "apikey.revoked":
+      return `Revoked API key ${label}`;
     default:
       return event.action;
   }
@@ -64,6 +68,8 @@ export function auditEventDetail(event: AuditEvent): string | null {
       return typeof meta.target === "string" && meta.target !== event.target_label ? meta.target : null;
     case "scan.portscan":
       return typeof meta.spec === "string" && meta.spec ? `ports ${meta.spec}` : null;
+    case "apikey.created":
+      return typeof meta.scopes === "string" ? `scopes ${meta.scopes.replaceAll(",", ", ")}` : null;
     case "history.exported":
       return [meta.format, typeof meta.points === "number" ? `${meta.points} samples` : null].filter(Boolean).join(" · ") || null;
     default:

@@ -228,7 +228,8 @@ func (srv *Server) handleHistoryExport(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
 		return
 	}
-	user, ok := srv.requireActor(w, r)
+	// A POST, but it only reads, so API keys need the read scope.
+	user, ok := srv.requireActorFor(w, r, store.ScopeRead)
 	if !ok {
 		return
 	}

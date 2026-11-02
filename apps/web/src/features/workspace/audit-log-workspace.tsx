@@ -2,14 +2,14 @@
 
 import { Fragment, useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { BellRing, FileClock, Radar, Radio, Download, Users } from "lucide-react";
+import { BellRing, Download, FileClock, KeyRound, Radar, Radio, Users } from "lucide-react";
 import { apiRequest, ApiError } from "@/lib/api";
 import { auditEventDetail, describeAuditEvent, shortUserAgent } from "@/lib/audit";
 import type { AuditEvent, AuditPage, WorkspaceTeamResponse } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
 import { Notice, SettingsCard, SettingsPageTitle } from "@/components/settings/settings-ui";
 
-type Category = "" | "member" | "monitor" | "alert" | "scan" | "export";
+type Category = "" | "member" | "monitor" | "alert" | "scan" | "export" | "apikey";
 
 const categories: { id: Category; label: string }[] = [
   { id: "", label: "All" },
@@ -18,6 +18,7 @@ const categories: { id: Category; label: string }[] = [
   { id: "alert", label: "Alert rules" },
   { id: "scan", label: "Scans" },
   { id: "export", label: "Exports" },
+  { id: "apikey", label: "API keys" },
 ];
 
 function AuditIcon({ action }: { action: string }) {
@@ -27,6 +28,7 @@ function AuditIcon({ action }: { action: string }) {
   if (action.startsWith("alert_rule.")) return <BellRing className={className} aria-hidden="true" />;
   if (action.startsWith("scan.")) return <Radar className={className} aria-hidden="true" />;
   if (action.startsWith("history.")) return <Download className={className} aria-hidden="true" />;
+  if (action.startsWith("apikey.")) return <KeyRound className={className} aria-hidden="true" />;
   return <FileClock className={className} aria-hidden="true" />;
 }
 
@@ -103,7 +105,7 @@ export function AuditLogWorkspace() {
       ) : (
         <SettingsCard
           title="Activity"
-          description="Members, monitors, alert rules, port scans, and exports."
+          description="Members, monitors, alert rules, port scans, exports, and API keys."
         >
           {/* The strip scrolls on its own on narrow screens instead of widening the page. */}
           <div className="-mx-1 mb-3 overflow-x-auto px-1">

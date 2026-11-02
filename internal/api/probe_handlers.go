@@ -56,7 +56,7 @@ func (srv *Server) handlePing(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
 		return
 	}
-	user, ok := srv.requireActor(w, r)
+	user, ok := srv.requireActorFor(w, r, store.ScopeProbe)
 	if !ok {
 		return
 	}
@@ -124,7 +124,7 @@ func (srv *Server) handleTCPPing(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
 		return
 	}
-	user, ok := srv.requireActor(w, r)
+	user, ok := srv.requireActorFor(w, r, store.ScopeProbe)
 	if !ok {
 		return
 	}
@@ -197,7 +197,7 @@ func (srv *Server) handlePortScan(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
 		return
 	}
-	user, ok := srv.requireActor(w, r)
+	user, ok := srv.requireActorFor(w, r, store.ScopeProbe)
 	if !ok {
 		return
 	}
@@ -245,7 +245,7 @@ func (srv *Server) handleDNSLookup(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
 		return
 	}
-	if _, ok := srv.requireAuthenticatedUser(w, r); !ok {
+	if _, ok := srv.requireActorFor(w, r, store.ScopeProbe); !ok {
 		return
 	}
 	if !srv.isAllowedRequestOrigin(r) {

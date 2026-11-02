@@ -113,7 +113,7 @@ export const navSections: NavSection[] = [
     items: [
       { href: "/workspace/team", label: "Team", icon: Users, keywords: "members invite roles" },
       { href: "/integrations", label: "Integrations", icon: Plug, keywords: "slack telegram discord pagerduty webhook", soon: true },
-      { href: "/api-keys", label: "API keys", icon: KeyRound, keywords: "tokens sdk terraform", soon: true },
+      { href: "/workspace/api-keys", label: "API keys", icon: KeyRound, keywords: "tokens sdk terraform ci automation" },
       { href: "/workspace/audit-log", label: "Audit log", icon: FileClock, keywords: "activity history who what when security" },
       { href: "/workspace/billing", label: "Billing", icon: CreditCard, keywords: "plan subscription usage" },
       { href: "/sso", label: "SSO & SCIM", icon: Bot, keywords: "saml oidc enterprise", soon: true },

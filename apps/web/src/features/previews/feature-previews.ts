@@ -517,30 +517,6 @@ export const featurePreviews: FeaturePreview[] = [
     capabilities: ["Slack, Microsoft Teams, Telegram, Discord", "PagerDuty, Opsgenie, SMS", "Jira and webhooks", "Terraform provider, CLI, and SDKs"],
   },
   {
-    slug: "api-keys",
-    title: "API keys",
-    description: "Scoped tokens for scripts, CI, and Terraform. Each key is limited to what it needs and can be revoked instantly.",
-    phase: 1,
-    phaseName: "SaaS core",
-    primaryAction: "Create API key",
-    stats: [
-      { label: "Active keys", value: "3", hint: "1 expires soon", tone: "warn" },
-      { label: "Requests (24h)", value: "8,412", hint: "99.9% success" },
-      { label: "Scopes", value: "Fine-grained", hint: "read, probe, admin" },
-      { label: "Rate limit", value: "600/min", hint: "per key" },
-    ],
-    table: {
-      title: "Keys",
-      columns: ["Name", "Prefix", "Scopes", "Created", "Last used", "Expires"],
-      rows: [
-        ["Terraform CI", c("qn_live_7f2a…"), "monitors:write", "Sep 30", "4m ago", "Never"],
-        ["Grafana read", c("qn_live_19cd…"), "history:read", "Oct 11", "1m ago", "Jan 11"],
-        ["Old script", c("qn_live_a03e…"), "probe:run", "Jun 2", "48d ago", w("In 3 days")],
-      ],
-    },
-    capabilities: ["Per-key scopes and expiry", "Usage metrics per key", "Instant revoke", "OpenAPI spec and SDKs for Go, Python, and TypeScript"],
-  },
-  {
     slug: "sso",
     title: "SSO & SCIM",
     description: "Sign in through your identity provider and keep membership in sync automatically.",

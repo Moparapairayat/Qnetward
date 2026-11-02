@@ -1,0 +1,382 @@
+openapi: 3.1.0
+info:
+  title: Qnetward API
+  version: "1.0"
+  summary: Diagnostics, monitors, alert rules, and history for one workspace.
+  description: |
+    Authenticate with a workspace API key, created by an owner or admin under
+    Workspace settings → API keys, and sent as `Authorization: Bearer qnw_…`.
+    A key acts in the workspace it belongs to.
+
+    Scopes:
+    - `read`: GET requests, and history export.
+    - `write`: create, change, and delete monitors and alert rules.
+    - `probe`: run ping, TCP ping, port scans, and DNS lookups.
+
+    Targets in private and cloud-metadata ranges are refused on the hosted
+    service. Errors are JSON objects with an `error` message.
+servers:
+  - url: https://console.qnetward.io
+    description: Hosted service
+security:
+  - apiKey: []
+tags:
+  - name: Diagnostics
+  - name: Monitors
+  - name: Alert rules
+  - name: History
+paths:
+  /api/ping:
+    post:
+      tags: [Diagnostics]
+      summary: Run an ICMP ping
+      description: "Needs the `probe` scope. Samples are stored in history."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [host]
+              properties:
+                host: { type: string, example: 1.1.1.1 }
+                count: { type: integer, minimum: 1, maximum: 100, default: 5 }
+                interval_ms: { type: integer, default: 1000 }
+                timeout_ms: { type: integer, default: 2000 }
+                size: { type: integer, description: Payload size in bytes }
+                ipv6: { type: boolean, default: false }
+      responses:
+        "200": { $ref: "#/components/responses/Report" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/tcpping:
+    post:
+      tags: [Diagnostics]
+      summary: Run a TCP ping
+      description: "Needs the `probe` scope. Measures TCP handshake time to a port."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [host, port]
+              properties:
+                host: { type: string, example: db.example.com }
+                port: { type: integer, minimum: 1, maximum: 65535, example: 5432 }
+                count: { type: integer, minimum: 1, maximum: 100, default: 5 }
+                interval_ms: { type: integer, default: 1000 }
+                timeout_ms: { type: integer, default: 2000 }
+      responses:
+        "200": { $ref: "#/components/responses/Report" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/portscan:
+    post:
+      tags: [Diagnostics]
+      summary: Scan TCP ports
+      description: "Needs the `probe` scope. Every scan is recorded in the workspace audit log."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [host, ports]
+              properties:
+                host: { type: string, example: scanme.nmap.org }
+                ports: { type: string, description: "Comma-separated ports and ranges, up to 4,096 ports.", example: "22,80,443,8000-8010" }
+                timeout_ms: { type: integer }
+                concurrency: { type: integer, maximum: 256 }
+      responses:
+        "200": { $ref: "#/components/responses/Report" }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/dnslookup:
+    post:
+      tags: [Diagnostics]
+      summary: Look up DNS records
+      description: "Needs the `probe` scope."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [target]
+              properties:
+                target: { type: string, example: example.com }
+                record_type: { type: string, example: ALL, description: "A record type such as A, AAAA, MX, TXT, or ALL." }
+                resolver: { type: string, example: cloudflare, description: "system, cloudflare, google, quad9, or an IP address." }
+                timeout_ms: { type: integer }
+      responses:
+        "200":
+          description: Records found, with DNSSEC and mail checks.
+          content:
+            application/json:
+              schema: { type: object }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/monitors:
+    get:
+      tags: [Monitors]
+      summary: List monitors
+      description: "Needs the `read` scope. Includes 24-hour uptime and the last 30 checks."
+      responses:
+        "200":
+          description: The workspace's monitors.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Monitor" }
+    post:
+      tags: [Monitors]
+      summary: Create or update a monitor
+      description: "Needs the `write` scope. Send `id` to update an existing monitor."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MonitorInput" }
+      responses:
+        "200": { description: Updated, content: { application/json: { schema: { $ref: "#/components/schemas/Monitor" } } } }
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Monitor" } } } }
+        "400": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+    delete:
+      tags: [Monitors]
+      summary: Delete a monitor
+      description: "Needs the `write` scope."
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Deleted }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/alerts/rules:
+    get:
+      tags: [Alert rules]
+      summary: List alert rules
+      description: "Needs the `read` scope."
+      responses:
+        "200":
+          description: The workspace's alert rules.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AlertRule" }
+    post:
+      tags: [Alert rules]
+      summary: Create or update an alert rule
+      description: "Needs the `write` scope. Set a latency threshold, a loss threshold, or both. Send `id` to update."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AlertRuleInput" }
+      responses:
+        "200": { description: Updated, content: { application/json: { schema: { $ref: "#/components/schemas/AlertRule" } } } }
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/AlertRule" } } } }
+        "400": { $ref: "#/components/responses/Error" }
+    delete:
+      tags: [Alert rules]
+      summary: Delete an alert rule
+      description: "Needs the `write` scope."
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Deleted }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/history:
+    get:
+      tags: [History]
+      summary: Samples for one target
+      description: "Needs the `read` scope. Oldest first."
+      parameters:
+        - { name: type, in: query, required: true, schema: { type: string, enum: [ping, tcpping] } }
+        - { name: host, in: query, required: true, schema: { type: string } }
+        - { name: port, in: query, schema: { type: integer }, description: Required for tcpping. }
+        - { name: limit, in: query, schema: { type: integer, maximum: 1000, default: 120 } }
+      responses:
+        "200":
+          description: Stored samples.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/HistoryPoint" }
+  /api/history/recent-targets:
+    get:
+      tags: [History]
+      summary: Recently probed targets
+      description: "Needs the `read` scope."
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, maximum: 50, default: 12 } }
+      responses:
+        "200":
+          description: Targets, most recent first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    protocol: { type: string }
+                    target: { type: string }
+                    port: { type: integer }
+                    last_sample_at: { type: integer, description: Unix milliseconds }
+  /api/export/history:
+    post:
+      tags: [History]
+      summary: Export samples as CSV or JSON
+      description: "Needs the `read` scope. Recorded in the audit log."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, host]
+              properties:
+                type: { type: string, enum: [ping, tcpping] }
+                host: { type: string }
+                port: { type: integer }
+                limit: { type: integer, maximum: 1000 }
+                format: { type: string, enum: [csv, json], default: json }
+      responses:
+        "200":
+          description: The export file.
+          content:
+            application/json: { schema: { type: array, items: { $ref: "#/components/schemas/HistoryPoint" } } }
+            text/csv: { schema: { type: string } }
+components:
+  securitySchemes:
+    apiKey:
+      type: http
+      scheme: bearer
+      description: A workspace API key, beginning with `qnw_`.
+  responses:
+    Error:
+      description: The request failed.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+    Report:
+      description: The run's results and summary.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Report" }
+  schemas:
+    Report:
+      type: object
+      properties:
+        protocol: { type: string }
+        target: { type: string }
+        addr: { type: string }
+        port: { type: integer }
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              seq: { type: integer }
+              port: { type: integer }
+              state: { type: string, description: "Port scans: open, closed, or timeout." }
+              rtt: { type: string, example: 18.2ms }
+              rtt_ms: { type: number }
+              error: { type: string }
+              addr: { type: string }
+        summary:
+          type: object
+          properties:
+            sent: { type: integer }
+            recv: { type: integer }
+            loss: { type: number, description: Percent }
+            min: { type: string }
+            avg: { type: string }
+            max: { type: string }
+            median: { type: string }
+            stddev: { type: string }
+            jitter: { type: string }
+            scanned: { type: integer }
+            open: { type: integer }
+            closed: { type: integer }
+            timeout: { type: integer }
+            duration: { type: string }
+    HistoryPoint:
+      type: object
+      properties:
+        ts: { type: integer, description: Unix milliseconds }
+        seq: { type: integer }
+        rtt_ms: { type: number }
+        error: { type: string }
+    MonitorInput:
+      type: object
+      required: [protocol, target, interval_seconds]
+      properties:
+        id: { type: integer, description: Set to update an existing monitor. }
+        name: { type: string, maxLength: 80 }
+        protocol: { type: string, enum: [http, tcpping, ping] }
+        target: { type: string, description: "A URL for http, otherwise a host name or IP.", example: https://api.example.com/health }
+        port: { type: integer, description: Required for tcpping. }
+        interval_seconds: { type: integer, enum: [60, 300, 600, 1800, 3600] }
+        expected_status: { type: integer, description: "http only. Without it, any 2xx or 3xx is up." }
+        notify_email: { type: string, description: Emailed when the monitor goes down or comes back. Empty for none. }
+        enabled: { type: boolean, default: true }
+    Monitor:
+      allOf:
+        - $ref: "#/components/schemas/MonitorInput"
+        - type: object
+          properties:
+            status: { type: string, enum: [pending, up, down] }
+            last_checked_at: { type: string, format: date-time }
+            last_status_change_at: { type: string, format: date-time }
+            last_rtt_ms: { type: number }
+            last_status_code: { type: integer }
+            last_error: { type: string }
+            tls_expires_at: { type: string, format: date-time }
+            next_run_at: { type: string, format: date-time }
+            uptime_24h: { type: number }
+            recent_checks:
+              type: array
+              items:
+                type: object
+                properties:
+                  checked_at: { type: string, format: date-time }
+                  ok: { type: boolean }
+                  rtt_ms: { type: number }
+                  loss_percent: { type: number }
+                  status_code: { type: integer }
+                  error: { type: string }
+    AlertRuleInput:
+      type: object
+      required: [protocol, target]
+      properties:
+        id: { type: integer, description: Set to update an existing rule. }
+        name: { type: string }
+        protocol: { type: string, enum: [ping, tcpping] }
+        target: { type: string }
+        port: { type: integer, description: Required for tcpping. }
+        recipient_email: { type: string }
+        latency_threshold_ms: { type: number }
+        loss_threshold_percent: { type: number }
+        consecutive_breaches: { type: integer, minimum: 1, maximum: 20, default: 1 }
+        cooldown_minutes: { type: integer, minimum: 1, maximum: 1440, default: 30 }
+        notify_on_recovery: { type: boolean, default: true }
+        enabled: { type: boolean, default: true }
+    AlertRule:
+      allOf:
+        - $ref: "#/components/schemas/AlertRuleInput"
+        - type: object
+          properties:
+            last_state: { type: string, enum: [healthy, alert] }
+            current_breach_streak: { type: integer }
+            last_triggered_at: { type: string, format: date-time }
+            last_recovered_at: { type: string, format: date-time }
+            last_evaluated_at: { type: string, format: date-time }
+            created_at: { type: string, format: date-time }

@@ -26,3 +26,4 @@ patterns don't.
 | [0010](0010-uptime-monitors-run-in-process.md) | Uptime monitors run inside the API process | Accepted |
 | [0011](0011-ai-through-an-openai-compatible-api-key.md) | AI features call a hosted model through an OpenAI-compatible API | Accepted |
 | [0012](0012-append-only-audit-log.md) | An append-only audit log in PostgreSQL | Accepted |
+| [0013](0013-workspace-api-keys.md) | Workspace API keys with scopes | Accepted |

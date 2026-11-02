@@ -385,6 +385,24 @@ export type AlertRulePayload = {
   enabled: boolean;
 };
 
+export type APIKey = {
+  id: number;
+  created_by?: number;
+  creator_name?: string;
+  name: string;
+  prefix: string;
+  scopes: string[];
+  expires_at?: string | null;
+  revoked_at?: string | null;
+  last_used_at?: string | null;
+  last_used_ip?: string;
+  created_at: string;
+};
+
+export type APIKeyListResponse = { keys: APIKey[]; scopes: string[] };
+
+export type APIKeyCreateResponse = { key: APIKey; token: string };
+
 export type AuditEvent = {
   id: number;
   occurred_at: string;

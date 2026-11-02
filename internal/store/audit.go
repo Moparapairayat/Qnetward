@@ -38,6 +38,7 @@ var AuditCategories = map[string]string{
 	"alert":   "alert_rule.",
 	"scan":    "scan.",
 	"export":  "history.",
+	"apikey":  "apikey.",
 }
 
 // AuditQuery pages through events newest first. Before is an event ID cursor.

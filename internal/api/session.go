@@ -33,21 +33,47 @@ func (srv *Server) requireAuthenticatedUser(w http.ResponseWriter, r *http.Reque
 	return user, true
 }
 
-// actor is a signed-in user acting inside their active workspace. Data they
+// actor is whoever is acting inside a workspace: a signed-in user in their
+// active workspace, or an API key in the workspace it belongs to. Data they
 // create (probe results, alert rules) belongs to that workspace.
 type actor struct {
 	store.User
 	WorkspaceID int64
-	// Role is the user's role in that workspace: owner, admin, member, or viewer.
+	// Role is the user's role in that workspace: owner, admin, member, or
+	// viewer. API keys have the role "api".
 	Role string
+	// APIKey is set when the request authenticated with a key.
+	APIKey *store.APIKey
 }
 
-// requireActor authenticates the request and resolves the session's active
-// workspace, falling back to the user's personal workspace.
+// apiKeyPrefix starts every API key, so keys are easy to recognise and to
+// find with secret scanners.
+const apiKeyPrefix = "qnw_"
+
+// requireActor authenticates a request to a workspace endpoint. Browser
+// sessions act in their active workspace. API keys act in their own
+// workspace and need the read scope for GET requests and write otherwise.
 func (srv *Server) requireActor(w http.ResponseWriter, r *http.Request) (actor, bool) {
+	scope := store.ScopeWrite
+	if r.Method == http.MethodGet || r.Method == http.MethodHead {
+		scope = store.ScopeRead
+	}
+	return srv.requireActorFor(w, r, scope)
+}
+
+// requireActorFor is requireActor with an explicit scope for API keys. An
+// empty scope admits browser sessions only.
+func (srv *Server) requireActorFor(w http.ResponseWriter, r *http.Request, scope string) (actor, bool) {
 	if srv.store == nil {
 		writeJSON(w, http.StatusServiceUnavailable, apiError{Error: "storage not available"})
 		return actor{}, false
+	}
+	if token, ok := bearerToken(r); ok {
+		if scope == "" {
+			writeJSON(w, http.StatusForbidden, apiError{Error: "this endpoint needs a signed-in session, not an API key"})
+			return actor{}, false
+		}
+		return srv.authenticateAPIKey(w, r, token, scope)
 	}
 	user, _, activeWorkspaceID, err := srv.currentSessionState(r)
 	if err != nil {
@@ -66,6 +92,45 @@ func (srv *Server) requireActor(w http.ResponseWriter, r *http.Request) (actor, 
 		return actor{}, false
 	}
 	return actor{User: user, WorkspaceID: workspace.ID, Role: workspace.Role}, true
+}
+
+func (srv *Server) authenticateAPIKey(w http.ResponseWriter, r *http.Request, token, scope string) (actor, bool) {
+	if !strings.HasPrefix(token, apiKeyPrefix) {
+		writeJSON(w, http.StatusUnauthorized, apiError{Error: "invalid API key"})
+		return actor{}, false
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+	key, err := srv.store.AuthenticateAPIKey(ctx, hashOpaqueToken(token), clientIPFromRequest(r))
+	if err != nil {
+		if errors.Is(err, store.ErrAPIKeyNotFound) {
+			writeJSON(w, http.StatusUnauthorized, apiError{Error: "invalid, expired, or revoked API key"})
+			return actor{}, false
+		}
+		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
+		return actor{}, false
+	}
+	if !key.HasScope(scope) {
+		writeJSON(w, http.StatusForbidden, apiError{Error: fmt.Sprintf("this API key lacks the %s scope", scope)})
+		return actor{}, false
+	}
+	return actor{
+		// The key acts on behalf of whoever created it; the audit log names the key.
+		User:        store.User{ID: key.CreatedBy, Email: "API key: " + key.Name},
+		WorkspaceID: key.WorkspaceID,
+		Role:        "api",
+		APIKey:      &key,
+	}, true
+}
+
+// bearerToken returns the token from an "Authorization: Bearer" header.
+func bearerToken(r *http.Request) (string, bool) {
+	header := strings.TrimSpace(r.Header.Get("Authorization"))
+	if len(header) < 7 || !strings.EqualFold(header[:7], "bearer ") {
+		return "", false
+	}
+	token := strings.TrimSpace(header[7:])
+	return token, token != ""
 }
 
 func (srv *Server) requirePlatformAdmin(w http.ResponseWriter, r *http.Request) (store.User, bool) {
