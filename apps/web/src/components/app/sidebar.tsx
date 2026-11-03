@@ -343,7 +343,7 @@ export function Sidebar({ session }: { session: SessionResponse }) {
             // A one-item section has no header to unfold it with.
             const folded = !collapsed && !single && !hasActive && !open;
             return (
-              <div key={section.label} className="mt-3 first:mt-2">
+              <div key={section.label} className="mt-1.5 first:mt-2">
                 {collapsed ? (
                   <div className="mx-auto mb-2 h-px w-6 bg-[var(--lp-border)]" aria-hidden="true" />
                 ) : single ? null : (
@@ -351,11 +351,11 @@ export function Sidebar({ session }: { session: SessionResponse }) {
                     type="button"
                     onClick={() => setSectionOpen(section.label, folded)}
                     aria-expanded={!folded}
-                    className="group mb-1 flex w-full items-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
+                    className="group mb-0.5 flex h-[34px] w-full items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium text-[#b8b8c0] transition-colors hover:bg-white/[0.04] hover:text-white"
                   >
                     <span className="flex-1 text-left">{section.label}</span>
-                    {folded ? <span className="text-[11px] tabular-nums text-[var(--lp-muted)]">{section.items.length}</span> : null}
-                    <ChevronDown className={cn("h-3.5 w-3.5 opacity-70 transition-transform group-hover:opacity-100", folded && "-rotate-90")} />
+                    {folded ? <span className="text-[12px] tabular-nums text-[var(--lp-muted)]">{section.items.length}</span> : null}
+                    <ChevronDown className={cn("h-4 w-4 opacity-70 transition-transform group-hover:opacity-100", folded && "-rotate-90")} />
                   </button>
                 )}
                 {folded ? null : (
