@@ -28,11 +28,18 @@ test("owner can add a monitor, create an API key, and see both in the audit log"
   }).toPass({ timeout: 30_000 });
 
   await page.goto("/workspace/api-keys");
-  await page.getByPlaceholder("GitHub Actions deploy checks").fill("e2e reader");
-  await page.getByRole("button", { name: "Create key" }).click();
+  await page.getByRole("button", { name: "Create API key" }).first().click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByPlaceholder("GitHub Actions deploy checks").fill("e2e reader");
+  await dialog.getByRole("button", { name: "Continue" }).click();
+  // Read is the default scope.
+  await dialog.getByRole("button", { name: "Continue" }).click();
+  await dialog.getByRole("button", { name: "Create key" }).click();
   // The full token, not the short prefix shown in the key list.
-  const token = (await page.locator("code").filter({ hasText: /^qnw_[A-Za-z0-9_-]{40,}$/ }).innerText()).trim();
+  const token = (await dialog.locator("code").filter({ hasText: /^qnw_[A-Za-z0-9_-]{40,}$/ }).innerText()).trim();
   expect(token).toMatch(/^qnw_[A-Za-z0-9_-]{40,}$/);
+  await dialog.getByRole("button", { name: "I've saved the key" }).click();
+  await expect(dialog).toBeHidden();
 
   const listed = await request.get("/api/monitors", { headers: { Authorization: `Bearer ${token}` } });
   expect(listed.ok()).toBeTruthy();

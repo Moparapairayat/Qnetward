@@ -42,11 +42,14 @@ export function Avatar({
   );
 }
 
-export function SettingsPageTitle({ title, description }: { title: string; description?: ReactNode }) {
+export function SettingsPageTitle({ title, description, action }: { title: string; description?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="border-b border-[var(--lp-border)] pb-4">
-      <h1 className="text-[22px] font-medium tracking-[-0.02em]">{title}</h1>
-      {description ? <p className="mt-1 text-[13px] leading-relaxed text-[var(--lp-muted)]">{description}</p> : null}
+    <div className="flex flex-col gap-3 border-b border-[var(--lp-border)] pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+      <div className="min-w-0">
+        <h1 className="text-[22px] font-medium tracking-[-0.02em]">{title}</h1>
+        {description ? <p className="mt-1 text-[13px] leading-relaxed text-[var(--lp-muted)]">{description}</p> : null}
+      </div>
+      {action ? <div className="flex shrink-0 gap-2">{action}</div> : null}
     </div>
   );
 }
