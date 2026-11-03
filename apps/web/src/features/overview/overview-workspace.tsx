@@ -12,6 +12,7 @@ import {
 import { buildOverviewDemoData } from "@/features/overview/overview-demo-data";
 import { GettingStarted } from "@/features/overview/overview-view";
 import { ComingNext, ResponseTimeChart, StatCards, TargetHealthCard, TargetsSummary, WelcomeHeader } from "@/features/overview/overview-dashboard";
+import { MonitorResponseChart } from "@/features/overview/monitor-response-chart";
 
 function mergeTrackedRules(alertRules: AlertRule[], recentTargets: RecentHistoryTarget[]) {
   const merged = new Map<string, AlertRule>();
@@ -221,7 +222,7 @@ export function OverviewWorkspace() {
       />
       <StatCards targets={targetSnapshots} historyMap={historyMap} alertRuleCount={alertRuleCount} firingCount={firingCount} />
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] [&>*]:min-w-0">
-        <ResponseTimeChart targets={targetSnapshots} historyMap={chartHistoryMap} />
+        <MonitorResponseChart enabled={sessionQuery.data?.authenticated === true && !isDemo} fallback={<ResponseTimeChart targets={targetSnapshots} historyMap={chartHistoryMap} />} />
         <TargetHealthCard targets={targetSnapshots} />
       </div>
       <TargetsSummary targets={targetSnapshots} historyMap={chartHistoryMap} />

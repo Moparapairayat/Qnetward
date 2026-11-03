@@ -126,6 +126,52 @@ func (srv *Server) handleMonitors(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// seriesWindows are the chart ranges the overview offers, each with a bucket
+// that keeps a line to a few hundred points at most.
+var seriesWindows = map[string]struct{ span, bucket time.Duration }{
+	"15m": {15 * time.Minute, time.Second},
+	"1h":  {time.Hour, time.Second},
+	"6h":  {6 * time.Hour, 2 * time.Minute},
+	"24h": {24 * time.Hour, 10 * time.Minute},
+}
+
+// handleMonitorSeries returns each monitor's checks over a window, for the
+// response-time chart on the overview.
+func (srv *Server) handleMonitorSeries(w http.ResponseWriter, r *http.Request) {
+	user, ok := srv.requireActorFor(w, r, store.ScopeRead)
+	if !ok {
+		return
+	}
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
+		return
+	}
+	name := r.URL.Query().Get("window")
+	if name == "" {
+		name = "1h"
+	}
+	win, found := seriesWindows[name]
+	if !found {
+		writeJSON(w, http.StatusBadRequest, apiError{Error: "window must be 15m, 1h, 6h, or 24h"})
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	now := time.Now()
+	series, err := srv.store.ListMonitorSeries(ctx, user.WorkspaceID, now.Add(-win.span), win.bucket)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"window":         name,
+		"now":            now.UnixMilli(),
+		"span_ms":        win.span.Milliseconds(),
+		"bucket_seconds": int(win.bucket / time.Second),
+		"monitors":       series,
+	})
+}
+
 func normalizeMonitorRequest(user actor, req monitorRequest) (store.Monitor, error) {
 	protocol := strings.ToLower(strings.TrimSpace(req.Protocol))
 	enabled := true

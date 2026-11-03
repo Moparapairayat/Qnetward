@@ -33,7 +33,7 @@ const stateMeta: Record<OverviewTargetSnapshot["healthState"], { label: string; 
   disabled: { label: "Paused", color: "#85858e", pill: "border-[var(--lp-border)] bg-white/[0.03] text-[var(--lp-muted)]" },
 };
 
-function formatMs(value?: number | null) {
+export function formatMs(value?: number | null) {
   if (typeof value !== "number" || Number.isNaN(value)) return "—";
   return value >= 100 ? `${Math.round(value)}` : value.toFixed(1);
 }
@@ -48,12 +48,12 @@ function relativeTime(ts?: number | null) {
   return hours < 24 ? `${hours}h ago` : `${Math.round(hours / 24)}d ago`;
 }
 
-function clockTime(ts: number) {
+export function clockTime(ts: number) {
   return new Date(ts).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 /** Current time, refreshed every 10 seconds, so "streaming now" counts stay pure during render. */
-function useNow(intervalMs = 10_000) {
+export function useNow(intervalMs = 10_000) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), intervalMs);
@@ -342,7 +342,7 @@ export function StatCards({
 type Series = { id: string; label: string; color: string; points: { ts: number; rtt: number }[] };
 
 /** Tracks an element's rendered size so charts can draw in real pixels instead of a stretched viewBox. */
-function useElementSize() {
+export function useElementSize() {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const ref = useCallback((el: HTMLDivElement | null) => {
     if (!el) return;
@@ -504,7 +504,13 @@ export function ResponseTimeChart({ targets, historyMap }: { targets: OverviewTa
           Response time
         </h2>
         <span className="ml-auto flex items-center gap-3">
-          {anyLive ? <LivePill live updatedAt={lastSampleAt} /> : <span className="text-[12px] text-[var(--lp-subtle)]">Last 24 samples per target</span>}
+          {anyLive ? (
+            <LivePill live updatedAt={lastSampleAt} />
+          ) : (
+            <Link href="/monitors" className="text-[12px] text-[var(--lp-subtle)] hover:text-[var(--lp-text)]">
+              Add a monitor for a live line
+            </Link>
+          )}
         </span>
       </div>
       {allSeries.length ? (
@@ -625,7 +631,10 @@ export function ResponseTimeChart({ targets, historyMap }: { targets: OverviewTa
         <div className="m-4 flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-[var(--lp-border)] py-16 text-center">
           <Activity className="h-5 w-5 text-[var(--lp-subtle)]" />
           <p className="mt-3 text-[13px] text-[var(--lp-muted)]">No latency data yet</p>
-          <p className="mt-1 text-[12px] text-[var(--lp-subtle)]">Run a ping or TCP ping and each target gets its own line here.</p>
+          <p className="mt-1 text-[12px] text-[var(--lp-subtle)]">Add a monitor and it draws a live line here, checked every 30 seconds or more.</p>
+          <Link href="/monitors" className="console-btn console-btn-secondary mt-4">
+            <Plus className="h-3.5 w-3.5" /> Add a monitor
+          </Link>
         </div>
       )}
     </section>

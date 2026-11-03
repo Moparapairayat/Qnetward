@@ -171,3 +171,65 @@ func TestHTTPMonitorRespectsTargetPolicy(t *testing.T) {
 		t.Fatalf("expected the loopback URL to be blocked, got %#v", check)
 	}
 }
+
+// The series endpoint returns each monitor's checks inside the window, raw
+// for short windows and bucketed for long ones, with failures counted.
+func TestMonitorSeriesWindows(t *testing.T) {
+	st := installTestStore(t)
+	user, cookie := issueTestSession(t, st)
+	workspaceID := testWorkspaceID(t, st, user.ID)
+
+	m, err := st.SaveMonitor(context.Background(), store.Monitor{WorkspaceID: workspaceID, UserID: user.ID, Protocol: "ping", Target: "series.example.com", IntervalSeconds: 30, Enabled: true}, 20)
+	if err != nil {
+		t.Fatalf("save monitor: %v", err)
+	}
+	m.WorkspaceID = workspaceID
+	now := time.Now()
+	rtt := 12.5
+	checks := []store.MonitorCheck{
+		{CheckedAt: now.Add(-3 * time.Hour), OK: true, RttMs: &rtt},
+		{CheckedAt: now.Add(-90 * time.Second), OK: true, RttMs: &rtt},
+		{CheckedAt: now.Add(-30 * time.Second), OK: false, Error: "timeout"},
+	}
+	for _, c := range checks {
+		if _, err := st.RecordMonitorCheck(context.Background(), m, c); err != nil {
+			t.Fatalf("record check: %v", err)
+		}
+	}
+
+	get := func(window string) (int, map[string]json.RawMessage) {
+		req := httptest.NewRequest(http.MethodGet, "/api/monitors/series?window="+window, nil)
+		req.AddCookie(cookie)
+		rr := httptest.NewRecorder()
+		testSrv.handleMonitorSeries(rr, req)
+		var body map[string]json.RawMessage
+		_ = json.Unmarshal(rr.Body.Bytes(), &body)
+		return rr.Code, body
+	}
+	points := func(body map[string]json.RawMessage) []store.SeriesPoint {
+		var monitors []store.MonitorSeries
+		if err := json.Unmarshal(body["monitors"], &monitors); err != nil || len(monitors) != 1 {
+			t.Fatalf("expected one monitor, got %s (err %v)", body["monitors"], err)
+		}
+		return monitors[0].Points
+	}
+
+	code, body := get("1h")
+	if code != http.StatusOK {
+		t.Fatalf("1h: expected 200, got %d", code)
+	}
+	if p := points(body); len(p) != 2 || p[0].RttMs == nil || p[1].Failed != 1 || p[1].RttMs != nil {
+		t.Fatalf("1h: expected an up and a down check, got %+v", p)
+	}
+	code, body = get("6h")
+	total := 0
+	for _, p := range points(body) {
+		total += p.Checks
+	}
+	if code != http.StatusOK || total != 3 {
+		t.Fatalf("6h: expected all three checks, got %d checks (status %d)", total, code)
+	}
+	if code, _ := get("90d"); code != http.StatusBadRequest {
+		t.Fatalf("unknown window: expected 400, got %d", code)
+	}
+}

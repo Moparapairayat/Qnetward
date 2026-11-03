@@ -163,6 +163,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/export/history", srv.handleHistoryExport)
 	mux.HandleFunc("/api/alerts/rules", srv.handleAlertRules)
 	mux.HandleFunc("/api/monitors", srv.handleMonitors)
+	mux.HandleFunc("/api/monitors/series", srv.handleMonitorSeries)
 	mux.HandleFunc("/ws", srv.handleWS)
 	mux.Handle("/", newBackendFallbackHandler())
 	return withSecurityHeaders(mux)

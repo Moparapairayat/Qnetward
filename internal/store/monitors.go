@@ -18,7 +18,7 @@ var (
 )
 
 // MonitorIntervals are the check intervals a monitor can use, in seconds.
-var MonitorIntervals = []int{60, 300, 600, 1800, 3600}
+var MonitorIntervals = []int{30, 60, 300, 600, 1800, 3600}
 
 // monitorRecentChecks is how many checks the list returns per monitor.
 const monitorRecentChecks = 30

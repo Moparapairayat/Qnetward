@@ -15,6 +15,7 @@ const MAX_MONITORS = 20;
 const RECENT_SLOTS = 30;
 
 const intervals = [
+  { seconds: 30, label: "30 sec" },
   { seconds: 60, label: "1 min" },
   { seconds: 300, label: "5 min" },
   { seconds: 600, label: "10 min" },
@@ -252,7 +253,7 @@ function MonitorForm({
 
       <div>
         <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Check every</span>
-        <div className="grid grid-cols-5 gap-1 rounded-lg border border-[var(--lp-border-strong)] bg-white/[0.03] p-1" role="radiogroup" aria-label="Check every">
+        <div className="grid grid-cols-3 gap-1 rounded-lg border border-[var(--lp-border-strong)] bg-white/[0.03] p-1 sm:grid-cols-6" role="radiogroup" aria-label="Check every">
           {intervals.map((option) => (
             <button
               key={option.seconds}

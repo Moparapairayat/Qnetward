@@ -489,6 +489,28 @@ export type Monitor = {
   recent_checks: MonitorCheck[];
 };
 
+export type MonitorSeriesWindow = "15m" | "1h" | "6h" | "24h";
+
+export type MonitorSeriesPoint = {
+  /** Slot start, Unix milliseconds. */
+  t: number;
+  rtt_ms?: number | null;
+  failed: number;
+  checks: number;
+};
+
+export type MonitorSeries = Pick<Monitor, "id" | "name" | "protocol" | "target" | "port" | "interval_seconds" | "enabled" | "status"> & {
+  points: MonitorSeriesPoint[];
+};
+
+export type MonitorSeriesResponse = {
+  window: MonitorSeriesWindow;
+  now: number;
+  span_ms: number;
+  bucket_seconds: number;
+  monitors: MonitorSeries[];
+};
+
 export type MonitorPayload = {
   id?: number;
   name: string;
