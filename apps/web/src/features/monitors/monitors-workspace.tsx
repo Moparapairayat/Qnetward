@@ -55,7 +55,7 @@ const stateMeta: Record<MonitorState, { label: string; dot: string; pill: string
   down: { label: "Down", dot: "#ff3d7f", pill: "border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.1)] text-[#ff8fb3]" },
   up: { label: "Up", dot: "#4ade80", pill: "border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] text-[#86efac]" },
   pending: { label: "Waiting for first check", dot: "#a78bfa", pill: "border-[rgba(167,139,250,0.3)] bg-[rgba(167,139,250,0.08)] text-[#c4b5fd]" },
-  paused: { label: "Paused", dot: "#6c6c75", pill: "border-[var(--lp-border)] bg-white/[0.03] text-[var(--lp-muted)]" },
+  paused: { label: "Paused", dot: "#85858e", pill: "border-[var(--lp-border)] bg-white/[0.03] text-[var(--lp-muted)]" },
 };
 
 function monitorState(m: Monitor): MonitorState {

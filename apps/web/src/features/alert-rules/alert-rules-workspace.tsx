@@ -73,7 +73,7 @@ function ruleState(rule: AlertRule): Exclude<RuleFilter, "all"> {
 const stateMeta = {
   firing: { label: "Firing", dot: "#ff3d7f", pill: "border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.1)] text-[#ff8fb3]" },
   healthy: { label: "Healthy", dot: "#4ade80", pill: "border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] text-[#86efac]" },
-  paused: { label: "Paused", dot: "#6c6c75", pill: "border-[var(--lp-border)] bg-white/[0.03] text-[var(--lp-muted)]" },
+  paused: { label: "Paused", dot: "#85858e", pill: "border-[var(--lp-border)] bg-white/[0.03] text-[var(--lp-muted)]" },
 } as const;
 
 function relativeTime(value?: string | null) {

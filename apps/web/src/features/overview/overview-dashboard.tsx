@@ -29,8 +29,8 @@ const stateMeta: Record<OverviewTargetSnapshot["healthState"], { label: string; 
   critical: { label: "Down", color: "#ff3d7f", pill: "border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.1)] text-[#ff8fb3]" },
   warning: { label: "Degraded", color: "#fbbf24", pill: "border-[rgba(251,191,36,0.3)] bg-[rgba(251,191,36,0.1)] text-[#fcd34d]" },
   stable: { label: "Healthy", color: "#4ade80", pill: "border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] text-[#86efac]" },
-  idle: { label: "No data", color: "#6c6c75", pill: "border-[var(--lp-border)] bg-white/[0.03] text-[var(--lp-muted)]" },
-  disabled: { label: "Paused", color: "#6c6c75", pill: "border-[var(--lp-border)] bg-white/[0.03] text-[var(--lp-muted)]" },
+  idle: { label: "No data", color: "#85858e", pill: "border-[var(--lp-border)] bg-white/[0.03] text-[var(--lp-muted)]" },
+  disabled: { label: "Paused", color: "#85858e", pill: "border-[var(--lp-border)] bg-white/[0.03] text-[var(--lp-muted)]" },
 };
 
 function formatMs(value?: number | null) {
@@ -80,7 +80,7 @@ export function WelcomeHeader({
   const deps = health ? [health.database, health.redis, health.object_storage].filter((d) => d.enabled) : [];
   const degraded = health?.ok === false || deps.some((d) => !d.healthy);
   const serviceLabel = !health ? "Checking services" : degraded ? "Service degraded" : "Services healthy";
-  const serviceColor = !health ? "#6c6c75" : degraded ? "#fbbf24" : "#4ade80";
+  const serviceColor = !health ? "#85858e" : degraded ? "#fbbf24" : "#4ade80";
   const first = (name ?? "").trim().split(/\s+/)[0];
   const withData = targets.filter((t) => t.healthState !== "idle" && t.healthState !== "disabled");
   const healthy = withData.filter((t) => t.healthState === "stable").length;
@@ -453,13 +453,18 @@ export function ResponseTimeChart({ targets, historyMap }: { targets: OverviewTa
     const fmt = (ts: number) =>
       new Date(ts).toLocaleString([], rangeMs > 20 * 3_600_000 ? { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
     const candidates = [times[0], ...breaks.map((k) => times[k])];
+    // Labels are 11px; ~6.5px per character is a safe width estimate. The first
+    // label is anchored at its start, the rest at their middle.
+    const width = (label: string) => label.length * 6.5;
     const out: { ts: number; label: string }[] = [];
-    let lastX = -Infinity;
-    candidates.forEach((ts) => {
+    let lastRight = -Infinity;
+    candidates.forEach((ts, i) => {
+      const label = fmt(ts);
       const px = x(ts);
-      if (px - lastX < 84) return;
-      out.push({ ts, label: fmt(ts) });
-      lastX = px;
+      const left = i === 0 ? px : px - width(label) / 2;
+      if (left - lastRight < 16) return;
+      out.push({ ts, label });
+      lastRight = left + width(label);
     });
     return out;
     // x depends on axis and width only.
@@ -543,13 +548,13 @@ export function ResponseTimeChart({ targets, historyMap }: { targets: OverviewTa
                 {ticks.map((v) => (
                   <g key={v}>
                     <line x1={PAD.l} x2={W - PAD.r} y1={y(v)} y2={y(v)} stroke="rgba(255,255,255,0.05)" />
-                    <text x={PAD.l - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="#6c6c75">
+                    <text x={PAD.l - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="#85858e">
                       {Math.round(v)}ms
                     </text>
                   </g>
                 ))}
                 {timeLabels.map((tl, i) => (
-                  <text key={tl.ts} x={x(tl.ts)} y={H - 6} textAnchor={i === 0 ? "start" : "middle"} fontSize="11" fill="#6c6c75">
+                  <text key={tl.ts} x={x(tl.ts)} y={H - 6} textAnchor={i === 0 ? "start" : "middle"} fontSize="11" fill="#85858e">
                     {tl.label}
                   </text>
                 ))}

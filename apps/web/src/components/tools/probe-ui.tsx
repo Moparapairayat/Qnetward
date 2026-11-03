@@ -21,7 +21,7 @@ export function PageHeader({ title, description, status }: { title: string; desc
 }
 
 const toneStyle: Record<RunTone, { dot: string; text: string; border: string }> = {
-  idle: { dot: "#6c6c75", text: "var(--lp-muted)", border: "var(--lp-border)" },
+  idle: { dot: "#85858e", text: "var(--lp-muted)", border: "var(--lp-border)" },
   live: { dot: "#4ade80", text: "#86efac", border: "rgba(74,222,128,0.3)" },
   done: { dot: "#a78bfa", text: "#c4b5fd", border: "rgba(167,139,250,0.3)" },
   error: { dot: "#ff3d7f", text: "#ff8fb3", border: "rgba(255,61,127,0.3)" },
@@ -150,7 +150,7 @@ export function LatencyChart({ points, emptyText }: { points: { seq: number; rtt
         {ticks.map((v) => (
           <g key={v}>
             <line x1={PAD.l} x2={W - PAD.r} y1={y(v)} y2={y(v)} stroke="rgba(255,255,255,0.05)" vectorEffect="non-scaling-stroke" />
-            <text x={PAD.l - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="#6c6c75">
+            <text x={PAD.l - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="#85858e">
               {v >= 100 ? Math.round(v) : v.toFixed(1)}ms
             </text>
           </g>

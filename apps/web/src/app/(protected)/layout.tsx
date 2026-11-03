@@ -1,22 +1,24 @@
 import { ReactNode } from "react";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { AuthGuard } from "@/components/app/auth-guard";
 import "@/features/landing/landing.css";
 import "@/features/console/console.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+// The console uses Geist, a typeface drawn for interfaces: it stays crisp at
+// the 13–14px sizes most of the console is set in.
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin"],
 });
 
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains",
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   return (
-    <div className={`lp-root lp-console ${inter.variable} ${jetbrainsMono.variable}`}>
+    <div className={`lp-root lp-console ${geist.variable} ${geistMono.variable}`}>
       <AuthGuard>{children}</AuthGuard>
     </div>
   );

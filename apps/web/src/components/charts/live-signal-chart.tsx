@@ -199,13 +199,13 @@ export function LiveSignalChart({
         {ticks.map((v) => (
           <g key={v}>
             <line x1={PAD.l} x2={W - PAD.r} y1={y(v)} y2={y(v)} stroke="rgba(255,255,255,0.05)" vectorEffect="non-scaling-stroke" />
-            <text x={PAD.l - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="#6c6c75">
+            <text x={PAD.l - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="#85858e">
               {v >= 100 ? Math.round(v) : v.toFixed(1)}ms
             </text>
           </g>
         ))}
         {timeLabels.map((tl) => (
-          <text key={tl.label} x={x(tl.t)} y={H - 6} textAnchor={tl.label === "now" ? "end" : "middle"} fontSize="10" fill="#6c6c75">
+          <text key={tl.label} x={x(tl.t)} y={H - 6} textAnchor={tl.label === "now" ? "end" : "middle"} fontSize="10" fill="#85858e">
             {tl.label}
           </text>
         ))}

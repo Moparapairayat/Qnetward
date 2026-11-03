@@ -19,8 +19,8 @@ const stateMeta: Record<OverviewTargetSnapshot["healthState"], { label: string; 
   critical: { label: "Down", color: "#ff3d7f" },
   warning: { label: "Degraded", color: "#fbbf24" },
   stable: { label: "Healthy", color: "#4ade80" },
-  idle: { label: "No recent data", color: "#6c6c75" },
-  disabled: { label: "Paused", color: "#6c6c75" },
+  idle: { label: "No recent data", color: "#85858e" },
+  disabled: { label: "Paused", color: "#85858e" },
 };
 
 function relativeTime(ts?: number | null) {
@@ -43,7 +43,7 @@ export function OverviewHeader({ health }: { health?: RuntimeHealthResponse }) {
   const deps = health ? [health.database, health.redis, health.object_storage].filter((d) => d.enabled) : [];
   const degraded = deps.some((d) => !d.healthy) || health?.ok === false;
   const label = !health ? "Checking services…" : degraded ? "Some services degraded" : "All services healthy";
-  const color = !health ? "#6c6c75" : degraded ? "#fbbf24" : "#4ade80";
+  const color = !health ? "#85858e" : degraded ? "#fbbf24" : "#4ade80";
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

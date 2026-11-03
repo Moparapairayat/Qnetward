@@ -135,7 +135,7 @@ function Check({ ok, label }: { ok: boolean; label: string }) {
           : { borderColor: "var(--lp-border)", color: "var(--lp-subtle)" }
       }
     >
-      <span className="h-1.5 w-1.5 rounded-full" style={{ background: ok ? "#4ade80" : "#6c6c75" }} />
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: ok ? "#4ade80" : "#85858e" }} />
       {label}
     </span>
   );
