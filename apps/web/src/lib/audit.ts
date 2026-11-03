@@ -7,7 +7,7 @@ export function describeAuditEvent(event: AuditEvent): string {
   const role = typeof meta.role === "string" ? meta.role : "";
   switch (event.action) {
     case "auth.login":
-      return "Signed in";
+      return meta.method === "passkey" ? "Signed in with a passkey" : meta.provider === "google" ? "Signed in with Google" : "Signed in";
     case "auth.login_failed":
       return "Failed sign-in attempt";
     case "auth.logout":
@@ -32,6 +32,14 @@ export function describeAuditEvent(event: AuditEvent): string {
       return "Wrong two-factor code";
     case "auth.recovery_code_used":
       return "Signed in with a recovery code";
+    case "account.passkey_added":
+      return `Added passkey ${label}`;
+    case "account.passkey_removed":
+      return `Removed passkey ${label}`;
+    case "auth.signup":
+      return meta.provider === "google" ? "Created the account with Google" : "Created the account";
+    case "auth.passkey_clone_warning":
+      return "Refused a passkey that looked copied";
     case "member.invited":
       return `Invited ${label}${role ? ` as ${role}` : ""}`;
     case "member.invitation_revoked":

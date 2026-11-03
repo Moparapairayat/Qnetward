@@ -55,6 +55,8 @@ func runServe(args []string) {
 	demoEmail := fs.String("demo-email", envString("QNETWARD_DEMO_EMAIL", "demo@qnetward.local"), "display email for demo access")
 	allowPrivateTargets := fs.Bool("allow-private-targets", envBool("QNETWARD_ALLOW_PRIVATE_TARGETS", false), "allow probes to loopback, private, and link-local addresses (self-hosted LAN monitoring); cloud metadata endpoints stay blocked")
 	encryptionKey := fs.String("encryption-key", envString("QNETWARD_ENCRYPTION_KEY", ""), "base64 32-byte key that encrypts stored secrets such as TOTP seeds (required in production)")
+	googleClientID := fs.String("google-client-id", envString("QNETWARD_GOOGLE_CLIENT_ID", ""), "Google OAuth client ID for \"Sign in with Google\"")
+	googleClientSecret := fs.String("google-client-secret", envString("QNETWARD_GOOGLE_CLIENT_SECRET", ""), "Google OAuth client secret")
 	runMonitors := fs.Bool("monitors", envBool("QNETWARD_MONITORS", true), "run scheduled uptime monitor checks in this process")
 	adminEmailsRaw := fs.String("admin-emails", envString("QNETWARD_ADMIN_EMAILS", ""), "comma-separated platform admin emails")
 
@@ -160,6 +162,7 @@ func runServe(args []string) {
 			DemoName:       *demoName,
 			DemoEmail:      *demoEmail,
 			TargetPolicy:   netguard.Policy{AllowPrivate: *allowPrivateTargets},
+			Google:         api.GoogleOAuth(*googleClientID, *googleClientSecret),
 		},
 	)
 

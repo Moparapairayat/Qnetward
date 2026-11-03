@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { Fingerprint } from "lucide-react";
+import { apiRequest } from "@/lib/api";
+import { getPasskey, passkeyErrorMessage, passkeysSupported, type RequestOptionsJSON } from "@/lib/webauthn";
 
 function GoogleMark() {
   return (
@@ -14,36 +18,78 @@ function GoogleMark() {
   );
 }
 
+type Providers = { google: boolean; passkeys: boolean };
+
 /**
- * Google and passkey sign-in. Neither is wired to the backend yet, so each
- * button says so when pressed instead of pretending to start a flow.
+ * Google and passkey sign-in. Each button works when the server has it set up
+ * and otherwise says why, rather than starting a flow that would fail.
  */
 export function AlternateSignIn({ mode }: { mode: "signin" | "signup" }) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [notice, setNotice] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const providers = useQuery({ queryKey: ["auth-providers"], queryFn: () => apiRequest<Providers>("/api/auth/providers"), staleTime: 60_000 });
   const verb = mode === "signin" ? "Sign in" : "Sign up";
+  const google = providers.data?.google === true;
+  const passkeys = providers.data?.passkeys === true;
+
+  async function signInWithPasskey() {
+    setNotice(null);
+    if (mode === "signup") {
+      setNotice("Create your account with email first, then add a passkey under Password and sessions.");
+      return;
+    }
+    if (!passkeys || !passkeysSupported()) {
+      setNotice(passkeys ? "This browser can't use passkeys." : "Passkeys aren't set up on this server yet. Use your email for now.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const begin = await apiRequest<{ token: string; options: RequestOptionsJSON }>("/api/auth/passkey/begin", { method: "POST", body: "{}" });
+      const assertion = await getPasskey(begin.options);
+      await apiRequest(`/api/auth/passkey/finish?token=${encodeURIComponent(begin.token)}`, { method: "POST", body: JSON.stringify(assertion) });
+      await queryClient.invalidateQueries({ queryKey: ["session"] });
+      router.replace("/overview");
+    } catch (error) {
+      setNotice(passkeyErrorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div className="grid gap-3">
       <div className="grid grid-cols-2 gap-3">
+        {google ? (
+          // A full page load on purpose: <Link> would prefetch the API route and start OAuth by itself.
+          // eslint-disable-next-line @next/next/no-html-link-for-pages
+          <a className="auth-provider-button" href="/api/auth/google/start" aria-label={`${verb} with Google`}>
+            <GoogleMark />
+            <span>Google</span>
+          </a>
+        ) : (
+          <button
+            type="button"
+            className="auth-provider-button"
+            aria-label={`${verb} with Google (not set up yet)`}
+            onClick={() => setNotice(`${verb} with Google isn't set up on this server yet. Use your email for now.`)}
+          >
+            <GoogleMark />
+            <span>Google</span>
+            {providers.isSuccess ? <span className="auth-soon-tag">Soon</span> : null}
+          </button>
+        )}
         <button
           type="button"
           className="auth-provider-button"
-          aria-label={`${verb} with Google (coming soon)`}
-          onClick={() => setNotice(`${verb} with Google is coming soon. Use your email for now.`)}
-        >
-          <GoogleMark />
-          <span>Google</span>
-          <span className="auth-soon-tag">Soon</span>
-        </button>
-        <button
-          type="button"
-          className="auth-provider-button"
-          aria-label={`${mode === "signin" ? "Sign in with a passkey" : "Use a passkey"} (coming soon)`}
-          onClick={() => setNotice("Passkeys are coming soon. Use your email for now.")}
+          aria-label={mode === "signin" ? "Sign in with a passkey" : "Use a passkey"}
+          disabled={busy}
+          onClick={signInWithPasskey}
         >
           <Fingerprint className="h-4 w-4 text-[var(--lp-muted)]" aria-hidden="true" />
-          <span>Passkey</span>
-          <span className="auth-soon-tag">Soon</span>
+          <span>{busy ? "Waiting…" : "Passkey"}</span>
+          {providers.isSuccess && !passkeys ? <span className="auth-soon-tag">Soon</span> : null}
         </button>
       </div>
 

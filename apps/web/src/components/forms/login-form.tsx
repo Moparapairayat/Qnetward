@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -88,10 +88,32 @@ function MFAStep({ token, onBack, onDone }: { token: string; onBack: () => void;
   );
 }
 
+const OAUTH_ERRORS: Record<string, string> = {
+  google_unavailable: "Sign in with Google isn't set up on this server.",
+  google_cancelled: "Google sign-in was cancelled.",
+  google_state: "That Google sign-in expired. Try again.",
+  google_unverified: "Your Google account's email isn't verified, so it can't be used here.",
+  google_failed: "Google sign-in didn't work. Try again, or use your email.",
+};
+
 export function LoginForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [mfaToken, setMFAToken] = useState<string | null>(null);
+  const [oauthError, setOAuthError] = useState<string | null>(null);
+
+  // Google sign-in comes back here with either an error code in the query or,
+  // for accounts with two-factor sign-in, a challenge token in the fragment.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const token = new URLSearchParams(url.hash.slice(1)).get("mfa");
+    const error = url.searchParams.get("error");
+    if (!token && !error) return;
+    window.history.replaceState(null, "", url.pathname);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reading the URL once after a redirect
+    if (token) setMFAToken(token);
+    if (error) setOAuthError(OAUTH_ERRORS[error] ?? "Sign-in didn't work. Try again.");
+  }, []);
   const finish = async () => {
     await queryClient.invalidateQueries({ queryKey: ["session"] });
     router.replace("/overview");
@@ -135,6 +157,11 @@ export function LoginForm() {
   return (
     <form className="grid gap-3.5" noValidate onSubmit={form.handleSubmit((values) => login.mutate(values))}>
       <AlternateSignIn mode="signin" />
+      {oauthError ? (
+        <p className="auth-notice-error" role="alert">
+          {oauthError}
+        </p>
+      ) : null}
       <AuthInputField
         id="login-email"
         label="Email"

@@ -93,7 +93,9 @@ jobs:
       QNETWARD_TEST_POSTGRES_DSN: postgres://qnetward:qnetward@127.0.0.1:5432/qnetward_e2e?sslmode=disable
       ENV_FILE: /dev/null
       E2E_API_PORT: "8090"
-      E2E_WEB_ORIGIN: http://127.0.0.1:3002
+      # localhost rather than 127.0.0.1: passkeys need a domain name, and the
+      # session cookie must reach the API's WebSocket on the same host.
+      E2E_WEB_ORIGIN: http://localhost:3002
     steps:
       - uses: actions/checkout@v4
 
@@ -133,7 +135,7 @@ jobs:
       - name: Build web
         working-directory: apps/web
         env:
-          NEXT_PUBLIC_QNETWARD_WS_URL: ws://127.0.0.1:8090/ws
+          NEXT_PUBLIC_QNETWARD_WS_URL: ws://localhost:8090/ws
         run: pnpm build
 
       - name: Start web
@@ -142,13 +144,13 @@ jobs:
           QNETWARD_BACKEND_URL: http://127.0.0.1:8090
         run: |
           pnpm start --hostname 127.0.0.1 --port 3002 > ../../.tmp/web.log 2>&1 &
-          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:3002/ > /dev/null && exit 0; sleep 1; done
+          for i in $(seq 1 60); do curl -fsS http://localhost:3002/ > /dev/null && exit 0; sleep 1; done
           cat ../../.tmp/web.log; exit 1
 
       - name: Playwright
         working-directory: apps/web
         env:
-          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3002
+          PLAYWRIGHT_BASE_URL: http://localhost:3002
         run: pnpm test:e2e
 
       - name: Server logs

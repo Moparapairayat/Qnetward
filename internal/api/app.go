@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/go-webauthn/webauthn/webauthn"
+
 	"qnetward/internal/platform/cache"
 	"qnetward/internal/platform/mailer"
 	"qnetward/internal/platform/netguard"
@@ -35,6 +37,8 @@ type Options struct {
 	DemoEnabled    bool
 	DemoName       string
 	DemoEmail      string
+	// Google enables "Sign in with Google" when its client ID and secret are set.
+	Google OAuthProvider
 	// TargetPolicy decides which addresses API-initiated probes may reach.
 	// The CLI does not use it: it runs on the operator's own machine.
 	TargetPolicy netguard.Policy
@@ -57,6 +61,8 @@ type Server struct {
 	demoEmail      string
 	demoCreatedAt  time.Time
 	targetPolicy   netguard.Policy
+	google         OAuthProvider
+	webauthn       *webauthn.WebAuthn
 	// monitorRootCAs overrides the system roots for HTTPS monitors; tests only.
 	monitorRootCAs *x509.CertPool
 
@@ -83,6 +89,8 @@ func New(deps Deps, opts Options) *Server {
 		demoEmail:      strings.TrimSpace(opts.DemoEmail),
 		demoCreatedAt:  time.Now().UTC(),
 		targetPolicy:   opts.TargetPolicy,
+		google:         opts.Google,
+		webauthn:       newWebAuthn(opts.PublicBaseURL),
 		probeLimiter:   make(chan struct{}, maxConcurrentProbes),
 		authLimiter:    newRateLimiter(),
 		quotaLimiter:   newRateLimiter(),
@@ -125,6 +133,14 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/account/mfa/disable", srv.handleAccountMFADisable)
 	mux.HandleFunc("/api/account/mfa/recovery-codes", srv.handleAccountMFARecovery)
 	mux.HandleFunc("/api/auth/mfa", srv.handleAuthMFA)
+	mux.HandleFunc("/api/auth/providers", srv.handleAuthProviders)
+	mux.HandleFunc("/api/auth/google/start", srv.handleGoogleStart)
+	mux.HandleFunc("/api/auth/google/callback", srv.handleGoogleCallback)
+	mux.HandleFunc("/api/auth/passkey/begin", srv.handlePasskeyLoginBegin)
+	mux.HandleFunc("/api/auth/passkey/finish", srv.handlePasskeyLoginFinish)
+	mux.HandleFunc("/api/account/passkeys", srv.handleAccountPasskeys)
+	mux.HandleFunc("/api/account/passkeys/begin", srv.handlePasskeyRegisterBegin)
+	mux.HandleFunc("/api/account/passkeys/finish", srv.handlePasskeyRegisterFinish)
 	mux.HandleFunc("/api/account", srv.handleAccountDelete)
 	mux.HandleFunc("GET /api/avatars/{id}", srv.handleAvatarImage)
 	mux.HandleFunc("/api/workspaces", srv.handleWorkspaces)

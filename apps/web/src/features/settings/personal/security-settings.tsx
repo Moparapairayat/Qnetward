@@ -8,6 +8,7 @@ import { apiRequest, ApiError } from "@/lib/api";
 import type { AccountSession, AuditPage, AuthMessageResponse, SessionResponse } from "@/lib/types";
 import { describeAuditEvent, shortUserAgent } from "@/lib/audit";
 import { MFACard } from "@/features/settings/personal/mfa-card";
+import { PasskeysCard } from "@/features/settings/personal/passkeys-card";
 import { formatDate, Notice, SaveState, SettingsCard, SettingsPageTitle } from "@/components/settings/settings-ui";
 
 const PASSWORD_MIN = 8;
@@ -281,6 +282,7 @@ export function SecuritySettings() {
       <SettingsPageTitle title="Password and sessions" description="How you sign in, the second step after your password, and where you're signed in." />
       {isDemo ? <Notice tone="info">This is the shared demo account, so password and session changes are turned off.</Notice> : null}
       <ChangePasswordCard email={session?.user?.email} disabled={isDemo} />
+      <PasskeysCard disabled={isDemo} />
       <MFACard disabled={isDemo} />
       <SessionsCard disabled={isDemo} />
       <ActivityCard />
