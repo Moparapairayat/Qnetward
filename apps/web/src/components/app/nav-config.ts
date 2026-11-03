@@ -109,7 +109,9 @@ export const navSections: NavSection[] = [
     items: [{ href: "/assistant", label: "AI assistant", icon: Sparkles, keywords: "ai ask root cause natural language", soon: true }],
   },
   {
+    // Lives in workspace settings; listed here for the palette and page titles.
     label: "Workspace",
+    hiddenInSidebar: true,
     items: [
       { href: "/workspace/team", label: "Team", icon: Users, keywords: "members invite roles" },
       { href: "/integrations", label: "Integrations", icon: Plug, keywords: "slack telegram discord pagerduty webhook", soon: true },
@@ -144,6 +146,13 @@ export const navSections: NavSection[] = [
 ];
 
 export const sidebarSections = (isAdmin: boolean) => navSections.filter((s) => !s.hiddenInSidebar && (!s.adminOnly || isAdmin));
+
+/** Sections start folded when nothing in them has shipped yet. */
+export const sectionOpenByDefault = (section: NavSection) => section.items.some((i) => !i.soon);
+
+/** Pages reached through the sidebar's Settings entry. */
+export const isSettingsPath = (pathname: string) =>
+  ["/workspace", "/settings", "/integrations", "/sso", "/status"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
 export const paletteSections = (isAdmin: boolean) => navSections.filter((s) => !s.adminOnly || isAdmin);
 

@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronDown, ChevronsUpDown, LogOut, PanelLeftClose, PanelLeftOpen, Shield, User, Users, X } from "lucide-react";
+import { Activity, Check, ChevronDown, ChevronsUpDown, LogOut, PanelLeftClose, PanelLeftOpen, Settings, Shield, User, Users, X } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 import { AlertRule, SessionResponse, WorkspaceListResponse } from "@/lib/types";
 import { useShellStore } from "@/store/ui-store";
 import { QnetwardMark } from "@/features/landing/qnetward-mark";
-import { sidebarSections, type NavItem } from "@/components/app/nav-config";
+import { isSettingsPath, sectionOpenByDefault, sidebarSections, type NavItem } from "@/components/app/nav-config";
 import { cn } from "@/lib/utils";
 
 function initials(value: string) {
@@ -171,6 +171,7 @@ function UserMenu({ session, collapsed }: { session: SessionResponse; collapsed:
           {[
             { href: "/settings/profile", label: "Settings", icon: User },
             { href: "/settings/security", label: "Password and sessions", icon: Shield },
+            { href: "/status", label: "System status", icon: Activity },
           ].map((item) => (
             <Link
               key={item.href}
@@ -273,7 +274,7 @@ function NavLink({
 
 export function Sidebar({ session }: { session: SessionResponse }) {
   const pathname = usePathname();
-  const { sidebarOpen, setSidebarOpen, sidebarCollapsed, toggleSidebarCollapsed, foldedSections, toggleSection } = useShellStore();
+  const { sidebarOpen, setSidebarOpen, sidebarCollapsed, toggleSidebarCollapsed, sectionState, setSectionOpen } = useShellStore();
   const isDemo = session.mode === "demo";
   const isAdmin = session.platform_role === "admin";
   // The rail only collapses on desktop; the mobile drawer is always full width.
@@ -336,8 +337,10 @@ export function Sidebar({ session }: { session: SessionResponse }) {
         <nav className={cn("flex-1 pb-4 pt-1", collapsed ? "overflow-visible px-2" : "lp-scroll-subtle overflow-y-auto px-3")} aria-label="Main">
           {sidebarSections(isAdmin).map((section) => {
             const hasActive = section.items.some((item) => item.href === pathname);
-            const folded = !collapsed && !hasActive && foldedSections.includes(section.label);
             const single = section.items.length === 1;
+            const open = sectionState[section.label] ?? sectionOpenByDefault(section);
+            // A one-item section has no header to unfold it with.
+            const folded = !collapsed && !single && !hasActive && !open;
             return (
               <div key={section.label} className="mt-3 first:mt-2">
                 {collapsed ? (
@@ -345,14 +348,13 @@ export function Sidebar({ session }: { session: SessionResponse }) {
                 ) : single ? null : (
                   <button
                     type="button"
-                    onClick={() => toggleSection(section.label)}
+                    onClick={() => setSectionOpen(section.label, folded)}
                     aria-expanded={!folded}
                     className="group mb-0.5 flex w-full items-center gap-1 rounded px-2.5 py-1 text-[11px] font-medium text-[var(--lp-subtle)] hover:text-[var(--lp-muted)]"
                   >
                     <span className="flex-1 text-left">{section.label}</span>
-                    <ChevronDown
-                      className={cn("h-3 w-3 opacity-0 transition-transform group-hover:opacity-100", folded && "-rotate-90 opacity-100")}
-                    />
+                    {folded ? <span className="text-[10px] tabular-nums text-[var(--lp-subtle)]">{section.items.length}</span> : null}
+                    <ChevronDown className={cn("h-3 w-3 opacity-60 transition-transform group-hover:opacity-100", folded && "-rotate-90")} />
                   </button>
                 )}
                 {folded ? null : (
@@ -381,6 +383,12 @@ export function Sidebar({ session }: { session: SessionResponse }) {
               Shared demo. Other visitors can see what you run here.
             </p>
           ) : null}
+          <NavLink
+            item={{ href: "/workspace/team", label: "Settings", icon: Settings }}
+            active={isSettingsPath(pathname)}
+            collapsed={collapsed}
+            onNavigate={close}
+          />
           <UserMenu session={session} collapsed={collapsed} />
         </div>
       </aside>
