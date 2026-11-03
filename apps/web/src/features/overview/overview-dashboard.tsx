@@ -272,10 +272,12 @@ export function StatCards({
   const stats = useMemo<Stat[]>(() => {
     const points = samplesInOrder(historyMap);
     const recent = points.slice(-48);
-    // Loss over a sliding window of 6 samples, so the trend shows bursts rather than single blips.
-    const lossTrend = recent.map((_, i) => {
-      const win = recent.slice(Math.max(0, i - 5), i + 1);
-      return (win.filter((p) => p.error || typeof p.rtt_ms !== "number").length / win.length) * 100;
+    // Loss across the same samples the headline figure counts, grouped into up
+    // to 40 buckets so the line stays readable and always agrees with the number.
+    const buckets = Math.min(40, points.length);
+    const lossTrend = Array.from({ length: buckets }, (_, i) => {
+      const slice = points.slice(Math.floor((i * points.length) / buckets), Math.floor(((i + 1) * points.length) / buckets));
+      return slice.length ? (slice.filter((p) => p.error || typeof p.rtt_ms !== "number").length / slice.length) * 100 : 0;
     });
     const rtts = points.map((p) => p.rtt_ms).filter((v): v is number => typeof v === "number");
     const avg = rtts.length ? rtts.reduce((a, b) => a + b, 0) / rtts.length : null;
@@ -311,7 +313,8 @@ export function StatCards({
         unit: loss === null ? undefined : "%",
         footer: points.length ? `${failures} of ${points.length} probes failed` : "No probes yet",
         tone: loss === null ? undefined : loss < 1 ? "good" : loss < 5 ? "warn" : "bad",
-        spark: lossTrend.some((v) => v > 0) ? { values: lossTrend, color: "#fbbf24" } : undefined,
+        // Always drawn: a flat green line means no loss, rather than a missing chart.
+        spark: lossTrend.length > 1 ? { values: lossTrend, color: lossTrend.some((v) => v > 0) ? "#fbbf24" : "#4ade80" } : undefined,
       },
       {
         icon: Bell,
