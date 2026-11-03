@@ -244,17 +244,18 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       aria-label={collapsed ? item.label : undefined}
       className={cn(
-        "group relative flex items-center gap-2.5 rounded-md text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[rgba(255,61,127,0.45)]",
-        collapsed ? "h-9 justify-center" : "h-8 px-2.5",
-        active ? "bg-white/[0.07] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:bg-white/[0.04] hover:text-[var(--lp-text)]",
+        "group relative flex items-center gap-2.5 rounded-md text-[13px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[rgba(255,61,127,0.45)]",
+        collapsed ? "h-9 justify-center" : "h-[34px] px-2.5",
+        active ? "bg-white/[0.08] text-white" : "text-[#d0d0d7] hover:bg-white/[0.05] hover:text-white",
       )}
     >
+      {active && !collapsed ? <span className="absolute -left-3 top-2 bottom-2 w-[3px] rounded-r-full bg-[var(--lp-accent)]" aria-hidden="true" /> : null}
       <item.icon
-        className={cn("h-4 w-4 shrink-0", active ? "text-[var(--lp-accent)]" : "text-[var(--lp-subtle)] group-hover:text-[var(--lp-muted)]")}
+        className={cn("h-4 w-4 shrink-0", active ? "text-[var(--lp-accent)]" : "text-[#9a9aa4] group-hover:text-[#d0d0d7]")}
       />
       {collapsed ? null : <span className="flex-1 truncate">{item.label}</span>}
       {item.soon && !collapsed ? (
-        <span className="rounded border border-[var(--lp-border)] px-1 text-[10px] leading-4 text-[var(--lp-subtle)]">Soon</span>
+        <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-[10px] leading-[18px] text-[var(--lp-muted)]">Soon</span>
       ) : null}
       {badge ? (
         <span
@@ -350,11 +351,11 @@ export function Sidebar({ session }: { session: SessionResponse }) {
                     type="button"
                     onClick={() => setSectionOpen(section.label, folded)}
                     aria-expanded={!folded}
-                    className="group mb-0.5 flex w-full items-center gap-1 rounded px-2.5 py-1 text-[11px] font-medium text-[var(--lp-subtle)] hover:text-[var(--lp-muted)]"
+                    className="group mb-1 flex w-full items-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
                   >
                     <span className="flex-1 text-left">{section.label}</span>
-                    {folded ? <span className="text-[10px] tabular-nums text-[var(--lp-subtle)]">{section.items.length}</span> : null}
-                    <ChevronDown className={cn("h-3 w-3 opacity-60 transition-transform group-hover:opacity-100", folded && "-rotate-90")} />
+                    {folded ? <span className="text-[11px] tabular-nums text-[var(--lp-muted)]">{section.items.length}</span> : null}
+                    <ChevronDown className={cn("h-3.5 w-3.5 opacity-70 transition-transform group-hover:opacity-100", folded && "-rotate-90")} />
                   </button>
                 )}
                 {folded ? null : (

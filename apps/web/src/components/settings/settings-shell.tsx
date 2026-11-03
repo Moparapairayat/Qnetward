@@ -197,7 +197,7 @@ export function SettingsShell({ context, children }: { context: "personal" | "wo
           <div className="hidden lg:block">
             {groups.map((group, gi) => (
               <div key={group.label ?? gi} className={cn(gi > 0 && "mt-3 border-t border-[var(--lp-border)] pt-3")}>
-                {group.label ? <p className="px-3 pb-1.5 text-[12px] text-[var(--lp-subtle)]">{group.label}</p> : null}
+                {group.label ? <p className="px-3 pb-1.5 text-[12px] font-medium text-[var(--lp-muted)]">{group.label}</p> : null}
                 <ul className="grid gap-0.5">
                   {group.items.map((item) => {
                     const active = isActive(item.href);
@@ -207,14 +207,14 @@ export function SettingsShell({ context, children }: { context: "personal" | "wo
                           href={item.href}
                           aria-current={active ? "page" : undefined}
                           className={cn(
-                            "relative flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] transition-colors",
-                            active ? "bg-white/[0.06] font-medium text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:bg-white/[0.03] hover:text-[var(--lp-text)]",
+                            "relative flex h-[34px] items-center gap-2.5 rounded-md px-3 text-[13px] font-medium transition-colors",
+                            active ? "bg-white/[0.08] text-white" : "text-[#d0d0d7] hover:bg-white/[0.05] hover:text-white",
                           )}
                         >
                           {active ? <span className="absolute -left-2 top-1.5 bottom-1.5 w-[3px] rounded-full bg-[var(--lp-accent)]" aria-hidden="true" /> : null}
-                          <item.icon className={cn("h-4 w-4", active ? "text-[var(--lp-text)]" : "text-[var(--lp-subtle)]")} />
+                          <item.icon className={cn("h-4 w-4", active ? "text-white" : "text-[#9a9aa4]")} />
                           <span className="flex-1 truncate">{item.label}</span>
-                          {item.soon ? <span className="rounded border border-[var(--lp-border)] px-1 text-[10px] leading-4 text-[var(--lp-subtle)]">Soon</span> : null}
+                          {item.soon ? <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-[10px] leading-[18px] text-[var(--lp-muted)]">Soon</span> : null}
                         </Link>
                       </li>
                     );
