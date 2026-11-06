@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, Check, ChevronDown, ChevronsUpDown, LogOut, PanelLeftClose, PanelLeftOpen, Settings, Shield, User, Users, X } from "lucide-react";
+import { Activity, Check, ChevronDown, ChevronsUpDown, CreditCard, LogOut, PanelLeftClose, PanelLeftOpen, Settings, Shield, User, UserPlus, X } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 import { AlertRule, SessionResponse, UserProfileResponse, WorkspaceListResponse } from "@/lib/types";
 import { Avatar, WorkspaceAvatar } from "@/components/settings/settings-ui";
@@ -12,6 +12,7 @@ import { useShellStore } from "@/store/ui-store";
 import { QnetwardMark } from "@/features/landing/qnetward-mark";
 import { isSettingsPath, sectionOpenByDefault, sidebarSections, type NavItem } from "@/components/app/nav-config";
 import { cn } from "@/lib/utils";
+import { planLabel } from "@/lib/plans";
 
 /** Closes a popover on outside click or Escape. */
 function useDismiss(open: boolean, close: () => void) {
@@ -39,6 +40,24 @@ function RailTip({ label, show }: { label: string; show: boolean }) {
     <span
       role="tooltip"
       className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md border border-[var(--lp-border-strong)] bg-[#1d1d22] px-2 py-1 text-[12px] text-[var(--lp-text)] opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+    >
+      {label}
+    </span>
+  );
+}
+
+function PlanBadge({ plan }: { plan?: string }) {
+  const label = planLabel(plan);
+  return (
+    <span
+      className={cn(
+        "shrink-0 rounded px-1.5 text-[10px] font-medium leading-[18px]",
+        label === "Pro"
+          ? "bg-[rgba(255,61,127,0.14)] text-[#ff8fb3]"
+          : label === "Enterprise"
+            ? "bg-[rgba(167,139,250,0.16)] text-[#c4b5fd]"
+            : "bg-white/[0.07] text-[var(--lp-muted)]",
+      )}
     >
       {label}
     </span>
@@ -75,7 +94,7 @@ function WorkspaceSwitcher({ session, collapsed }: { session: SessionResponse; c
   const activeID = list.data?.active_workspace_id ?? session.active_workspace_id;
   const active = workspaces.find((w) => w.id === activeID) ?? workspaces[0];
   const name = active?.name ?? (isDemo ? "Demo workspace" : "Workspace");
-  const meta = isDemo ? "Shared sandbox" : active ? `${active.plan} plan · ${active.role}` : "Loading…";
+  const roleText = (role?: string) => (role ? role.charAt(0).toUpperCase() + role.slice(1) : "");
 
   return (
     <div ref={ref} className="relative">
@@ -90,46 +109,76 @@ function WorkspaceSwitcher({ session, collapsed }: { session: SessionResponse; c
           collapsed ? "justify-center p-1.5" : "px-2.5 py-2",
         )}
       >
-        <WorkspaceAvatar name={name} id={active?.id} size={24} />
+        <WorkspaceAvatar name={name} id={active?.id} size={collapsed ? 26 : 30} />
         {collapsed ? null : (
           <>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13px] font-medium text-[var(--lp-text)]">{name}</span>
-              <span className={cn("block truncate text-[11px] text-[var(--lp-subtle)]", !isDemo && "capitalize")}>{meta}</span>
+              <span className="block truncate text-[13px] font-semibold text-white">{name}</span>
+              <span className="mt-0.5 flex min-w-0 items-center gap-1.5">
+                {isDemo ? (
+                  <span className="truncate text-[11px] text-[var(--lp-muted)]">Shared sandbox</span>
+                ) : active ? (
+                  <>
+                    <PlanBadge plan={active.plan} />
+                    <span className="truncate text-[11px] text-[var(--lp-muted)]">{roleText(active.role)}</span>
+                  </>
+                ) : (
+                  <span className="text-[11px] text-[var(--lp-subtle)]">Loading…</span>
+                )}
+              </span>
             </span>
-            <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-[var(--lp-subtle)]" />
+            <ChevronsUpDown className="h-4 w-4 shrink-0 text-[var(--lp-muted)] transition-colors group-hover:text-white" />
           </>
         )}
         <RailTip label={name} show={collapsed} />
       </button>
 
       {open ? (
-        <div role="menu" className={cn("console-popover absolute top-full z-50 mt-1 p-1", collapsed ? "left-0 w-56" : "left-0 right-0")}>
-          <p className="px-2 pb-1 pt-1.5 text-[11px] text-[var(--lp-subtle)]">Switch workspace</p>
+        <div role="menu" className={cn("console-popover absolute top-full z-50 mt-1.5 p-1.5", collapsed ? "left-0 w-64" : "left-0 right-0 min-w-[248px]")}>
+          <p className="px-2 pb-1.5 pt-1 text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--lp-subtle)]">Workspaces</p>
           {workspaces.length === 0 ? <p className="px-2 py-1.5 text-[13px] text-[var(--lp-muted)]">{name}</p> : null}
-          {workspaces.map((w) => (
-            <button
-              key={w.id}
-              type="button"
+          {workspaces.map((w) => {
+            const current = w.id === activeID;
+            return (
+              <button
+                key={w.id}
+                type="button"
+                role="menuitem"
+                disabled={switchWorkspace.isPending}
+                onClick={() => (current ? setOpen(false) : switchWorkspace.mutate(w.id))}
+                className={cn(
+                  "flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors",
+                  current ? "bg-white/[0.06]" : "hover:bg-white/[0.05]",
+                )}
+              >
+                <WorkspaceAvatar name={w.name} id={w.id} size={28} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-medium text-[var(--lp-text)]">{w.name}</span>
+                  <span className="mt-0.5 flex items-center gap-1.5">
+                    <PlanBadge plan={w.plan} />
+                    <span className="truncate text-[11px] text-[var(--lp-muted)]">{roleText(w.role)}</span>
+                  </span>
+                </span>
+                {current ? <Check className="h-4 w-4 shrink-0 text-[var(--lp-accent)]" /> : null}
+              </button>
+            );
+          })}
+          <div className="my-1.5 h-px bg-[var(--lp-border)]" />
+          {[
+            { href: "/workspace/general", label: "Workspace settings", icon: Settings },
+            { href: "/workspace/team", label: "Invite people", icon: UserPlus },
+            { href: "/workspace/billing", label: "Plan and billing", icon: CreditCard },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
               role="menuitem"
-              disabled={switchWorkspace.isPending}
-              onClick={() => (w.id === activeID ? setOpen(false) : switchWorkspace.mutate(w.id))}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-[var(--lp-text)] hover:bg-white/[0.05]"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] text-[#d0d0d7] hover:bg-white/[0.05] hover:text-white"
             >
-              <WorkspaceAvatar name={w.name} id={w.id} size={20} />
-              <span className="min-w-0 flex-1 truncate">{w.name}</span>
-              {w.id === activeID ? <Check className="h-3.5 w-3.5 text-[var(--lp-accent)]" /> : null}
-            </button>
+              <item.icon className="h-4 w-4 text-[#9a9aa4]" /> {item.label}
+            </Link>
           ))}
-          <div className="my-1 h-px bg-[var(--lp-border)]" />
-          <Link
-            href="/workspace/team"
-            role="menuitem"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-[var(--lp-muted)] hover:bg-white/[0.05] hover:text-[var(--lp-text)]"
-          >
-            <Users className="h-3.5 w-3.5" /> Manage team
-          </Link>
         </div>
       ) : null}
     </div>

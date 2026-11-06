@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { AuthMessageResponse, SessionResponse, WorkspaceInvitationsResponse, WorkspaceListResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { planLabel } from "@/lib/plans";
 import { formatDate, Notice, roleLabel, SettingsCard, SettingsPageTitle, WorkspaceAvatar } from "@/components/settings/settings-ui";
 
 export function WorkspacesSettings() {
@@ -71,7 +72,7 @@ export function WorkspacesSettings() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px]">{w.name}</p>
                     <p className="text-[12px] text-[var(--lp-subtle)]">
-                      {roleLabel(w.role)} · {w.member_count} {w.member_count === 1 ? "member" : "members"} · {w.plan}
+                      {roleLabel(w.role)} · {w.member_count} {w.member_count === 1 ? "member" : "members"} · {planLabel(w.plan)}
                     </p>
                   </div>
                   {active ? (

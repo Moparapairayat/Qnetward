@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { SessionResponse, WorkspaceContextResponse } from "@/lib/types";
+import { planLabel } from "@/lib/plans";
 import { formatDate, Notice, roleLabel, SaveState, SettingsCard, SettingsPageTitle, WorkspaceAvatar } from "@/components/settings/settings-ui";
 
 const NAME_MAX = 60;
@@ -88,7 +89,7 @@ export function WorkspaceGeneral() {
               <dt className="text-[var(--lp-subtle)]">Members</dt>
               <dd>{workspace.member_count}</dd>
               <dt className="text-[var(--lp-subtle)]">Plan</dt>
-              <dd className="capitalize">{workspace.plan}</dd>
+              <dd>{planLabel(workspace.plan)}</dd>
               <dt className="text-[var(--lp-subtle)]">Created</dt>
               <dd>{formatDate(workspace.created_at)}</dd>
               <dt className="text-[var(--lp-subtle)]">Workspace ID</dt>
