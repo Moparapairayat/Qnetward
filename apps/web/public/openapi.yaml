@@ -153,6 +153,48 @@ paths:
       responses:
         "200": { description: Deleted }
         "404": { $ref: "#/components/responses/Error" }
+  /api/monitors/series:
+    get:
+      tags: [Monitors]
+      summary: Response time per monitor over a window
+      description: "Needs the `read` scope. Checks are returned raw for 15m and 1h, and averaged into buckets for 6h (2 minutes) and 24h (10 minutes)."
+      parameters:
+        - { name: window, in: query, schema: { type: string, enum: [15m, 1h, 6h, 24h], default: 1h } }
+      responses:
+        "200":
+          description: Each monitor with its points in the window.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  window: { type: string }
+                  now: { type: integer, description: Server time, Unix milliseconds. }
+                  span_ms: { type: integer }
+                  bucket_seconds: { type: integer, description: 1 when points are single checks. }
+                  monitors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer }
+                        name: { type: string }
+                        protocol: { type: string, enum: [ping, tcpping, http] }
+                        target: { type: string }
+                        port: { type: integer }
+                        interval_seconds: { type: integer }
+                        enabled: { type: boolean }
+                        status: { type: string, enum: [pending, up, down] }
+                        points:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              t: { type: integer, description: Slot start, Unix milliseconds. }
+                              rtt_ms: { type: number, description: Average of the checks that succeeded. Absent when all failed. }
+                              failed: { type: integer }
+                              checks: { type: integer }
+        "400": { $ref: "#/components/responses/Error" }
   /api/alerts/rules:
     get:
       tags: [Alert rules]
@@ -324,7 +366,7 @@ components:
         protocol: { type: string, enum: [http, tcpping, ping] }
         target: { type: string, description: "A URL for http, otherwise a host name or IP.", example: https://api.example.com/health }
         port: { type: integer, description: Required for tcpping. }
-        interval_seconds: { type: integer, enum: [60, 300, 600, 1800, 3600] }
+        interval_seconds: { type: integer, enum: [30, 60, 300, 600, 1800, 3600] }
         expected_status: { type: integer, description: "http only. Without it, any 2xx or 3xx is up." }
         notify_email: { type: string, description: Emailed when the monitor goes down or comes back. Empty for none. }
         enabled: { type: boolean, default: true }
