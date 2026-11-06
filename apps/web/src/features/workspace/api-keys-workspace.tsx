@@ -8,6 +8,7 @@ import type { APIKey, APIKeyCreateResponse, APIKeyListResponse, SessionResponse,
 import { cn, formatDateTime } from "@/lib/utils";
 import { formatDate, Notice, SettingsCard, SettingsPageTitle } from "@/components/settings/settings-ui";
 import { Modal } from "@/components/ui/modal";
+import { Stepper } from "@/components/ui/stepper";
 
 const scopeInfo: Record<string, { label: string; detail: string }> = {
   read: { label: "Read", detail: "List monitors, alert rules, and history; export history" },
@@ -40,36 +41,6 @@ function keyState(key: APIKey): "active" | "revoked" | "expired" {
 
 type Step = 0 | 1 | 2 | 3;
 const STEPS = ["Details", "Scopes", "Review", "Copy key"] as const;
-
-/** Numbered progress across the top of the create dialog. */
-function Stepper({ step }: { step: Step }) {
-  return (
-    <ol className="mb-5 flex items-center gap-2" aria-label="Steps">
-      {STEPS.map((label, i) => {
-        const done = i < step;
-        const current = i === step;
-        return (
-          <li key={label} className="flex min-w-0 flex-1 items-center gap-2" aria-current={current ? "step" : undefined}>
-            <span
-              className={cn(
-                "grid h-6 w-6 shrink-0 place-items-center rounded-full border text-[12px]",
-                done
-                  ? "border-[rgba(74,222,128,0.45)] bg-[rgba(74,222,128,0.12)] text-[#86efac]"
-                  : current
-                    ? "border-[rgba(255,61,127,0.55)] bg-[rgba(255,61,127,0.12)] text-[#ff8fb3]"
-                    : "border-[var(--lp-border-strong)] text-[var(--lp-subtle)]",
-              )}
-            >
-              {done ? <Check className="h-3.5 w-3.5" /> : i + 1}
-            </span>
-            <span className={cn("hidden truncate text-[12px] sm:block", current ? "text-[var(--lp-text)]" : "text-[var(--lp-subtle)]")}>{label}</span>
-            {i < STEPS.length - 1 ? <span className="h-px min-w-3 flex-1 bg-[var(--lp-border-strong)]" aria-hidden="true" /> : null}
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
 
 function ReviewRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -162,7 +133,7 @@ function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () => void
       description={step === 3 ? "Copy it now. For your security it won't be shown again." : "A key acts as this workspace for scripts, CI, and Terraform."}
       footer={footer}
     >
-      <Stepper step={step} />
+      <Stepper steps={STEPS} step={step} />
       <form
         id="create-key-form"
         onSubmit={(e) => {

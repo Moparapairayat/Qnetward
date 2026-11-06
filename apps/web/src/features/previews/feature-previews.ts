@@ -18,7 +18,7 @@ export type FeaturePreview = {
   stats: { label: string; value: string; hint: string; tone?: Tone }[];
   table?: { title: string; columns: string[]; rows: Cell[][] };
   side?: { title: string; items: { label: string; value: string; tone?: Tone }[] };
-  visual?: "uptime" | "topology" | "assistant" | "flows" | "trace" | "timeline" | "schedule" | "integrations";
+  visual?: "uptime" | "topology" | "assistant" | "flows" | "trace" | "timeline" | "schedule";
   capabilities: string[];
 };
 
@@ -499,22 +499,6 @@ export const featurePreviews: FeaturePreview[] = [
       "Incident summaries and fix suggestions",
       "Anomaly detection with learned baselines",
     ],
-  },
-  {
-    slug: "integrations",
-    title: "Integrations",
-    description: "Send alerts and incidents where your team already works, and pull data in from the tools you use.",
-    phase: 2,
-    phaseName: "Agents & monitoring",
-    primaryAction: "Add integration",
-    visual: "integrations",
-    stats: [
-      { label: "Connected", value: "2", hint: "email, webhook" },
-      { label: "Available", value: "14", hint: "chat, paging, ticketing" },
-      { label: "Deliveries (7d)", value: "96", hint: "all succeeded", tone: "good" },
-      { label: "Avg delivery", value: "1.8 s", hint: "alert to message" },
-    ],
-    capabilities: ["Slack, Microsoft Teams, Telegram, Discord", "PagerDuty, Opsgenie, SMS", "Jira and webhooks", "Terraform provider, CLI, and SDKs"],
   },
   {
     slug: "sso",

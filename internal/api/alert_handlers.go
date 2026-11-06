@@ -259,15 +259,12 @@ func (srv *Server) enqueueAlertEvaluation(user actor, protocol, target string, p
 			log.Printf("alert evaluation failed for %s/%s: %v", protocol, target, err)
 			return
 		}
-		if srv.mailer == nil {
-			return
-		}
 		for _, decision := range decisions {
 			alertTitle := decision.Rule.Name
 			if strings.TrimSpace(alertTitle) == "" {
 				alertTitle = "Monitoring Alert"
 			}
-			if err := srv.mailer.SendAlert(ctx, mailer.AlertEmailInput{
+			in := mailer.AlertEmailInput{
 				To:           decision.Rule.RecipientEmail,
 				Name:         user.Name,
 				Severity:     decision.Severity,
@@ -276,7 +273,16 @@ func (srv *Server) enqueueAlertEvaluation(user actor, protocol, target string, p
 				Target:       alertTargetLabel(decision.Rule),
 				TriggeredAt:  time.Now().UTC(),
 				DashboardURL: dashboardURL,
-			}); err != nil {
+			}
+			event := "alert.firing"
+			if decision.Recovered {
+				event = "alert.resolved"
+			}
+			srv.notifyChannels(user.WorkspaceID, store.ChannelEventAlertRules, toNotice(in, event))
+			if srv.mailer == nil {
+				continue
+			}
+			if err := srv.mailer.SendAlert(ctx, in); err != nil {
 				log.Printf("alert email failed for rule %d: %v", decision.Rule.ID, err)
 			}
 		}

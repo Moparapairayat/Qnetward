@@ -537,3 +537,25 @@ export type RuntimeHealthResponse = {
   redis: RuntimeHealthDependency;
   object_storage: RuntimeHealthDependency;
 };
+
+export type ChannelKind = "slack" | "discord" | "telegram" | "webhook";
+export type ChannelEvent = "monitors" | "certificates" | "alert_rules";
+
+export type NotificationChannel = {
+  id: number;
+  kind: ChannelKind;
+  name: string;
+  /** A masked hint of the destination, such as …9x2k or chat -100123. */
+  target: string;
+  events: ChannelEvent[];
+  enabled: boolean;
+  last_sent_at?: string | null;
+  last_error?: string;
+  created_at: string;
+};
+
+export type ChannelListResponse = { channels: NotificationChannel[]; kinds: ChannelKind[]; events: ChannelEvent[] };
+
+export type ChannelSaveResponse = { channel: NotificationChannel; signing_secret?: string };
+
+export type ChannelTestResponse = { ok: boolean; error?: string };

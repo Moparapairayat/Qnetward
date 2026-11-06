@@ -3,7 +3,6 @@ import type { Cell, FeaturePreview, Tone } from "@/features/previews/feature-pre
 import {
   AssistantVisual,
   FlowsVisual,
-  IntegrationsVisual,
   ScheduleVisual,
   TimelineVisual,
   TopologyVisual,
@@ -52,8 +51,6 @@ function Visual({ kind }: { kind: NonNullable<FeaturePreview["visual"]> }) {
       return <TimelineVisual />;
     case "schedule":
       return <ScheduleVisual />;
-    case "integrations":
-      return <IntegrationsVisual />;
   }
 }
 

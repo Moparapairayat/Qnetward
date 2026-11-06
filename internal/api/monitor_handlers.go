@@ -16,6 +16,7 @@ import (
 	"qnetward/internal/engine/report"
 	"qnetward/internal/engine/tcpping"
 	"qnetward/internal/platform/mailer"
+	"qnetward/internal/platform/notify"
 	"qnetward/internal/probe"
 	"qnetward/internal/store"
 )
@@ -306,17 +307,36 @@ func (srv *Server) checkMonitor(ctx context.Context, m store.Monitor) {
 			m.Protocol, m.Target, monitorPort(m), *summary, srv.buildConfiguredDashboardURL("alerts"))
 	}
 
+	wentDown := !check.OK && outcome.Previous != "down"
+	recovered := check.OK && outcome.Previous == "down"
+	if wentDown || recovered {
+		srv.notifyChannels(m.WorkspaceID, store.ChannelEventMonitors, toNotice(srv.monitorAlert(m, check, recovered), monitorEvent(recovered)))
+	}
+	if outcome.WarnTLS {
+		srv.notifyChannels(m.WorkspaceID, store.ChannelEventCertificates, toNotice(certificateAlert(m, *check.TLSExpiresAt, srv.buildConfiguredDashboardURL("monitors")), "certificate.expiring"))
+	}
+
 	if m.NotifyEmail == "" || srv.mailer == nil {
 		return
 	}
-	wentDown := !check.OK && outcome.Previous != "down"
-	recovered := check.OK && outcome.Previous == "down"
 	if wentDown || recovered {
 		srv.sendMonitorEmail(saveCtx, m, check, recovered)
 	}
 	if outcome.WarnTLS {
 		srv.sendCertificateWarning(saveCtx, m, *check.TLSExpiresAt)
 	}
+}
+
+func monitorEvent(recovered bool) string {
+	if recovered {
+		return "monitor.up"
+	}
+	return "monitor.down"
+}
+
+// toNotice turns an alert email into the same alert for chat channels.
+func toNotice(in mailer.AlertEmailInput, event string) notify.Message {
+	return notify.Message{Event: event, Severity: in.Severity, Title: in.Title, Summary: in.Summary, Target: in.Target, URL: in.DashboardURL, At: in.TriggeredAt}
 }
 
 // runProbeCheck sends three pings or TCP connects. Any reply means up. Each
@@ -418,6 +438,13 @@ func monitorTargetLabel(m store.Monitor) string {
 }
 
 func (srv *Server) sendMonitorEmail(ctx context.Context, m store.Monitor, check store.MonitorCheck, recovered bool) {
+	if err := srv.mailer.SendAlert(ctx, srv.monitorAlert(m, check, recovered)); err != nil {
+		log.Printf("monitor email failed for monitor %d: %v", m.ID, err)
+	}
+}
+
+// monitorAlert words a monitor going down or coming back up.
+func (srv *Server) monitorAlert(m store.Monitor, check store.MonitorCheck, recovered bool) mailer.AlertEmailInput {
 	target := monitorTargetLabel(m)
 	in := mailer.AlertEmailInput{
 		To:           m.NotifyEmail,
@@ -440,12 +467,17 @@ func (srv *Server) sendMonitorEmail(ctx context.Context, m store.Monitor, check 
 		}
 	}
 	in.Summary = strings.TrimSpace(in.Summary)
-	if err := srv.mailer.SendAlert(ctx, in); err != nil {
-		log.Printf("monitor email failed for monitor %d: %v", m.ID, err)
-	}
+	return in
 }
 
 func (srv *Server) sendCertificateWarning(ctx context.Context, m store.Monitor, expires time.Time) {
+	if err := srv.mailer.SendAlert(ctx, certificateAlert(m, expires, srv.buildConfiguredDashboardURL("monitors"))); err != nil {
+		log.Printf("certificate warning failed for monitor %d: %v", m.ID, err)
+	}
+}
+
+// certificateAlert words a certificate that expires soon.
+func certificateAlert(m store.Monitor, expires time.Time, dashboardURL string) mailer.AlertEmailInput {
 	days := int(time.Until(expires).Hours() / 24)
 	when := fmt.Sprintf("in %d days", days)
 	switch {
@@ -456,17 +488,14 @@ func (srv *Server) sendCertificateWarning(ctx context.Context, m store.Monitor, 
 	case days == 1:
 		when = "tomorrow"
 	}
-	in := mailer.AlertEmailInput{
+	return mailer.AlertEmailInput{
 		To:           m.NotifyEmail,
 		Severity:     "warning",
 		Title:        "Certificate for " + m.Name + " expires " + when,
 		Summary:      fmt.Sprintf("The TLS certificate served by %s expires on %s UTC. Renew it before visitors start seeing errors.", m.Target, expires.UTC().Format("2 Jan 2006 15:04")),
 		Target:       m.Target,
 		TriggeredAt:  time.Now().UTC(),
-		DashboardURL: srv.buildConfiguredDashboardURL("monitors"),
-	}
-	if err := srv.mailer.SendAlert(ctx, in); err != nil {
-		log.Printf("certificate warning failed for monitor %d: %v", m.ID, err)
+		DashboardURL: dashboardURL,
 	}
 }
 

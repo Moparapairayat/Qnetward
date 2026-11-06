@@ -37,6 +37,8 @@ type Options struct {
 	DemoEnabled    bool
 	DemoName       string
 	DemoEmail      string
+	// DemoFullAccess lifts the demo account's restrictions, for local testing.
+	DemoFullAccess bool
 	// Google enables "Sign in with Google" when its client ID and secret are set.
 	Google OAuthProvider
 	// TargetPolicy decides which addresses API-initiated probes may reach.
@@ -59,12 +61,15 @@ type Server struct {
 	demoEnabled    bool
 	demoName       string
 	demoEmail      string
+	demoFullAccess bool
 	demoCreatedAt  time.Time
 	targetPolicy   netguard.Policy
 	google         OAuthProvider
 	webauthn       *webauthn.WebAuthn
 	// monitorRootCAs overrides the system roots for HTTPS monitors; tests only.
 	monitorRootCAs *x509.CertPool
+	// telegramAPI overrides the Telegram Bot API base; tests only.
+	telegramAPI string
 
 	probeLimiter chan struct{}
 	// quotaLimiter counts per-workspace and per-key usage against plan limits.
@@ -87,6 +92,7 @@ func New(deps Deps, opts Options) *Server {
 		demoEnabled:    opts.DemoEnabled,
 		demoName:       strings.TrimSpace(opts.DemoName),
 		demoEmail:      strings.TrimSpace(opts.DemoEmail),
+		demoFullAccess: opts.DemoFullAccess,
 		demoCreatedAt:  time.Now().UTC(),
 		targetPolicy:   opts.TargetPolicy,
 		google:         opts.Google,
@@ -164,6 +170,8 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/alerts/rules", srv.handleAlertRules)
 	mux.HandleFunc("/api/monitors", srv.handleMonitors)
 	mux.HandleFunc("/api/monitors/series", srv.handleMonitorSeries)
+	mux.HandleFunc("/api/workspace/channels", srv.handleChannels)
+	mux.HandleFunc("/api/workspace/channels/test", srv.handleChannelTest)
 	mux.HandleFunc("/ws", srv.handleWS)
 	mux.Handle("/", newBackendFallbackHandler())
 	return withSecurityHeaders(mux)
