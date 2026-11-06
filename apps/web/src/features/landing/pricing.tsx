@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { Check, Clock3, Minus } from "lucide-react";
@@ -225,6 +226,18 @@ export function Pricing() {
         </span>
         <span>Free needs no card. Pro is paid ahead in taka, with no auto-renewal.</span>
       </p>
+
+      <div className="mt-10 flex flex-col items-center gap-4">
+        <p className="text-[13px] font-medium text-[var(--lp-muted)]">Pay with</p>
+        <Image
+          src="/payments/methods.webp"
+          alt="Accepted payment methods: Visa, Mastercard, American Express, BRAC Bank, DBBL Nexus, City Touch, Bank Asia, Islami Bank, AB Bank, Q Cash, Fast Cash, MTB, bKash, Rocket, Islami Bank mCash, MyCash, t-cash, SureCash, Upay, iPay, OK Wallet, and Dmoney"
+          width={1879}
+          height={342}
+          sizes="(min-width: 1024px) 900px, 100vw"
+          className="h-auto w-full max-w-[900px]"
+        />
+      </div>
 
       <details className="group mt-12 rounded-2xl border border-[var(--lp-border)]">
         <summary className="flex cursor-pointer list-none items-center justify-between px-6 py-4 text-[15px] font-medium [&::-webkit-details-marker]:hidden">
