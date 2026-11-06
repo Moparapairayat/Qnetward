@@ -2,15 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeftRight,
   Bell,
   Bot,
   Building2,
-  Check,
-  ChevronDown,
   CreditCard,
   FileClock,
   KeyRound,
@@ -27,105 +24,62 @@ import { cn } from "@/lib/utils";
 import { Avatar, initialsFor, roleLabel } from "@/components/settings/settings-ui";
 
 type NavItem = { href: string; label: string; icon: LucideIcon; soon?: boolean };
-type NavGroup = { label?: string; items: NavItem[] };
 
-const personalNav: NavGroup[] = [
-  {
-    items: [
-      { href: "/settings/profile", label: "Profile", icon: User },
-      { href: "/settings/account", label: "Account", icon: Settings2 },
-      { href: "/settings/notifications", label: "Notifications", icon: Bell },
-    ],
-  },
-  {
-    label: "Access",
-    items: [
-      { href: "/settings/security", label: "Password and sessions", icon: Shield },
-      { href: "/settings/workspaces", label: "Workspaces", icon: Building2 },
-    ],
-  },
+const personalItems: NavItem[] = [
+  { href: "/settings/profile", label: "Profile", icon: User },
+  { href: "/settings/account", label: "Account", icon: Settings2 },
+  { href: "/settings/notifications", label: "Notifications", icon: Bell },
+  { href: "/settings/security", label: "Password and sessions", icon: Shield },
+  { href: "/settings/workspaces", label: "Workspaces", icon: Building2 },
 ];
 
-const workspaceNav: NavGroup[] = [
-  {
-    items: [
-      { href: "/workspace/team", label: "Team", icon: Users },
-      { href: "/workspace/billing", label: "Billing and plan", icon: CreditCard },
-      { href: "/workspace/integrations", label: "Integrations", icon: Plug },
-      { href: "/workspace/api-keys", label: "API keys", icon: KeyRound },
-      { href: "/workspace/audit-log", label: "Audit log", icon: FileClock },
-    ],
-  },
-  {
-    label: "Coming soon",
-    items: [
-      { href: "/sso", label: "SSO and SCIM", icon: Bot, soon: true },
-    ],
-  },
+const workspaceItems: NavItem[] = [
+  { href: "/workspace/team", label: "Team", icon: Users },
+  { href: "/workspace/billing", label: "Billing and plan", icon: CreditCard },
+  { href: "/workspace/integrations", label: "Integrations", icon: Plug },
+  { href: "/workspace/api-keys", label: "API keys", icon: KeyRound },
+  { href: "/workspace/audit-log", label: "Audit log", icon: FileClock },
 ];
 
-function ContextSwitcher({ context, workspaceName }: { context: "personal" | "workspace"; workspaceName?: string }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false);
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+const soonItems: NavItem[] = [{ href: "/sso", label: "SSO and SCIM", icon: Bot, soon: true }];
 
-  const options = [
-    { id: "personal", href: "/settings/profile", label: "Personal account", hint: "Profile, password, notifications" },
-    { id: "workspace", href: "/workspace/team", label: workspaceName ?? "Workspace", hint: "Team, billing, integrations" },
-  ];
-
+function NavLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        className="console-btn console-btn-secondary"
-      >
-        <ArrowLeftRight className="h-3.5 w-3.5" /> Switch settings context
-        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
-      </button>
-      {open ? (
-        <div role="menu" className="console-popover absolute right-0 z-40 mt-1 w-72 p-1">
-          {options.map((option) => (
-            <Link
-              key={option.id}
-              href={option.href}
-              role="menuitem"
-              onClick={() => setOpen(false)}
-              className="flex items-start gap-2.5 rounded-md px-2.5 py-2 hover:bg-white/[0.05]"
-            >
-              <span className="mt-0.5 grid h-4 w-4 place-items-center">
-                {context === option.id ? <Check className="h-3.5 w-3.5 text-[var(--lp-accent)]" /> : null}
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate text-[13px] text-[var(--lp-text)]">{option.label}</span>
-                <span className="block text-[12px] text-[var(--lp-subtle)]">{option.hint}</span>
-              </span>
-            </Link>
-          ))}
-        </div>
-      ) : null}
+    <Link
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "relative flex h-[34px] items-center gap-2.5 rounded-md px-3 text-[13px] font-medium transition-colors",
+        active ? "bg-white/[0.08] text-white" : "text-[#d0d0d7] hover:bg-white/[0.05] hover:text-white",
+      )}
+    >
+      {active ? <span className="absolute -left-2 top-1.5 bottom-1.5 w-[3px] rounded-full bg-[var(--lp-accent)]" aria-hidden="true" /> : null}
+      <item.icon className={cn("h-4 w-4", active ? "text-white" : "text-[#9a9aa4]")} />
+      <span className="flex-1 truncate">{item.label}</span>
+      {item.soon ? <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-[10px] leading-[18px] text-[var(--lp-muted)]">Soon</span> : null}
+    </Link>
+  );
+}
+
+/** A nav section's heading: who or what the links below configure. */
+function SectionHeading({ badge, title, meta }: { badge: ReactNode; title: string; meta?: string }) {
+  return (
+    <div className="mb-1 flex min-w-0 items-center gap-2.5 px-3 py-1.5">
+      {badge}
+      <div className="min-w-0">
+        <p className="truncate text-[13px] font-medium text-[var(--lp-text)]">{title}</p>
+        {meta ? <p className="truncate text-[11px] text-[var(--lp-subtle)]">{meta}</p> : null}
+      </div>
     </div>
   );
 }
 
 /**
- * Settings layout in the GitHub mould: who or what you're configuring at the
- * top, with a context switch, and a section menu beside the content.
+ * Settings in one place: your own account and the active workspace sit side
+ * by side in a single menu, each under a heading that says whose settings
+ * they are, so there's no mode to switch between.
  */
-export function SettingsShell({ context, children }: { context: "personal" | "workspace"; children: ReactNode }) {
+export function SettingsShell({ children }: { context?: "personal" | "workspace"; children: ReactNode }) {
   const pathname = usePathname();
   const session = useQuery({
     queryKey: ["session"],
@@ -139,47 +93,38 @@ export function SettingsShell({ context, children }: { context: "personal" | "wo
   const profile = useQuery({
     queryKey: ["account-profile"],
     queryFn: () => apiRequest<UserProfileResponse>("/api/account/profile"),
-    enabled: context === "personal" && session.data?.authenticated === true,
+    enabled: session.data?.authenticated === true,
   });
   const user = session.data?.user;
   const activeId = workspaces.data?.active_workspace_id ?? session.data?.active_workspace_id;
   const workspace = workspaces.data?.workspaces?.find((w) => w.id === activeId) ?? workspaces.data?.workspaces?.[0];
-  const groups = context === "personal" ? personalNav : workspaceNav;
+  const workspaceName = workspace?.name || "Workspace";
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+
+  const workspaceBadge = (size: string) => (
+    <span className={cn("grid shrink-0 place-items-center rounded-md bg-[linear-gradient(135deg,#ff3d7f,#8b5cf6)] font-semibold text-white", size)} aria-hidden="true">
+      {initialsFor(workspace?.name)}
+    </span>
+  );
 
   return (
     <div className="mx-auto w-full max-w-[1180px]">
-      <header className="flex flex-col gap-4 pb-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
-          {context === "personal" ? (
-            <Avatar name={user?.name} email={user?.email} src={profile.data?.avatar_url || null} size={44} />
-          ) : (
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/[0.06] text-[14px] font-medium" aria-hidden="true">
-              {initialsFor(workspace?.name)}
-            </span>
-          )}
-          <div className="min-w-0">
-            <p className="truncate text-[17px] font-medium tracking-[-0.01em]">
-              {context === "personal" ? user?.name || user?.email || "Your account" : workspace?.name || "Workspace"}
-              {context === "personal" && user?.email ? <span className="ml-2 text-[14px] font-normal text-[var(--lp-subtle)]">{user.email}</span> : null}
-            </p>
-            <p className="text-[13px] text-[var(--lp-muted)]">
-              {context === "personal" ? "Your personal account" : `Workspace settings${workspace?.role ? ` · you are ${roleLabel(workspace.role).toLowerCase()}` : ""}`}
-            </p>
-          </div>
-        </div>
-        <ContextSwitcher context={context} workspaceName={workspace?.name} />
+      <header className="pb-6">
+        <h1 className="text-[22px] font-medium tracking-[-0.02em]">Settings</h1>
+        <p className="mt-1 text-[13px] text-[var(--lp-muted)]">
+          Your own account, and everything shared in <span className="text-[var(--lp-text)]">{workspaceName}</span>.
+        </p>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-10">
-        <nav aria-label={context === "personal" ? "Personal settings" : "Workspace settings"} className="min-w-0">
-          {/* Small screens: one scrollable row of tabs. */}
-          <ul className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:hidden">
-            {groups
-              .flatMap((g) => g.items)
-              .filter((item) => !item.soon)
-              .map((item) => (
-                <li key={item.href}>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10">
+        <nav aria-label="Settings" className="min-w-0">
+          {/* Small screens: one scrollable row, account links then workspace links. */}
+          <ul className="-mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-1 lg:hidden">
+            {[...personalItems, null, ...workspaceItems].map((item, i) =>
+              item === null ? (
+                <li key="divider" className="mx-1 h-5 w-px shrink-0 bg-[var(--lp-border-strong)]" aria-hidden="true" />
+              ) : (
+                <li key={item.href ?? i}>
                   <Link
                     href={item.href}
                     aria-current={isActive(item.href) ? "page" : undefined}
@@ -191,37 +136,38 @@ export function SettingsShell({ context, children }: { context: "personal" | "wo
                     <item.icon className="h-3.5 w-3.5" /> {item.label}
                   </Link>
                 </li>
-              ))}
+              ),
+            )}
           </ul>
 
           <div className="hidden lg:block">
-            {groups.map((group, gi) => (
-              <div key={group.label ?? gi} className={cn(gi > 0 && "mt-3 border-t border-[var(--lp-border)] pt-3")}>
-                {group.label ? <p className="px-3 pb-1.5 text-[12px] font-medium text-[var(--lp-muted)]">{group.label}</p> : null}
-                <ul className="grid gap-0.5">
-                  {group.items.map((item) => {
-                    const active = isActive(item.href);
-                    return (
-                      <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          aria-current={active ? "page" : undefined}
-                          className={cn(
-                            "relative flex h-[34px] items-center gap-2.5 rounded-md px-3 text-[13px] font-medium transition-colors",
-                            active ? "bg-white/[0.08] text-white" : "text-[#d0d0d7] hover:bg-white/[0.05] hover:text-white",
-                          )}
-                        >
-                          {active ? <span className="absolute -left-2 top-1.5 bottom-1.5 w-[3px] rounded-full bg-[var(--lp-accent)]" aria-hidden="true" /> : null}
-                          <item.icon className={cn("h-4 w-4", active ? "text-white" : "text-[#9a9aa4]")} />
-                          <span className="flex-1 truncate">{item.label}</span>
-                          {item.soon ? <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-[10px] leading-[18px] text-[var(--lp-muted)]">Soon</span> : null}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
+            <SectionHeading
+              badge={<Avatar name={user?.name} email={user?.email} src={profile.data?.avatar_url || null} size={24} />}
+              title="Your account"
+              meta={user?.email}
+            />
+            <ul className="grid gap-0.5">
+              {personalItems.map((item) => (
+                <li key={item.href}>
+                  <NavLink item={item} active={isActive(item.href)} />
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-4 border-t border-[var(--lp-border)] pt-4">
+              <SectionHeading
+                badge={workspaceBadge("h-6 w-6 text-[10px]")}
+                title={workspaceName}
+                meta={workspace?.role ? `Workspace · you are ${roleLabel(workspace.role).toLowerCase()}` : "Workspace"}
+              />
+              <ul className="grid gap-0.5">
+                {[...workspaceItems, ...soonItems].map((item) => (
+                  <li key={item.href}>
+                    <NavLink item={item} active={isActive(item.href)} />
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </nav>
 
