@@ -774,8 +774,10 @@ func (srv *Server) getOrCreateDemoUser(ctx context.Context) (store.User, error) 
 	return srv.store.CreateUser(ctx, srv.demoName, srv.demoEmail, string(passwordHash), false)
 }
 
+// isDemoUser reports whether user is the shared, restricted demo account.
+// With full access on, the demo account counts as an ordinary one.
 func (srv *Server) isDemoUser(user store.User) bool {
-	if !srv.demoEnabled || srv.demoEmail == "" {
+	if !srv.demoEnabled || srv.demoEmail == "" || srv.demoFullAccess {
 		return false
 	}
 	return strings.EqualFold(user.Email, srv.demoEmail)

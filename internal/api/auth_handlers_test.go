@@ -604,3 +604,58 @@ func TestHandleAuthForgotPasswordCleansUpTokenWhenEmailSendFails(t *testing.T) {
 		t.Fatal("expected password reset token to be cleaned up after send failure")
 	}
 }
+
+// With full access on, the demo account acts as an ordinary owner: its
+// session isn't marked demo, and it can do what the demo normally can't.
+func TestDemoFullAccessLiftsRestrictions(t *testing.T) {
+	installTestStore(t)
+	enabled, name, email, full := testSrv.demoEnabled, testSrv.demoName, testSrv.demoEmail, testSrv.demoFullAccess
+	t.Cleanup(func() {
+		testSrv.demoEnabled, testSrv.demoName, testSrv.demoEmail, testSrv.demoFullAccess = enabled, name, email, full
+	})
+	testSrv.demoEnabled = true
+	testSrv.demoName = "Contributor Demo"
+	testSrv.demoEmail = fmt.Sprintf("demo-full-%d@qnetward.local", time.Now().UnixNano())
+
+	login := func() *http.Cookie {
+		rr := httptest.NewRecorder()
+		testSrv.handleAuthDemoLogin(rr, httptest.NewRequest(http.MethodPost, "/api/auth/demo-login", strings.NewReader(`{}`)))
+		if rr.Code != http.StatusOK {
+			t.Fatalf("demo login: expected 200, got %d: %s", rr.Code, rr.Body.String())
+		}
+		for _, c := range rr.Result().Cookies() {
+			if c.Name == authCookieName {
+				return c
+			}
+		}
+		t.Fatal("no session cookie")
+		return nil
+	}
+	createKey := func(cookie *http.Cookie) int {
+		req := httptest.NewRequest(http.MethodPost, "/api/workspace/api-keys", strings.NewReader(`{"name":"demo","scopes":["read"],"expires_in_days":30}`))
+		req.AddCookie(cookie)
+		rr := httptest.NewRecorder()
+		testSrv.handleWorkspaceAPIKeys(rr, req)
+		return rr.Code
+	}
+
+	testSrv.demoFullAccess = false
+	if code := createKey(login()); code != http.StatusForbidden {
+		t.Fatalf("restricted demo: expected 403, got %d", code)
+	}
+
+	testSrv.demoFullAccess = true
+	cookie := login()
+	if code := createKey(cookie); code != http.StatusCreated {
+		t.Fatalf("full-access demo: expected 201, got %d", code)
+	}
+	req := httptest.NewRequest(http.MethodGet, "/api/auth/session", nil)
+	req.AddCookie(cookie)
+	rr := httptest.NewRecorder()
+	testSrv.handleAuthSession(rr, req)
+	var session authSessionResponse
+	_ = json.Unmarshal(rr.Body.Bytes(), &session)
+	if session.Mode != "authenticated" {
+		t.Fatalf("expected the session to be an ordinary one, got mode %q", session.Mode)
+	}
+}
