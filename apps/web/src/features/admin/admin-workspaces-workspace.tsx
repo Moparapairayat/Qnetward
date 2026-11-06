@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { AdminWorkspacesResponse } from "@/lib/types";
 import { PageHeader, Panel, StatStrip } from "@/components/tools/probe-ui";
-import { initialsFor } from "@/components/settings/settings-ui";
+import { WorkspaceAvatar } from "@/components/settings/settings-ui";
 import { HeadRow, SearchBox, Segmented, TableShell, Td, Th, timeAgo } from "@/features/admin/admin-ui";
 
 type Filter = "all" | "shared" | "solo" | "invites";
@@ -117,9 +117,7 @@ export function AdminWorkspacesWorkspace() {
                 <tr key={w.id} className="border-b border-[var(--lp-border)] last:border-0 hover:bg-white/[0.015]">
                   <Td>
                     <div className="flex items-center gap-3">
-                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-white/[0.06] text-[11px]" aria-hidden="true">
-                        {initialsFor(w.name)}
-                      </span>
+                      <WorkspaceAvatar name={w.name} id={w.id} size={28} />
                       <span className="truncate">{w.name}</span>
                     </div>
                   </Td>

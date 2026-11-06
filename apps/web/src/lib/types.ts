@@ -74,6 +74,7 @@ export type WorkspaceMember = {
   role: string;
   joined_at: string;
   is_current: boolean;
+  avatar_url?: string;
 };
 
 export type WorkspaceInvitation = {

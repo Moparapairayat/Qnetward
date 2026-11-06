@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -187,23 +188,60 @@ func TestAccountDeleteRefusesSharedWorkspace(t *testing.T) {
 	}
 }
 
-func TestAccountAvatarNeedsObjectStorage(t *testing.T) {
+// Without object storage the picture is kept in the database: it uploads,
+// serves with its type, replaces in place, and goes away on removal.
+func TestAccountAvatarStoredInDatabase(t *testing.T) {
 	st := installTestStore(t)
-	_, cookie := newPasswordUser(t, st, "password-123")
+	user, cookie := newPasswordUser(t, st, "password-123")
 
-	var body bytes.Buffer
-	mw := multipart.NewWriter(&body)
-	part, _ := mw.CreateFormFile("file", "a.png")
-	_, _ = part.Write([]byte("\x89PNG\r\n\x1a\nfake"))
-	_ = mw.Close()
+	upload := func(data []byte) *httptest.ResponseRecorder {
+		var body bytes.Buffer
+		mw := multipart.NewWriter(&body)
+		part, _ := mw.CreateFormFile("file", "a.png")
+		_, _ = part.Write(data)
+		_ = mw.Close()
+		req := httptest.NewRequest(http.MethodPost, "/api/account/avatar", &body)
+		req.Header.Set("Content-Type", mw.FormDataContentType())
+		req.AddCookie(cookie)
+		rr := httptest.NewRecorder()
+		testSrv.handleAccountAvatar(rr, req)
+		return rr
+	}
+	fetch := func() *httptest.ResponseRecorder {
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/avatars/%d", user.ID), nil)
+		req.SetPathValue("id", strconv.FormatInt(user.ID, 10))
+		req.AddCookie(cookie)
+		rr := httptest.NewRecorder()
+		testSrv.handleAvatarImage(rr, req)
+		return rr
+	}
 
-	req := httptest.NewRequest(http.MethodPost, "/api/account/avatar", &body)
-	req.Header.Set("Content-Type", mw.FormDataContentType())
+	png := []byte("\x89PNG\r\n\x1a\nfirst")
+	first := upload(png)
+	if first.Code != http.StatusOK || !strings.Contains(first.Body.String(), "/api/avatars/") {
+		t.Fatalf("upload: got %d: %s", first.Code, first.Body.String())
+	}
+	if rr := fetch(); rr.Code != http.StatusOK || rr.Header().Get("Content-Type") != "image/png" || !bytes.Equal(rr.Body.Bytes(), png) {
+		t.Fatalf("serve: got %d %q", rr.Code, rr.Header().Get("Content-Type"))
+	}
+
+	second := upload([]byte("\x89PNG\r\n\x1a\nsecond"))
+	if second.Body.String() == first.Body.String() {
+		t.Fatal("a new picture should get a new URL, so caches refresh")
+	}
+	if rr := fetch(); !strings.HasSuffix(rr.Body.String(), "second") {
+		t.Fatal("expected the replacement picture")
+	}
+
+	if rr := upload([]byte("<svg onload=alert(1)>")); rr.Code != http.StatusUnsupportedMediaType {
+		t.Fatalf("svg: expected 415, got %d", rr.Code)
+	}
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/account/avatar", nil)
 	req.AddCookie(cookie)
-	rr := httptest.NewRecorder()
-	testSrv.handleAccountAvatar(rr, req)
-	if rr.Code != http.StatusServiceUnavailable {
-		t.Fatalf("expected 503 without object storage, got %d", rr.Code)
+	testSrv.handleAccountAvatar(httptest.NewRecorder(), req)
+	if rr := fetch(); rr.Code != http.StatusNotFound {
+		t.Fatalf("after removal: expected 404, got %d", rr.Code)
 	}
 }
 

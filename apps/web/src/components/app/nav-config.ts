@@ -113,6 +113,7 @@ export const navSections: NavSection[] = [
     label: "Workspace",
     hiddenInSidebar: true,
     items: [
+      { href: "/workspace/general", label: "Workspace general", icon: Settings, keywords: "workspace name rename company" },
       { href: "/workspace/team", label: "Team", icon: Users, keywords: "members invite roles" },
       { href: "/workspace/integrations", label: "Integrations", icon: Plug, keywords: "slack telegram discord webhook alerts channels notifications" },
       { href: "/workspace/api-keys", label: "API keys", icon: KeyRound, keywords: "tokens sdk terraform ci automation" },

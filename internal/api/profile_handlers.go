@@ -30,7 +30,7 @@ type profileResponse struct {
 
 func (srv *Server) profileResponse(ctx context.Context, userID int64, profile store.UserProfile) profileResponse {
 	key, _ := srv.store.GetUserAvatarKey(ctx, userID)
-	return profileResponse{Profile: profile, AvatarURL: avatarURL(userID, key), AvatarUploads: srv.objects != nil}
+	return profileResponse{Profile: profile, AvatarURL: avatarURL(userID, key), AvatarUploads: srv.store != nil}
 }
 
 type profileUpdateRequest struct {

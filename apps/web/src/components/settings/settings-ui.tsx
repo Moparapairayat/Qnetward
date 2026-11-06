@@ -12,6 +12,25 @@ export function initialsFor(name?: string | null, email?: string | null) {
   return source.slice(0, 2).toUpperCase();
 }
 
+// Quiet, earthy tones for initials: a background and a matching letter colour.
+const AVATAR_TONES: [string, string][] = [
+  ["#33413a", "#b9d4c2"], // sage
+  ["#463a31", "#e6c6a6"], // clay
+  ["#333c4b", "#bccbe0"], // slate
+  ["#47363b", "#e8bcc6"], // rose
+  ["#423f35", "#dcd2ad"], // sand
+  ["#31444a", "#b1d6da"], // teal
+  ["#3d3649", "#cfc2e6"], // lavender
+  ["#4a392f", "#ecbf98"], // terracotta
+];
+
+/** The same person always gets the same tone. */
+function toneFor(seed: string): [string, string] {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  return AVATAR_TONES[Math.abs(hash) % AVATAR_TONES.length];
+}
+
 export function Avatar({
   name,
   email,
@@ -31,13 +50,31 @@ export function Avatar({
       <img src={src} alt="" width={size} height={size} className={cn("shrink-0 rounded-full object-cover", className)} style={{ width: size, height: size }} />
     );
   }
+  const [background, color] = toneFor((email || name || "").toLowerCase());
   return (
     <span
       aria-hidden="true"
-      className={cn("grid shrink-0 place-items-center rounded-full font-medium text-white", className)}
-      style={{ width: size, height: size, fontSize: Math.round(size * 0.36), background: "linear-gradient(135deg, #ff3d7f 0%, #a855f7 100%)" }}
+      className={cn("grid shrink-0 select-none place-items-center rounded-full font-medium", className)}
+      style={{ width: size, height: size, fontSize: Math.round(size * 0.38), background, color, letterSpacing: "0.01em" }}
     >
       {initialsFor(name, email)}
+    </span>
+  );
+}
+
+/**
+ * A workspace's mark: its initials on the same quiet tones as people, but on
+ * a rounded square, so a workspace never reads as a person.
+ */
+export function WorkspaceAvatar({ name, id, size = 32, className }: { name?: string | null; id?: number | null; size?: number; className?: string }) {
+  const [background, color] = toneFor(`workspace:${id ?? ""}:${(name || "").toLowerCase()}`);
+  return (
+    <span
+      aria-hidden="true"
+      className={cn("grid shrink-0 select-none place-items-center font-semibold", className)}
+      style={{ width: size, height: size, borderRadius: Math.max(4, Math.round(size * 0.24)), fontSize: Math.round(size * 0.4), background, color }}
+    >
+      {initialsFor(name)}
     </span>
   );
 }

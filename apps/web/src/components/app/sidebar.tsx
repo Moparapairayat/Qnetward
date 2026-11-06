@@ -6,17 +6,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Activity, Check, ChevronDown, ChevronsUpDown, LogOut, PanelLeftClose, PanelLeftOpen, Settings, Shield, User, Users, X } from "lucide-react";
 import { apiRequest } from "@/lib/api";
-import { AlertRule, SessionResponse, WorkspaceListResponse } from "@/lib/types";
+import { AlertRule, SessionResponse, UserProfileResponse, WorkspaceListResponse } from "@/lib/types";
+import { Avatar, WorkspaceAvatar } from "@/components/settings/settings-ui";
 import { useShellStore } from "@/store/ui-store";
 import { QnetwardMark } from "@/features/landing/qnetward-mark";
 import { isSettingsPath, sectionOpenByDefault, sidebarSections, type NavItem } from "@/components/app/nav-config";
 import { cn } from "@/lib/utils";
-
-function initials(value: string) {
-  const parts = value.trim().split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return value.trim().slice(0, 2).toUpperCase() || "?";
-}
 
 /** Closes a popover on outside click or Escape. */
 function useDismiss(open: boolean, close: () => void) {
@@ -95,9 +90,7 @@ function WorkspaceSwitcher({ session, collapsed }: { session: SessionResponse; c
           collapsed ? "justify-center p-1.5" : "px-2.5 py-2",
         )}
       >
-        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-[linear-gradient(135deg,#ff3d7f,#8b5cf6)] text-[10px] font-semibold text-white">
-          {initials(name)}
-        </span>
+        <WorkspaceAvatar name={name} id={active?.id} size={24} />
         {collapsed ? null : (
           <>
             <span className="min-w-0 flex-1">
@@ -123,7 +116,7 @@ function WorkspaceSwitcher({ session, collapsed }: { session: SessionResponse; c
               onClick={() => (w.id === activeID ? setOpen(false) : switchWorkspace.mutate(w.id))}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-[var(--lp-text)] hover:bg-white/[0.05]"
             >
-              <span className="grid h-5 w-5 place-items-center rounded bg-white/[0.06] text-[10px]">{initials(w.name)}</span>
+              <WorkspaceAvatar name={w.name} id={w.id} size={20} />
               <span className="min-w-0 flex-1 truncate">{w.name}</span>
               {w.id === activeID ? <Check className="h-3.5 w-3.5 text-[var(--lp-accent)]" /> : null}
             </button>
@@ -150,6 +143,13 @@ function UserMenu({ session, collapsed }: { session: SessionResponse; collapsed:
   const ref = useDismiss(open, () => setOpen(false));
   const isDemo = session.mode === "demo";
   const displayName = session.user?.name?.trim() || session.user?.email || "Account";
+  // Shares the profile page's cache, so a new picture shows here at once.
+  const profile = useQuery({
+    queryKey: ["account-profile"],
+    queryFn: () => apiRequest<UserProfileResponse>("/api/account/profile"),
+    enabled: session.authenticated,
+    staleTime: 5 * 60_000,
+  });
 
   const logout = useMutation({
     mutationFn: () => apiRequest<{ ok: boolean }>("/api/auth/logout", { method: "POST", body: JSON.stringify({}) }),
@@ -206,9 +206,7 @@ function UserMenu({ session, collapsed }: { session: SessionResponse; collapsed:
           collapsed ? "justify-center p-1.5" : "px-2 py-2",
         )}
       >
-        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#2a2a31] text-[11px] font-semibold text-[var(--lp-text)] ring-1 ring-[var(--lp-border-strong)]">
-          {initials(displayName)}
-        </span>
+        <Avatar name={session.user?.name} email={session.user?.email} src={profile.data?.avatar_url || null} size={28} />
         {collapsed ? null : (
           <>
             <span className="min-w-0 flex-1">

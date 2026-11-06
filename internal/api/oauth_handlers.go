@@ -139,6 +139,7 @@ type oauthUserInfo struct {
 	Email         string `json:"email"`
 	EmailVerified bool   `json:"email_verified"`
 	Name          string `json:"name"`
+	Picture       string `json:"picture"`
 }
 
 // handleGoogleCallback finishes the Google flow: it checks the state, trades
@@ -199,6 +200,9 @@ func (srv *Server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) 
 	}
 	if created {
 		srv.recordAudit(r, 0, user, "auth.signup", auditTarget{}, map[string]any{"provider": "google"})
+	}
+	if info.Picture != "" {
+		go srv.importProviderPicture(user.ID, info.Picture)
 	}
 
 	if mfa, _, err := srv.store.GetMFA(ctx, user.ID); err != nil {
@@ -292,4 +296,51 @@ func randomURLToken(bytes int) (string, error) {
 		return "", err
 	}
 	return base64.RawURLEncoding.EncodeToString(buf), nil
+}
+
+// importProviderPicture copies a Google profile picture into the user's
+// avatar, unless they already have one. It runs after sign-in, so a slow or
+// failed download never holds up the redirect.
+func (srv *Server) importProviderPicture(userID int64, pictureURL string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	if key, err := srv.store.GetUserAvatarKey(ctx, userID); err != nil || key != "" {
+		return
+	}
+	u, err := url.Parse(pictureURL)
+	if err != nil || (u.Scheme != "https" && !srv.allowInsecurePictureHost(u)) || !(strings.HasSuffix(u.Hostname(), ".googleusercontent.com") || srv.allowInsecurePictureHost(u)) {
+		return
+	}
+	// Google serves 96 px by default; ask for the size the UI uses.
+	u.Path = strings.Replace(u.Path, "=s96-c", "=s256-c", 1)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return
+	}
+	resp, err := srv.notifySender().Client.Do(req)
+	if err != nil {
+		log.Printf("fetching the Google picture for user %d failed: %v", userID, err)
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return
+	}
+	data, err := io.ReadAll(io.LimitReader(resp.Body, maxAvatarBytes+1))
+	if err != nil || len(data) > maxAvatarBytes {
+		return
+	}
+	contentType := http.DetectContentType(data)
+	ext, ok := avatarTypes[contentType]
+	if !ok {
+		return
+	}
+	if _, err := srv.setAvatar(ctx, userID, contentType, ext, data); err != nil {
+		log.Printf("saving the Google picture for user %d failed: %v", userID, err)
+	}
+}
+
+// allowInsecurePictureHost lets tests serve the picture from a local server.
+func (srv *Server) allowInsecurePictureHost(u *url.URL) bool {
+	return srv.pictureTestHost != "" && u.Host == srv.pictureTestHost
 }

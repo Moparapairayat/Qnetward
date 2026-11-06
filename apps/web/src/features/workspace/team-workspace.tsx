@@ -62,7 +62,7 @@ function MemberRow({
   const [confirming, setConfirming] = useState(false);
   return (
     <li className="flex flex-wrap items-center gap-3 px-4 py-3">
-      <Avatar name={member.name} email={member.email} size={34} />
+      <Avatar name={member.name} email={member.email} src={member.avatar_url || null} size={34} />
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-2 truncate text-[13px]">
           <span className="truncate">{member.name || member.email}</span>

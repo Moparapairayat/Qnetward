@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { AuthMessageResponse, SessionResponse, WorkspaceInvitationsResponse, WorkspaceListResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { formatDate, initialsFor, Notice, roleLabel, SettingsCard, SettingsPageTitle } from "@/components/settings/settings-ui";
+import { formatDate, Notice, roleLabel, SettingsCard, SettingsPageTitle, WorkspaceAvatar } from "@/components/settings/settings-ui";
 
 export function WorkspacesSettings() {
   const router = useRouter();
@@ -67,9 +67,7 @@ export function WorkspacesSettings() {
               const active = w.id === activeId;
               return (
                 <li key={w.id} className="flex items-center gap-3 px-4 py-3">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-white/[0.06] text-[12px]" aria-hidden="true">
-                    {initialsFor(w.name)}
-                  </span>
+                  <WorkspaceAvatar name={w.name} id={w.id} size={32} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px]">{w.name}</p>
                     <p className="text-[12px] text-[var(--lp-subtle)]">

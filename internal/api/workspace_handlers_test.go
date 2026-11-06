@@ -352,3 +352,43 @@ func TestHandleWorkspaceTeamRevokesInvitation(t *testing.T) {
 		t.Fatalf("expected revoked invitation, got %q", invitations[0].Status)
 	}
 }
+
+// Owners rename the workspace through /api/workspace; blank names are refused
+// and the change is audited.
+func TestWorkspaceRename(t *testing.T) {
+	st := installTestStore(t)
+	_, cookie := issueTestSession(t, st)
+
+	patch := func(body string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(http.MethodPatch, "/api/workspace", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.AddCookie(cookie)
+		rr := httptest.NewRecorder()
+		testSrv.handleWorkspaceGeneral(rr, req)
+		return rr
+	}
+	if rr := patch(`{"name":"   "}`); rr.Code != http.StatusBadRequest {
+		t.Fatalf("blank name: expected 400, got %d", rr.Code)
+	}
+	rr := patch(`{"name":"  Kestrel   Labs "}`)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("rename: expected 200, got %d: %s", rr.Code, rr.Body.String())
+	}
+	var resp struct {
+		Workspace struct {
+			Name string `json:"name"`
+		} `json:"workspace"`
+	}
+	_ = json.Unmarshal(rr.Body.Bytes(), &resp)
+	if resp.Workspace.Name != "Kestrel Labs" {
+		t.Fatalf("expected the tidied name, got %q", resp.Workspace.Name)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/workspace", nil)
+	req.AddCookie(cookie)
+	get := httptest.NewRecorder()
+	testSrv.handleWorkspaceGeneral(get, req)
+	if !strings.Contains(get.Body.String(), "Kestrel Labs") {
+		t.Fatalf("expected the new name on read, got %s", get.Body.String())
+	}
+}

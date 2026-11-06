@@ -37,6 +37,9 @@ func (f *fakeOAuth) server(t *testing.T) *httptest.Server {
 		}
 		_ = json.NewEncoder(w).Encode(map[string]string{"access_token": "fake-access"})
 	})
+	mux.HandleFunc("/photo=s256-c", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("\x89PNG\r\n\x1a\ngoogle-photo"))
+	})
 	mux.HandleFunc("/userinfo", func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer fake-access" {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
@@ -56,10 +59,11 @@ func TestGoogleSignInCreatesLinksAndRejects(t *testing.T) {
 	fake := &fakeOAuth{}
 	provider := fake.server(t)
 
-	previous, previousBase := testSrv.google, testSrv.publicBaseURL
+	previous, previousBase, previousPictureHost := testSrv.google, testSrv.publicBaseURL, testSrv.pictureTestHost
 	testSrv.google = OAuthProvider{Name: "google", ClientID: "client", ClientSecret: "secret", AuthURL: provider.URL + "/auth", TokenURL: provider.URL + "/token", UserInfoURL: provider.URL + "/userinfo", Scopes: "openid email"}
 	testSrv.publicBaseURL = "http://web.test"
-	t.Cleanup(func() { testSrv.google, testSrv.publicBaseURL = previous, previousBase })
+	testSrv.pictureTestHost = strings.TrimPrefix(provider.URL, "http://")
+	t.Cleanup(func() { testSrv.google, testSrv.publicBaseURL, testSrv.pictureTestHost = previous, previousBase, previousPictureHost })
 
 	// signIn runs start and callback, returning the final redirect and cookies.
 	signIn := func(profile oauthUserInfo, tamperState bool) (string, []*http.Cookie) {
@@ -110,7 +114,7 @@ func TestGoogleSignInCreatesLinksAndRejects(t *testing.T) {
 	run := time.Now().UnixNano()
 	sub := func(n int) string { return fmt.Sprintf("sub-%d-%d", run, n) }
 	email := fmt.Sprintf("google_%d@example.com", run)
-	location, cookies := signIn(oauthUserInfo{Subject: sub(1), Email: email, EmailVerified: true, Name: "Grace Google"}, false)
+	location, cookies := signIn(oauthUserInfo{Subject: sub(1), Email: email, EmailVerified: true, Name: "Grace Google", Picture: provider.URL + "/photo=s96-c"}, false)
 	if location != "http://web.test/overview" || !hasSession(cookies) {
 		t.Fatalf("new account: redirected to %q, session %v", location, hasSession(cookies))
 	}
@@ -118,6 +122,11 @@ func TestGoogleSignInCreatesLinksAndRejects(t *testing.T) {
 	if err != nil || user.Name != "Grace Google" || user.VerificationRequired {
 		t.Fatalf("expected a verified account named from Google, got %#v (err %v)", user, err)
 	}
+	// The Google picture becomes the avatar, fetched at 256 px, after the redirect.
+	waitFor(t, 10*time.Second, func() bool {
+		_, data, err := st.GetUserAvatarData(t.Context(), user.ID)
+		return err == nil && strings.HasSuffix(string(data), "google-photo")
+	})
 
 	// The same Google account signs into the same user, even with a new email.
 	if location, _ := signIn(oauthUserInfo{Subject: sub(1), Email: email, EmailVerified: true}, false); location != "http://web.test/overview" {

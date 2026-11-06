@@ -608,11 +608,12 @@ func TestHandleAuthForgotPasswordCleansUpTokenWhenEmailSendFails(t *testing.T) {
 // With full access on, the demo account acts as an ordinary owner: its
 // session isn't marked demo, and it can do what the demo normally can't.
 func TestDemoFullAccessLiftsRestrictions(t *testing.T) {
-	installTestStore(t)
-	enabled, name, email, full := testSrv.demoEnabled, testSrv.demoName, testSrv.demoEmail, testSrv.demoFullAccess
+	st := installTestStore(t)
+	enabled, name, email, full, workspace := testSrv.demoEnabled, testSrv.demoName, testSrv.demoEmail, testSrv.demoFullAccess, testSrv.demoWorkspace
 	t.Cleanup(func() {
-		testSrv.demoEnabled, testSrv.demoName, testSrv.demoEmail, testSrv.demoFullAccess = enabled, name, email, full
+		testSrv.demoEnabled, testSrv.demoName, testSrv.demoEmail, testSrv.demoFullAccess, testSrv.demoWorkspace = enabled, name, email, full, workspace
 	})
+	testSrv.demoWorkspace = "Kestrel Labs"
 	testSrv.demoEnabled = true
 	testSrv.demoName = "Contributor Demo"
 	testSrv.demoEmail = fmt.Sprintf("demo-full-%d@qnetward.local", time.Now().UnixNano())
@@ -657,5 +658,15 @@ func TestDemoFullAccessLiftsRestrictions(t *testing.T) {
 	_ = json.Unmarshal(rr.Body.Bytes(), &session)
 	if session.Mode != "authenticated" {
 		t.Fatalf("expected the session to be an ordinary one, got mode %q", session.Mode)
+	}
+
+	// The generated "<name> Workspace" becomes the demo workspace's company name.
+	user, err := st.GetUserByEmail(t.Context(), testSrv.demoEmail)
+	if err != nil {
+		t.Fatalf("demo user: %v", err)
+	}
+	ws, err := st.GetWorkspaceContextByUserID(t.Context(), user.ID)
+	if err != nil || ws.Name != testSrv.demoWorkspace {
+		t.Fatalf("expected the demo workspace to be named %q, got %q (err %v)", testSrv.demoWorkspace, ws.Name, err)
 	}
 }

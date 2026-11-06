@@ -223,7 +223,7 @@ func (srv *Server) handleAccountDelete(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: "could not delete account"})
 		return
 	}
-	if avatarKey != "" && srv.objects != nil {
+	if avatarKey != "" && !strings.HasPrefix(avatarKey, dbAvatarPrefix) && srv.objects != nil {
 		if err := srv.objects.Delete(ctx, avatarKey); err != nil {
 			log.Printf("delete avatar for removed user %d: %v", user.ID, err)
 		}
@@ -251,10 +251,6 @@ func (srv *Server) handleAccountAvatar(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if srv.objects == nil {
-		writeJSON(w, http.StatusServiceUnavailable, apiError{Error: "file storage is not configured on this server"})
-		return
-	}
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
 
@@ -264,7 +260,7 @@ func (srv *Server) handleAccountAvatar(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusInternalServerError, apiError{Error: "could not remove avatar"})
 			return
 		}
-		srv.deleteObjectQuietly(ctx, previous)
+		srv.dropAvatar(ctx, user.ID, previous, "")
 		writeJSON(w, http.StatusOK, avatarResponse{})
 		return
 	}
@@ -293,25 +289,61 @@ func (srv *Server) handleAccountAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nonce := make([]byte, 8)
-	if _, err := rand.Read(nonce); err != nil {
-		writeJSON(w, http.StatusInternalServerError, apiError{Error: "could not store avatar"})
-		return
-	}
-	key, err := srv.objects.Put(ctx, fmt.Sprintf("avatars/%d/%s.%s", user.ID, hex.EncodeToString(nonce), ext), contentType, data)
+	key, err := srv.setAvatar(ctx, user.ID, contentType, ext, data)
 	if err != nil {
 		log.Printf("upload avatar for user %d: %v", user.ID, err)
-		writeJSON(w, http.StatusBadGateway, apiError{Error: "file storage rejected the upload"})
+		writeJSON(w, http.StatusBadGateway, apiError{Error: "could not store the picture"})
 		return
 	}
-	previous, err := srv.store.SetUserAvatarKey(ctx, user.ID, key)
-	if err != nil {
-		srv.deleteObjectQuietly(ctx, key)
-		writeJSON(w, http.StatusInternalServerError, apiError{Error: "could not save avatar"})
-		return
-	}
-	srv.deleteObjectQuietly(ctx, previous)
 	writeJSON(w, http.StatusOK, avatarResponse{AvatarURL: avatarURL(user.ID, key)})
+}
+
+// dbAvatarPrefix marks an avatar_key whose image lives in user_avatars.
+const dbAvatarPrefix = "db:"
+
+// setAvatar stores a picture, in object storage when the server has it and
+// in the database otherwise, points the profile at it, and drops the old one.
+func (srv *Server) setAvatar(ctx context.Context, userID int64, contentType, ext string, data []byte) (string, error) {
+	nonce := make([]byte, 8)
+	if _, err := rand.Read(nonce); err != nil {
+		return "", err
+	}
+	var key string
+	if srv.objects != nil {
+		stored, err := srv.objects.Put(ctx, fmt.Sprintf("avatars/%d/%s.%s", userID, hex.EncodeToString(nonce), ext), contentType, data)
+		if err != nil {
+			return "", err
+		}
+		key = stored
+	} else {
+		if err := srv.store.SaveUserAvatarData(ctx, userID, contentType, data); err != nil {
+			return "", err
+		}
+		key = dbAvatarPrefix + hex.EncodeToString(nonce)
+	}
+	previous, err := srv.store.SetUserAvatarKey(ctx, userID, key)
+	if err != nil {
+		srv.dropAvatar(ctx, userID, key, "")
+		return "", err
+	}
+	srv.dropAvatar(ctx, userID, previous, key)
+	return key, nil
+}
+
+// dropAvatar deletes the picture behind key unless the current key still
+// needs it: a database row is shared by every db: key, since it's replaced in place.
+func (srv *Server) dropAvatar(ctx context.Context, userID int64, key, current string) {
+	switch {
+	case key == "":
+	case strings.HasPrefix(key, dbAvatarPrefix):
+		if !strings.HasPrefix(current, dbAvatarPrefix) {
+			if err := srv.store.DeleteUserAvatarData(ctx, userID); err != nil {
+				log.Printf("delete stored avatar for user %d: %v", userID, err)
+			}
+		}
+	default:
+		srv.deleteObjectQuietly(ctx, key)
+	}
 }
 
 // handleAvatarImage streams a user's avatar to any signed-in user.
@@ -320,7 +352,7 @@ func (srv *Server) handleAvatarImage(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
 		return
 	}
-	if srv.store == nil || srv.objects == nil {
+	if srv.store == nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -339,22 +371,43 @@ func (srv *Server) handleAvatarImage(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	writeHeaders := func(contentType string, size int64) bool {
+		if _, ok := avatarTypes[contentType]; !ok {
+			http.NotFound(w, r)
+			return false
+		}
+		w.Header().Set("Content-Type", contentType)
+		w.Header().Set("Content-Length", strconv.FormatInt(size, 10))
+		w.Header().Set("Cache-Control", "private, max-age=86400")
+		w.Header().Set("Content-Security-Policy", "default-src 'none'")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.WriteHeader(http.StatusOK)
+		return true
+	}
+	if strings.HasPrefix(key, dbAvatarPrefix) {
+		contentType, data, err := srv.store.GetUserAvatarData(ctx, userID)
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		if writeHeaders(contentType, int64(len(data))) {
+			_, _ = w.Write(data)
+		}
+		return
+	}
+	if srv.objects == nil {
+		http.NotFound(w, r)
+		return
+	}
 	body, contentType, size, err := srv.objects.Get(ctx, key)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 	defer body.Close()
-	if _, ok := avatarTypes[contentType]; !ok {
-		http.NotFound(w, r)
-		return
+	if writeHeaders(contentType, size) {
+		_, _ = io.Copy(w, body)
 	}
-	w.Header().Set("Content-Type", contentType)
-	w.Header().Set("Content-Length", strconv.FormatInt(size, 10))
-	w.Header().Set("Cache-Control", "private, max-age=86400")
-	w.Header().Set("Content-Security-Policy", "default-src 'none'")
-	w.WriteHeader(http.StatusOK)
-	_, _ = io.Copy(w, body)
 }
 
 func (srv *Server) deleteObjectQuietly(ctx context.Context, key string) {

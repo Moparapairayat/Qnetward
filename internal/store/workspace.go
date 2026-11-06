@@ -26,6 +26,9 @@ type WorkspaceMember struct {
 	Role      string    `json:"role"`
 	JoinedAt  time.Time `json:"joined_at"`
 	IsCurrent bool      `json:"is_current"`
+	// AvatarKey locates the member's picture; the API turns it into avatar_url.
+	AvatarKey string `json:"-"`
+	AvatarURL string `json:"avatar_url,omitempty"`
 }
 
 type WorkspaceInvitation struct {
@@ -210,9 +213,11 @@ func (s *Store) ListWorkspaceMembersByWorkspaceIDAndUserID(ctx context.Context, 
 			u.name,
 			u.email,
 			wm.role,
-			wm.created_at
+			wm.created_at,
+			COALESCE(p.avatar_key, '')
 		FROM workspace_members wm
 		INNER JOIN users u ON u.id = wm.user_id
+		LEFT JOIN user_profiles p ON p.user_id = u.id
 		WHERE wm.workspace_id = $1
 		ORDER BY
 			CASE WHEN wm.role = 'owner' THEN 0 WHEN wm.role = 'admin' THEN 1 ELSE 2 END,
@@ -227,7 +232,7 @@ func (s *Store) ListWorkspaceMembersByWorkspaceIDAndUserID(ctx context.Context, 
 	var members []WorkspaceMember
 	for rows.Next() {
 		var member WorkspaceMember
-		if err := rows.Scan(&member.UserID, &member.Name, &member.Email, &member.Role, &member.JoinedAt); err != nil {
+		if err := rows.Scan(&member.UserID, &member.Name, &member.Email, &member.Role, &member.JoinedAt, &member.AvatarKey); err != nil {
 			return nil, err
 		}
 		member.IsCurrent = member.UserID == userID
@@ -858,4 +863,26 @@ func maxInt(left, right int) int {
 		return left
 	}
 	return right
+}
+
+// RenameWorkspace changes a workspace's display name.
+func (s *Store) RenameWorkspace(ctx context.Context, workspaceID int64, name string) (string, error) {
+	if s == nil {
+		return "", errors.New("store is not available")
+	}
+	name = strings.Join(strings.Fields(name), " ")
+	if name == "" {
+		return "", errors.New("name is required")
+	}
+	if len([]rune(name)) > 60 {
+		return "", errors.New("name must be 60 characters or fewer")
+	}
+	res, err := s.db.ExecContext(ctx, `UPDATE workspaces SET name = $2 WHERE id = $1`, workspaceID, name)
+	if err != nil {
+		return "", err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return "", ErrWorkspaceNotFound
+	}
+	return name, nil
 }

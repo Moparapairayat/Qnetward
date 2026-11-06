@@ -161,6 +161,7 @@ func (srv *Server) handleAuthDemoLogin(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 		return
 	}
+	srv.nameDemoWorkspace(ctx, user)
 	if err := srv.issueSession(w, r, ctx, user); err != nil {
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 		return
@@ -776,6 +777,22 @@ func (srv *Server) getOrCreateDemoUser(ctx context.Context) (store.User, error) 
 
 // isDemoUser reports whether user is the shared, restricted demo account.
 // With full access on, the demo account counts as an ordinary one.
+// nameDemoWorkspace gives the demo workspace a believable company name in
+// place of the generated "<name> Workspace", leaving any name someone chose.
+func (srv *Server) nameDemoWorkspace(ctx context.Context, user store.User) {
+	workspace, err := srv.store.GetWorkspaceContextByUserID(ctx, user.ID)
+	if err != nil || srv.demoWorkspace == "" || workspace.Name == srv.demoWorkspace {
+		return
+	}
+	// Generated names end in " Workspace"; the demo name may have changed since.
+	if !strings.HasSuffix(workspace.Name, " Workspace") {
+		return
+	}
+	if _, err := srv.store.RenameWorkspace(ctx, workspace.ID, srv.demoWorkspace); err != nil {
+		log.Printf("naming the demo workspace failed: %v", err)
+	}
+}
+
 func (srv *Server) isDemoUser(user store.User) bool {
 	if !srv.demoEnabled || srv.demoEmail == "" || srv.demoFullAccess {
 		return false

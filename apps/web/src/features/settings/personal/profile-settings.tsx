@@ -6,6 +6,7 @@ import { Globe, ImageUp, Link2, Plus, Trash2, X } from "lucide-react";
 import { apiRequest, apiUpload, ApiError } from "@/lib/api";
 import type { AuthMessageResponse, SessionResponse, UserProfile, UserProfileResponse } from "@/lib/types";
 import { Avatar, Notice, SaveState, SettingsCard, SettingsPageTitle } from "@/components/settings/settings-ui";
+import { squareImage } from "@/lib/image";
 
 const BIO_MAX = 160;
 const NAME_MAX = 80;
@@ -64,7 +65,8 @@ function useSaveProfile() {
   });
 }
 
-const AVATAR_MAX_BYTES = 1024 * 1024;
+// Photos are resized in the browser before upload, so the original can be large.
+const AVATAR_MAX_BYTES = 20 * 1024 * 1024;
 const AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 
 function AvatarCard({ session, data, disabled }: { session?: SessionResponse; data?: UserProfileResponse; disabled: boolean }) {
@@ -77,7 +79,7 @@ function AvatarCard({ session, data, disabled }: { session?: SessionResponse; da
   const setAvatar = (url: string) =>
     queryClient.setQueryData<UserProfileResponse>(["account-profile"], (current) => (current ? { ...current, avatar_url: url } : current));
   const upload = useMutation({
-    mutationFn: (file: File) => apiUpload<{ avatar_url: string }>("/api/account/avatar", "file", file),
+    mutationFn: async (file: File) => apiUpload<{ avatar_url: string }>("/api/account/avatar", "file", await squareImage(file)),
     onSuccess: (res) => setAvatar(res.avatar_url),
   });
   const remove = useMutation({
@@ -91,7 +93,7 @@ function AvatarCard({ session, data, disabled }: { session?: SessionResponse; da
     <SettingsCard
       id="avatar"
       title="Avatar"
-      description={uploadsEnabled ? "A square image works best. PNG, JPEG, WebP, or GIF, up to 1 MB." : "Built from your initials. Photo uploads need file storage, which this server doesn't have set up."}
+      description={uploadsEnabled ? "Any photo works: it's cropped to a square and resized before it's uploaded." : "Built from your initials. This server can't store pictures."}
       hint={upload.isSuccess || remove.isSuccess || error ? <SaveState saved={upload.isSuccess ? "Avatar updated." : remove.isSuccess ? "Avatar removed." : null} error={error} /> : undefined}
       action={
         uploadsEnabled ? (
@@ -112,7 +114,9 @@ function AvatarCard({ session, data, disabled }: { session?: SessionResponse; da
         <Avatar name={session?.user?.name} email={session?.user?.email} src={avatarUrl} size={64} />
         <div className="text-[13px] text-[var(--lp-muted)]">
           <p className="text-[var(--lp-text)]">{session?.user?.name || session?.user?.email}</p>
-          <p className="text-[12px] text-[var(--lp-subtle)]">{avatarUrl ? "Visible to people in your workspaces." : "Your initials are shown until you upload a picture."}</p>
+          <p className="text-[12px] text-[var(--lp-subtle)]">
+            {avatarUrl ? "Visible to people in your workspaces." : "Your initials are shown until you add a picture. Signing in with Google uses your Google photo."}
+          </p>
         </div>
       </div>
       <input
@@ -129,7 +133,7 @@ function AvatarCard({ session, data, disabled }: { session?: SessionResponse; da
           remove.reset();
           if (!file) return;
           if (!AVATAR_TYPES.includes(file.type)) return setClientError("Use a PNG, JPEG, WebP, or GIF image.");
-          if (file.size > AVATAR_MAX_BYTES) return setClientError("Image must be 1 MB or smaller.");
+          if (file.size > AVATAR_MAX_BYTES) return setClientError("Image must be 20 MB or smaller.");
           upload.mutate(file);
         }}
       />

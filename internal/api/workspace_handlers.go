@@ -171,6 +171,9 @@ func (srv *Server) handleWorkspaceTeam(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 			return
 		}
+		for i := range members {
+			members[i].AvatarURL = avatarURL(members[i].UserID, members[i].AvatarKey)
+		}
 		invitations, err := srv.store.ListWorkspaceInvitationsByWorkspaceIDAndUserID(ctx, workspace.ID, user.ID)
 		if err != nil {
 			writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
@@ -488,4 +491,61 @@ func toAuthWorkspaceInvitations(invitations []store.WorkspaceInvitation) []authW
 		})
 	}
 	return resp
+}
+
+// handleWorkspaceGeneral returns the active workspace, and lets owners and
+// admins rename it.
+func (srv *Server) handleWorkspaceGeneral(w http.ResponseWriter, r *http.Request) {
+	if srv.store == nil {
+		writeJSON(w, http.StatusServiceUnavailable, apiError{Error: "storage not available"})
+		return
+	}
+	user, ok := srv.requireAuthenticatedUser(w, r)
+	if !ok {
+		return
+	}
+	_, _, activeWorkspaceID, _ := srv.currentSessionState(r)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+	workspace, err := srv.resolveActiveWorkspace(ctx, user, activeWorkspaceID)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		writeJSON(w, http.StatusOK, map[string]any{"workspace": workspace})
+	case http.MethodPatch:
+		if !srv.isAllowedRequestOrigin(r) {
+			writeJSON(w, http.StatusForbidden, apiError{Error: "forbidden origin"})
+			return
+		}
+		if workspace.Role != "owner" && workspace.Role != "admin" {
+			writeJSON(w, http.StatusForbidden, apiError{Error: "only workspace owners and admins can rename the workspace"})
+			return
+		}
+		if srv.isDemoUser(user) {
+			writeJSON(w, http.StatusForbidden, apiError{Error: "the shared demo account can't rename its workspace"})
+			return
+		}
+		var req struct {
+			Name string `json:"name"`
+		}
+		if err := decodeJSON(w, r, &req); err != nil {
+			writeJSON(w, http.StatusBadRequest, apiError{Error: err.Error()})
+			return
+		}
+		previous := workspace.Name
+		name, err := srv.store.RenameWorkspace(ctx, workspace.ID, req.Name)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, apiError{Error: err.Error()})
+			return
+		}
+		workspace.Name = name
+		srv.recordAudit(r, workspace.ID, user, "workspace.renamed", idTarget("workspace", workspace.ID, name), map[string]any{"from": previous, "to": name})
+		writeJSON(w, http.StatusOK, map[string]any{"workspace": workspace})
+	default:
+		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
+	}
 }

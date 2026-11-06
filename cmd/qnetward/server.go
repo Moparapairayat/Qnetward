@@ -53,6 +53,7 @@ func runServe(args []string) {
 	demoEnabled := fs.Bool("demo-enabled", envBool("QNETWARD_DEMO_ENABLED", false), "enable shared demo login")
 	demoName := fs.String("demo-name", envString("QNETWARD_DEMO_NAME", "Contributor Demo"), "display name for demo access")
 	demoEmail := fs.String("demo-email", envString("QNETWARD_DEMO_EMAIL", "demo@qnetward.local"), "display email for demo access")
+	demoWorkspace := fs.String("demo-workspace", envString("QNETWARD_DEMO_WORKSPACE", "Kestrel Labs"), "name of the demo account's workspace")
 	demoFullAccess := fs.Bool("demo-full-access", envBool("QNETWARD_DEMO_FULL_ACCESS", false), "let the demo account do everything a normal owner can; for local testing only")
 	allowPrivateTargets := fs.Bool("allow-private-targets", envBool("QNETWARD_ALLOW_PRIVATE_TARGETS", false), "allow probes to loopback, private, and link-local addresses (self-hosted LAN monitoring); cloud metadata endpoints stay blocked")
 	encryptionKey := fs.String("encryption-key", envString("QNETWARD_ENCRYPTION_KEY", ""), "base64 32-byte key that encrypts stored secrets such as TOTP seeds (required in production)")
@@ -163,6 +164,7 @@ func runServe(args []string) {
 			DemoName:       *demoName,
 			DemoEmail:      *demoEmail,
 			DemoFullAccess: *demoFullAccess,
+			DemoWorkspace:  *demoWorkspace,
 			TargetPolicy:   netguard.Policy{AllowPrivate: *allowPrivateTargets},
 			Google:         api.GoogleOAuth(*googleClientID, *googleClientSecret),
 		},

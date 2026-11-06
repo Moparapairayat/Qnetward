@@ -21,7 +21,7 @@ import {
 import { apiRequest } from "@/lib/api";
 import type { SessionResponse, UserProfileResponse, WorkspaceListResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Avatar, initialsFor, roleLabel } from "@/components/settings/settings-ui";
+import { Avatar, roleLabel, WorkspaceAvatar } from "@/components/settings/settings-ui";
 
 type NavItem = { href: string; label: string; icon: LucideIcon; soon?: boolean };
 
@@ -34,6 +34,7 @@ const personalItems: NavItem[] = [
 ];
 
 const workspaceItems: NavItem[] = [
+  { href: "/workspace/general", label: "General", icon: Settings2 },
   { href: "/workspace/team", label: "Team", icon: Users },
   { href: "/workspace/billing", label: "Billing and plan", icon: CreditCard },
   { href: "/workspace/integrations", label: "Integrations", icon: Plug },
@@ -101,11 +102,6 @@ export function SettingsShell({ children }: { context?: "personal" | "workspace"
   const workspaceName = workspace?.name || "Workspace";
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
-  const workspaceBadge = (size: string) => (
-    <span className={cn("grid shrink-0 place-items-center rounded-md bg-[linear-gradient(135deg,#ff3d7f,#8b5cf6)] font-semibold text-white", size)} aria-hidden="true">
-      {initialsFor(workspace?.name)}
-    </span>
-  );
 
   return (
     <div className="mx-auto w-full max-w-[1180px]">
@@ -156,7 +152,7 @@ export function SettingsShell({ children }: { context?: "personal" | "workspace"
 
             <div className="mt-4 border-t border-[var(--lp-border)] pt-4">
               <SectionHeading
-                badge={workspaceBadge("h-6 w-6 text-[10px]")}
+                badge={<WorkspaceAvatar name={workspace?.name} id={workspace?.id} size={24} />}
                 title={workspaceName}
                 meta={workspace?.role ? `Workspace · you are ${roleLabel(workspace.role).toLowerCase()}` : "Workspace"}
               />

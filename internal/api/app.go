@@ -39,6 +39,8 @@ type Options struct {
 	DemoEmail      string
 	// DemoFullAccess lifts the demo account's restrictions, for local testing.
 	DemoFullAccess bool
+	// DemoWorkspace names the demo account's workspace.
+	DemoWorkspace string
 	// Google enables "Sign in with Google" when its client ID and secret are set.
 	Google OAuthProvider
 	// TargetPolicy decides which addresses API-initiated probes may reach.
@@ -62,6 +64,7 @@ type Server struct {
 	demoName       string
 	demoEmail      string
 	demoFullAccess bool
+	demoWorkspace  string
 	demoCreatedAt  time.Time
 	targetPolicy   netguard.Policy
 	google         OAuthProvider
@@ -70,6 +73,8 @@ type Server struct {
 	monitorRootCAs *x509.CertPool
 	// telegramAPI overrides the Telegram Bot API base; tests only.
 	telegramAPI string
+	// pictureTestHost is a host allowed to serve provider pictures; tests only.
+	pictureTestHost string
 
 	probeLimiter chan struct{}
 	// quotaLimiter counts per-workspace and per-key usage against plan limits.
@@ -93,6 +98,7 @@ func New(deps Deps, opts Options) *Server {
 		demoName:       strings.TrimSpace(opts.DemoName),
 		demoEmail:      strings.TrimSpace(opts.DemoEmail),
 		demoFullAccess: opts.DemoFullAccess,
+		demoWorkspace:  strings.TrimSpace(opts.DemoWorkspace),
 		demoCreatedAt:  time.Now().UTC(),
 		targetPolicy:   opts.TargetPolicy,
 		google:         opts.Google,
@@ -107,6 +113,9 @@ func New(deps Deps, opts Options) *Server {
 		}
 		if srv.demoEmail == "" {
 			srv.demoEmail = "demo@qnetward.local"
+		}
+		if srv.demoWorkspace == "" {
+			srv.demoWorkspace = "Kestrel Labs"
 		}
 	}
 	return srv
@@ -150,6 +159,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/account", srv.handleAccountDelete)
 	mux.HandleFunc("GET /api/avatars/{id}", srv.handleAvatarImage)
 	mux.HandleFunc("/api/workspaces", srv.handleWorkspaces)
+	mux.HandleFunc("/api/workspace", srv.handleWorkspaceGeneral)
 	mux.HandleFunc("/api/workspace/team", srv.handleWorkspaceTeam)
 	mux.HandleFunc("/api/workspace/invitations", srv.handleWorkspaceInvitations)
 	mux.HandleFunc("/api/workspace/audit", srv.handleWorkspaceAudit)
