@@ -14,6 +14,7 @@ import (
 	"qnetward/internal/platform/netguard"
 	"qnetward/internal/platform/objectstore"
 	"qnetward/internal/platform/secretbox"
+	"qnetward/internal/platform/uddoktapay"
 	"qnetward/internal/store"
 )
 
@@ -43,6 +44,8 @@ type Options struct {
 	DemoWorkspace string
 	// Google enables "Sign in with Google" when its client ID and secret are set.
 	Google OAuthProvider
+	// Billing configures paid plans; without an UddoktaPay key, nothing can be bought.
+	Billing Billing
 	// TargetPolicy decides which addresses API-initiated probes may reach.
 	// The CLI does not use it: it runs on the operator's own machine.
 	TargetPolicy netguard.Policy
@@ -71,6 +74,8 @@ type Server struct {
 	webauthn       *webauthn.WebAuthn
 	// monitorRootCAs overrides the system roots for HTTPS monitors; tests only.
 	monitorRootCAs *x509.CertPool
+	billing        Billing
+	payments       *uddoktapay.Client
 	// telegramAPI overrides the Telegram Bot API base; tests only.
 	telegramAPI string
 	// pictureTestHost is a host allowed to serve provider pictures; tests only.
@@ -99,6 +104,8 @@ func New(deps Deps, opts Options) *Server {
 		demoEmail:      strings.TrimSpace(opts.DemoEmail),
 		demoFullAccess: opts.DemoFullAccess,
 		demoWorkspace:  strings.TrimSpace(opts.DemoWorkspace),
+		billing:        opts.Billing,
+		payments:       &uddoktapay.Client{BaseURL: strings.TrimSpace(opts.Billing.UddoktaPayURL), APIKey: strings.TrimSpace(opts.Billing.UddoktaPayKey)},
 		demoCreatedAt:  time.Now().UTC(),
 		targetPolicy:   opts.TargetPolicy,
 		google:         opts.Google,
@@ -160,6 +167,10 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/avatars/{id}", srv.handleAvatarImage)
 	mux.HandleFunc("/api/workspaces", srv.handleWorkspaces)
 	mux.HandleFunc("/api/workspace", srv.handleWorkspaceGeneral)
+	mux.HandleFunc("/api/billing", srv.handleBilling)
+	mux.HandleFunc("/api/billing/checkout", srv.handleBillingCheckout)
+	mux.HandleFunc("/api/billing/uddoktapay/return", srv.handleUddoktaPayReturn)
+	mux.HandleFunc("/api/billing/uddoktapay/webhook", srv.handleUddoktaPayWebhook)
 	mux.HandleFunc("/api/workspace/team", srv.handleWorkspaceTeam)
 	mux.HandleFunc("/api/workspace/invitations", srv.handleWorkspaceInvitations)
 	mux.HandleFunc("/api/workspace/audit", srv.handleWorkspaceAudit)

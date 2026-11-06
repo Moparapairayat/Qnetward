@@ -50,6 +50,18 @@ func envBool(key string, fallback bool) bool {
 	return parsed
 }
 
+func envFloat(key string, fallback float64) float64 {
+	value := lookupEnv(key)
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
 func envDuration(key string, fallback time.Duration) time.Duration {
 	value := lookupEnv(key)
 	if value == "" {

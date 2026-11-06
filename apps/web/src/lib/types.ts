@@ -560,3 +560,28 @@ export type ChannelListResponse = { channels: NotificationChannel[]; kinds: Chan
 export type ChannelSaveResponse = { channel: NotificationChannel; signing_secret?: string };
 
 export type ChannelTestResponse = { ok: boolean; error?: string };
+
+export type BillingPayment = {
+  id: number;
+  provider: string;
+  plan: string;
+  months: number;
+  amount: number;
+  currency: string;
+  status: "pending" | "paid" | "failed";
+  invoice_id?: string;
+  transaction_id?: string;
+  payment_method?: string;
+  created_at: string;
+  paid_at?: string | null;
+};
+
+export type BillingResponse = {
+  plan: string;
+  plan_expires_at?: string | null;
+  payments_enabled: boolean;
+  prices: { plan: string; months: number; amount: number }[];
+  currency: string;
+  can_pay: boolean;
+  payments?: BillingPayment[];
+};

@@ -31,3 +31,4 @@ patterns don't.
 | [0015](0015-totp-two-factor-sign-in.md) | Two-factor sign-in with TOTP | Accepted |
 | [0016](0016-google-sign-in-and-passkeys.md) | Google sign-in and passkeys in our own auth | Accepted |
 | [0017](0017-alert-channels.md) | Alert channels for chat tools and webhooks | Accepted |
+| [0018](0018-plans-paid-through-uddoktapay.md) | Paid plans through UddoktaPay, bought a period at a time | Accepted |

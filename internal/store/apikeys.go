@@ -294,8 +294,9 @@ func (s *Store) GetWorkspaceUsage(ctx context.Context, workspaceID int64) (Works
 }
 
 // SetWorkspacePlan changes a workspace's plan. Callers validate the plan ID.
+// A plan set by hand doesn't expire, so any paid period is cleared.
 func (s *Store) SetWorkspacePlan(ctx context.Context, workspaceID int64, plan string) error {
-	res, err := s.db.ExecContext(ctx, `UPDATE workspaces SET plan = $2 WHERE id = $1`, workspaceID, plan)
+	res, err := s.db.ExecContext(ctx, `UPDATE workspaces SET plan = $2, plan_expires_at = NULL WHERE id = $1`, workspaceID, plan)
 	if err != nil {
 		return err
 	}

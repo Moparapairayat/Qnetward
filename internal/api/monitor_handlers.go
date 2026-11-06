@@ -248,6 +248,12 @@ func (srv *Server) RunMonitors(ctx context.Context) {
 			if err := srv.store.PruneAuditEvents(pruneCtx, time.Now().Add(-store.AuditRetention)); err != nil {
 				log.Printf("audit log pruning failed: %v", err)
 			}
+			// Paid periods that ran out return their workspaces to Free.
+			if n, err := srv.store.ExpirePlans(pruneCtx); err != nil {
+				log.Printf("expiring plans failed: %v", err)
+			} else if n > 0 {
+				log.Printf("moved %d workspaces back to Free after their paid period ended", n)
+			}
 			cancel()
 		case <-poll.C:
 			free := monitorConcurrency - len(slots)

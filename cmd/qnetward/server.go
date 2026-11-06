@@ -53,6 +53,10 @@ func runServe(args []string) {
 	demoEnabled := fs.Bool("demo-enabled", envBool("QNETWARD_DEMO_ENABLED", false), "enable shared demo login")
 	demoName := fs.String("demo-name", envString("QNETWARD_DEMO_NAME", "Contributor Demo"), "display name for demo access")
 	demoEmail := fs.String("demo-email", envString("QNETWARD_DEMO_EMAIL", "demo@qnetward.local"), "display email for demo access")
+	uddoktaURL := fs.String("uddoktapay-url", envString("QNETWARD_UDDOKTAPAY_URL", ""), "UddoktaPay installation URL, such as https://pay.example.com or https://sandbox.uddoktapay.com")
+	uddoktaKey := fs.String("uddoktapay-api-key", envString("QNETWARD_UDDOKTAPAY_API_KEY", ""), "UddoktaPay API key; without it, plans can't be bought")
+	proMonthly := fs.Float64("pro-monthly-bdt", envFloat("QNETWARD_PRO_MONTHLY_BDT", 1500), "price of one month of Pro, in taka")
+	proYearly := fs.Float64("pro-yearly-bdt", envFloat("QNETWARD_PRO_YEARLY_BDT", 15000), "price of twelve months of Pro, in taka")
 	demoWorkspace := fs.String("demo-workspace", envString("QNETWARD_DEMO_WORKSPACE", "Kestrel Labs"), "name of the demo account's workspace")
 	demoFullAccess := fs.Bool("demo-full-access", envBool("QNETWARD_DEMO_FULL_ACCESS", false), "let the demo account do everything a normal owner can; for local testing only")
 	allowPrivateTargets := fs.Bool("allow-private-targets", envBool("QNETWARD_ALLOW_PRIVATE_TARGETS", false), "allow probes to loopback, private, and link-local addresses (self-hosted LAN monitoring); cloud metadata endpoints stay blocked")
@@ -165,6 +169,7 @@ func runServe(args []string) {
 			DemoEmail:      *demoEmail,
 			DemoFullAccess: *demoFullAccess,
 			DemoWorkspace:  *demoWorkspace,
+			Billing:        api.Billing{UddoktaPayURL: *uddoktaURL, UddoktaPayKey: *uddoktaKey, ProMonthlyBDT: *proMonthly, ProYearlyBDT: *proYearly},
 			TargetPolicy:   netguard.Policy{AllowPrivate: *allowPrivateTargets},
 			Google:         api.GoogleOAuth(*googleClientID, *googleClientSecret),
 		},
