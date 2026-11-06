@@ -85,5 +85,3 @@ export const roadmap: RoadmapTheme[] = [
     ],
   },
 ];
-
-export const itemsByHorizon = (horizon: Horizon) => roadmap.flatMap((theme) => theme.items.filter((item) => item.horizon === horizon));

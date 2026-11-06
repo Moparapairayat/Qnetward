@@ -7,7 +7,6 @@ import { GitHubIcon, LandingNav } from "./landing-nav";
 import { NetworkCanvas } from "./network-canvas";
 import { Pricing } from "./pricing";
 import { ProductShowcase } from "./product-showcase";
-import { RoadmapPreview } from "./roadmap-preview";
 import { MonitorStackVisual, MonitorVisual, ProbeVisual, WorkspaceVisual } from "./step-visuals";
 import { QnetwardMark } from "./qnetward-mark";
 import { TechLogos } from "./tech-logos";
@@ -284,10 +283,6 @@ export function LandingPage() {
             />
             <div className="lp-reveal mt-14">
               <ProductShowcase />
-            </div>
-
-            <div className="mt-20">
-              <RoadmapPreview />
             </div>
           </div>
         </section>
