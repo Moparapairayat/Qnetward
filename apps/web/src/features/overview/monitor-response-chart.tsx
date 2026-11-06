@@ -205,7 +205,7 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
         ) : null}
       </ul>
 
-      <div ref={boxRef} className="relative mx-2 mb-2 mt-2 min-h-[240px] flex-1">
+      <div ref={boxRef} className="relative mx-2 mb-2 mt-2 min-h-[210px] flex-1">
         {box.width > 0 ? (
           <svg
             width={W}

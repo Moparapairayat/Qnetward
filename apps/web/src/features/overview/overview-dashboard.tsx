@@ -226,7 +226,7 @@ function StatCard({ stat }: { stat: Stat }) {
         </span>
         <span className="text-[13px] text-[var(--lp-text)]">{stat.label}</span>
       </div>
-      <div className="flex items-end justify-between gap-3 px-4 pb-4 pt-3">
+      <div className="flex items-end justify-between gap-3 px-4 pb-3 pt-2">
         <span className="flex items-baseline gap-1.5">
           <span className="text-[28px] font-medium tracking-[-0.02em]">{stat.value}</span>
           {stat.unit ? <span className="text-[13px] text-[var(--lp-subtle)]">{stat.unit}</span> : null}
@@ -245,7 +245,7 @@ function StatCard({ stat }: { stat: Stat }) {
           </span>
         ) : null}
       </div>
-      <div className="mt-auto flex items-center justify-between gap-2 border-t border-[var(--lp-border)] px-4 py-2.5 text-[12px] text-[var(--lp-subtle)]">
+      <div className="mt-auto flex items-center justify-between gap-2 border-t border-[var(--lp-border)] px-4 py-2 text-[12px] text-[var(--lp-subtle)]">
         <span className="truncate">{stat.footer}</span>
         {stat.tone ? (
           <span className={cn("rounded border px-1.5 py-px text-[11px]", toneClass)}>
@@ -541,7 +541,7 @@ export function ResponseTimeChart({ targets, historyMap }: { targets: OverviewTa
               );
             })}
           </ul>
-          <div ref={boxRef} className="relative mx-2 mb-2 mt-2 min-h-[240px] flex-1">
+          <div ref={boxRef} className="relative mx-2 mb-2 mt-2 min-h-[210px] flex-1">
             {box.width > 0 && series.length ? (
               <svg width={W} height={H} className="absolute inset-0 touch-none" onPointerMove={onMove} onPointerLeave={() => setHoverTs(null)} role="img" aria-label="Response time per target">
                 {axis.breaks.map((k) => {
@@ -675,13 +675,13 @@ export function TargetHealthCard({ targets }: { targets: OverviewTargetSnapshot[
           Target health
         </h2>
       </div>
-      <div className="space-y-4 px-4 pt-4">
+      <div className="space-y-3 px-4 pb-4 pt-3.5">
         {rows.map((row) => {
           const count = targets.filter((t) => t.healthState === row.state).length;
           const pct = total ? Math.round((count / total) * 100) : 0;
           return (
             <div key={row.state}>
-              <div className="mb-1.5 flex items-baseline justify-between text-[13px]">
+              <div className="mb-1 flex items-baseline justify-between text-[13px]">
                 <span className="text-[var(--lp-text)]">{row.label}</span>
                 <span className="lp-mono text-[12px]" style={{ color: count ? stateMeta[row.state].color : "var(--lp-subtle)" }}>
                   {count} <span className="text-[var(--lp-subtle)]">· {pct}%</span>
@@ -692,29 +692,28 @@ export function TargetHealthCard({ targets }: { targets: OverviewTargetSnapshot[
           );
         })}
       </div>
-      <div className="m-4 mt-5 rounded-lg border border-[var(--lp-border)] bg-black/20 p-3">
-        {attention.length ? (
-          <>
-            <p className="flex items-center gap-2 text-[12px] text-[var(--lp-muted)]">
-              <AlertTriangle className="h-3.5 w-3.5 text-[var(--lp-amber)]" />
-              {attention.length} {attention.length === 1 ? "target needs" : "targets need"} attention
-            </p>
-            <ul className="mt-2 space-y-1.5 text-[12px]">
-              {attention.slice(0, 3).map((t) => (
-                <li key={t.id}>
-                  <Link href={t.href} className="flex items-center gap-2 text-[var(--lp-text)] hover:text-[var(--lp-accent)]">
-                    <span className="h-1.5 w-1.5 rounded-sm" style={{ background: stateMeta[t.healthState].color }} />
-                    <span className="truncate">{t.name}</span>
-                    <span className="ml-auto text-[var(--lp-subtle)]">{stateMeta[t.healthState].label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : (
-          <p className="text-[12px] text-[var(--lp-subtle)]">{total ? "Nothing needs attention right now." : "Targets appear here after your first probe."}</p>
-        )}
-      </div>
+      {/* Only takes room when something needs a look, or before the first probe. */}
+      {attention.length ? (
+        <div className="mx-4 mb-4 rounded-lg border border-[var(--lp-border)] bg-black/20 p-3">
+          <p className="flex items-center gap-2 text-[12px] text-[var(--lp-muted)]">
+            <AlertTriangle className="h-3.5 w-3.5 text-[var(--lp-amber)]" />
+            {attention.length} {attention.length === 1 ? "target needs" : "targets need"} attention
+          </p>
+          <ul className="mt-2 space-y-1.5 text-[12px]">
+            {attention.slice(0, 3).map((t) => (
+              <li key={t.id}>
+                <Link href={t.href} className="flex items-center gap-2 text-[var(--lp-text)] hover:text-[var(--lp-accent)]">
+                  <span className="h-1.5 w-1.5 rounded-sm" style={{ background: stateMeta[t.healthState].color }} />
+                  <span className="truncate">{t.name}</span>
+                  <span className="ml-auto text-[var(--lp-subtle)]">{stateMeta[t.healthState].label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : !total ? (
+        <p className="px-4 pb-4 text-[12px] text-[var(--lp-subtle)]">Targets appear here after your first probe.</p>
+      ) : null}
     </section>
   );
 }
