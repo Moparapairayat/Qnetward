@@ -228,7 +228,7 @@ function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () => void
             <div className="rounded-lg border border-[var(--lp-border)] bg-black/20 p-3">
               <p className="text-[12px] text-[var(--lp-subtle)]">Try it</p>
               <p className="lp-mono mt-1 overflow-x-auto whitespace-nowrap text-[12px] text-[var(--lp-muted)]">
-                curl -H &quot;Authorization: Bearer {token.slice(0, 12)}…&quot; https://console.qnetward.io/api/monitors
+                curl -H &quot;Authorization: Bearer {token.slice(0, 12)}…&quot; https://console.qnetward.com/api/monitors
               </p>
             </div>
             <Notice tone="info">Store it in your CI secrets or a password manager. If it&apos;s lost, revoke it and create a new one.</Notice>

@@ -17,7 +17,7 @@ export function HeroConsole() {
           <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
           <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
           <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-          <span className="lp-mono ml-4 truncate text-[11px] text-[var(--lp-subtle)]">console.qnetward.io/overview</span>
+          <span className="lp-mono ml-4 truncate text-[11px] text-[var(--lp-subtle)]">console.qnetward.com/overview</span>
         </div>
 
         <Image

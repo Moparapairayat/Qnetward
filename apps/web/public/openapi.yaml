@@ -16,7 +16,7 @@ info:
     Targets in private and cloud-metadata ranges are refused on the hosted
     service. Errors are JSON objects with an `error` message.
 servers:
-  - url: https://console.qnetward.io
+  - url: https://console.qnetward.com
     description: Hosted service
 security:
   - apiKey: []

@@ -137,7 +137,7 @@ export function ProductShowcase() {
             <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
             <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
             <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-            <span className="lp-mono ml-4 truncate text-[11px] text-[var(--lp-subtle)]">console.qnetward.io/{active.path}</span>
+            <span className="lp-mono ml-4 truncate text-[11px] text-[var(--lp-subtle)]">console.qnetward.com/{active.path}</span>
           </div>
           {/* All screens stay mounted and cross-fade, so switching tools never shifts the layout. */}
           <div className="relative aspect-[1184/800]">
