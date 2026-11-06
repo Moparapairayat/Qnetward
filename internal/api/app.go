@@ -119,7 +119,7 @@ func New(deps Deps, opts Options) *Server {
 			srv.demoName = "Contributor Demo"
 		}
 		if srv.demoEmail == "" {
-			srv.demoEmail = "demo@qnetward.local"
+			srv.demoEmail = "demo@qnetward.com"
 		}
 		if srv.demoWorkspace == "" {
 			srv.demoWorkspace = "Kestrel Labs"

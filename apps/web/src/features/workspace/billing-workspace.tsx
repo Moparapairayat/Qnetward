@@ -158,7 +158,7 @@ function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; pla
     }
     if (id === "enterprise") {
       return (
-        <a href="mailto:sales@qnetward.io?subject=Qnetward%20Enterprise" className="console-btn console-btn-secondary h-9 w-full justify-center">
+        <a href="mailto:sales@qnetward.com?subject=Qnetward%20Enterprise" className="console-btn console-btn-secondary h-9 w-full justify-center">
           {isCurrent ? "Your current plan" : "Contact sales"}
         </a>
       );

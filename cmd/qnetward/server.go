@@ -52,7 +52,7 @@ func runServe(args []string) {
 	allowedOriginsRaw := fs.String("allowed-origins", envString("QNETWARD_ALLOWED_ORIGINS", ""), "comma-separated additional allowed browser origins, for example http://127.0.0.1:3000")
 	demoEnabled := fs.Bool("demo-enabled", envBool("QNETWARD_DEMO_ENABLED", false), "enable shared demo login")
 	demoName := fs.String("demo-name", envString("QNETWARD_DEMO_NAME", "Contributor Demo"), "display name for demo access")
-	demoEmail := fs.String("demo-email", envString("QNETWARD_DEMO_EMAIL", "demo@qnetward.local"), "display email for demo access")
+	demoEmail := fs.String("demo-email", envString("QNETWARD_DEMO_EMAIL", "demo@qnetward.com"), "display email for demo access")
 	uddoktaURL := fs.String("uddoktapay-url", envString("QNETWARD_UDDOKTAPAY_URL", ""), "UddoktaPay installation URL, such as https://pay.example.com or https://sandbox.uddoktapay.com")
 	uddoktaKey := fs.String("uddoktapay-api-key", envString("QNETWARD_UDDOKTAPAY_API_KEY", ""), "UddoktaPay API key; without it, plans can't be bought")
 	proMonthly := fs.Float64("pro-monthly-bdt", envFloat("QNETWARD_PRO_MONTHLY_BDT", 1500), "price of one month of Pro, in taka")
