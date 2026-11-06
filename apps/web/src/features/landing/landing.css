@@ -307,14 +307,6 @@
   .lp-root .lp-cta-panel {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01)), var(--lp-bg);
   }
-  /* Faint grid behind the closing call to action, fading out toward the right. */
-  .lp-root .lp-cta-grid {
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
-    background-size: 44px 44px;
-    mask-image: radial-gradient(ellipse 70% 90% at 20% 60%, #000 20%, transparent 75%);
-  }
   .lp-root .overflow-x-auto {
     position: relative;
   }

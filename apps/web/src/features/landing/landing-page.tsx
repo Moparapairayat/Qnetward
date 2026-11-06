@@ -458,7 +458,6 @@ export function LandingPage() {
         <section className="lp-divider py-20 sm:py-28">
           <div className="lp-container">
             <div className="lp-reveal lp-cta-panel relative overflow-hidden rounded-3xl border border-[var(--lp-border-strong)] px-6 py-12 sm:px-12 sm:py-16">
-              <div aria-hidden="true" className="lp-cta-grid pointer-events-none absolute inset-0" />
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0"
