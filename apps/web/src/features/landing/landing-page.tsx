@@ -430,8 +430,8 @@ export function LandingPage() {
           <div className="lp-container">
             <SectionHeader
               label="Pricing"
-              title="Free while we're in beta"
-              aside="Use everything that exists today at no cost. Paid plans arrive with agents and multi-region probing, and we'll announce prices well before the beta ends."
+              title="Start free, grow into Pro"
+              aside="Everything that exists today is free, with room for a small team. Pro raises the limits when you need more, paid in taka with bKash, Nagad, Rocket, or card."
             />
             <div className="mt-14">
               <Pricing />
