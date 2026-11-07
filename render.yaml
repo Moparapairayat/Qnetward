@@ -1,5 +1,17 @@
-# Render Blueprint: the whole app as one Docker web service.
-# Setup and caveats of the free plan: docs/deploy-render.md
+# Render Blueprint: the whole app as one Docker web service, with a Render
+# Postgres database. Setup and caveats of the free plan: docs/deploy-render.md
+#
+# A free Render database expires 30 days after it's created and is deleted
+# 14 days later with all its data. Use it for short tests and demos only.
+databases:
+  - name: qnetward-db
+    plan: free
+    region: singapore
+    databaseName: qnetward
+    user: qnetward
+    # Migration 0005 grants SET on the tenant role, which needs PostgreSQL 16+.
+    postgresMajorVersion: "16"
+
 services:
   - type: web
     name: qnetward
@@ -13,7 +25,9 @@ services:
     envVars:
       # Secrets: Render asks for these when the Blueprint is created.
       - key: QNETWARD_DB_DSN
-        sync: false
+        fromDatabase:
+          name: qnetward-db
+          property: connectionString
       - key: QNETWARD_ENCRYPTION_KEY
         sync: false
       - key: QNETWARD_PUBLIC_BASE_URL
@@ -24,7 +38,7 @@ services:
         sync: false
       - key: QNETWARD_ADMIN_EMAILS
         sync: false
-      # The free Neon plan allows few connections; keep the pool small.
+      # The free database allows few connections; keep the pool small.
       - key: QNETWARD_DB_MAX_OPEN
         value: "5"
       - key: QNETWARD_DB_MAX_IDLE
