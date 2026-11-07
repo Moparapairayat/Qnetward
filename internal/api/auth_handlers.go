@@ -162,6 +162,7 @@ func (srv *Server) handleAuthDemoLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	srv.nameDemoWorkspace(ctx, user)
+	user = srv.prepareDemo(ctx, user)
 	if err := srv.issueSession(w, r, ctx, user); err != nil {
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 		return

@@ -46,7 +46,7 @@ services:
       - key: QNETWARD_DEMO_ENABLED
         value: "true"
       - key: QNETWARD_DEMO_NAME
-        value: Demo User
+        value: Mopara Pair Ayat
       - key: QNETWARD_DEMO_EMAIL
         value: demo@qnetward.com
       - key: QNETWARD_DEMO_WORKSPACE

@@ -670,3 +670,41 @@ func TestDemoFullAccessLiftsRestrictions(t *testing.T) {
 		t.Fatalf("expected the demo workspace to be named %q, got %q (err %v)", testSrv.demoWorkspace, ws.Name, err)
 	}
 }
+
+// The shared demo arrives with live monitors, an alert rule, and the
+// configured name, once: a second login doesn't add more.
+func TestDemoLoginSeedsAnEmptyWorkspace(t *testing.T) {
+	st := installTestStore(t)
+	enabled, name, email, full, workspace := testSrv.demoEnabled, testSrv.demoName, testSrv.demoEmail, testSrv.demoFullAccess, testSrv.demoWorkspace
+	t.Cleanup(func() {
+		testSrv.demoEnabled, testSrv.demoName, testSrv.demoEmail, testSrv.demoFullAccess, testSrv.demoWorkspace = enabled, name, email, full, workspace
+	})
+	testSrv.demoEnabled, testSrv.demoFullAccess = true, false
+	testSrv.demoName = "Mopara Pair Ayat"
+	testSrv.demoEmail = fmt.Sprintf("demo-seed-%d@qnetward.local", time.Now().UnixNano())
+	testSrv.demoWorkspace = "Kestrel Labs"
+
+	login := func() {
+		rr := httptest.NewRecorder()
+		testSrv.handleAuthDemoLogin(rr, httptest.NewRequest(http.MethodPost, "/api/auth/demo-login", strings.NewReader(`{}`)))
+		if rr.Code != http.StatusOK {
+			t.Fatalf("demo login: got %d: %s", rr.Code, rr.Body.String())
+		}
+	}
+	login()
+	login()
+
+	user, err := st.GetUserByEmail(t.Context(), testSrv.demoEmail)
+	if err != nil || user.Name != "Mopara Pair Ayat" {
+		t.Fatalf("expected the demo to carry the configured name, got %q (err %v)", user.Name, err)
+	}
+	ws, _ := st.GetWorkspaceContextByUserID(t.Context(), user.ID)
+	monitors, _ := st.ListMonitors(t.Context(), ws.ID)
+	if len(monitors) != len(demoMonitors()) {
+		t.Fatalf("expected %d demo monitors after two logins, got %d", len(demoMonitors()), len(monitors))
+	}
+	rules, err := st.ListAlertRules(t.Context(), ws.ID)
+	if err != nil || len(rules) != 1 {
+		t.Fatalf("expected one demo alert rule, got %d (err %v)", len(rules), err)
+	}
+}
