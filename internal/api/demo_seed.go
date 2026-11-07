@@ -25,7 +25,9 @@ func intPtr(v int) *int { return &v }
 func demoMonitors() []demoMonitor {
 	return []demoMonitor{
 		{"Website", store.Monitor{Name: "Website", Protocol: "http", Target: "https://www.cloudflare.com/", IntervalSeconds: 60}, true},
-		{"Public API", store.Monitor{Name: "Public API", Protocol: "http", Target: "https://api.github.com/", IntervalSeconds: 60}, true},
+		// GitHub's status API, not api.github.com: shared cloud addresses hit
+		// the unauthenticated rate limit there and get 403s.
+		{"Public API", store.Monitor{Name: "Public API", Protocol: "http", Target: "https://www.githubstatus.com/api/v2/status.json", IntervalSeconds: 60}, true},
 		{"DNS resolver", store.Monitor{Name: "DNS resolver", Protocol: "tcpping", Target: "1.1.1.1", Port: intPtr(53), IntervalSeconds: 60}, true},
 		{"Search edge", store.Monitor{Name: "Search edge", Protocol: "tcpping", Target: "google.com", Port: intPtr(443), IntervalSeconds: 60}, true},
 		{"Docs", store.Monitor{Name: "Docs", Protocol: "http", Target: "https://example.com/", IntervalSeconds: 300}, false},
