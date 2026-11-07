@@ -1,4 +1,4 @@
-import { UserPlus } from "lucide-react";
+import { UserPlus } from "@/components/icons";
 import { AuthLayoutCard } from "@/components/auth/auth-layout-card";
 import { DemoLoginButton } from "@/components/auth/demo-login-button";
 import { GuestOnly } from "@/components/auth/guest-only";

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Fingerprint } from "lucide-react";
+import { Fingerprint } from "@/components/icons";
 import { apiRequest } from "@/lib/api";
 import { getPasskey, passkeyErrorMessage, passkeysSupported, type RequestOptionsJSON } from "@/lib/webauthn";
 

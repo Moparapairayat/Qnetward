@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { BellRing, Download, FileClock, KeyRound, Radar, Radio, Users } from "lucide-react";
+import { BellRing, Download, FileClock, KeyRound, Radar, Radio, Users } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import { auditEventDetail, describeAuditEvent, shortUserAgent } from "@/lib/audit";
 import type { AuditEvent, AuditPage, WorkspaceTeamResponse } from "@/lib/types";

@@ -1,4 +1,4 @@
-import { Eye, Lock } from "lucide-react";
+import { Eye, Lock } from "@/components/icons";
 import type { Cell, FeaturePreview, Tone } from "@/features/previews/feature-previews";
 import {
   AssistantVisual,

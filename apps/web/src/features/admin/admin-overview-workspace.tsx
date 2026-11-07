@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRight, Building2, Server, Users } from "lucide-react";
+import { ArrowUpRight, Building2, Server, Users } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { AdminOverviewResponse, AdminUsersResponse, AdminWorkspacesResponse, RuntimeHealthResponse } from "@/lib/types";
 import { PageHeader, Panel, RunStatus, StatStrip } from "@/components/tools/probe-ui";

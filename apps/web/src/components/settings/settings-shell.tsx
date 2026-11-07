@@ -16,14 +16,14 @@ import {
   Shield,
   User,
   Users,
-  type LucideIcon,
-} from "lucide-react";
+  type AppIcon,
+} from "@/components/icons";
 import { apiRequest } from "@/lib/api";
 import type { SessionResponse, UserProfileResponse, WorkspaceListResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Avatar, roleLabel, WorkspaceAvatar } from "@/components/settings/settings-ui";
 
-type NavItem = { href: string; label: string; icon: LucideIcon; soon?: boolean };
+type NavItem = { href: string; label: string; icon: AppIcon; soon?: boolean };
 
 const personalItems: NavItem[] = [
   { href: "/settings/profile", label: "Profile", icon: User },
@@ -55,7 +55,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       )}
     >
       {active ? <span className="absolute -left-2 top-1.5 bottom-1.5 w-[3px] rounded-full bg-[var(--lp-accent)]" aria-hidden="true" /> : null}
-      <item.icon className={cn("h-4 w-4", active ? "text-white" : "text-[#9a9aa4]")} />
+      <item.icon weight={active ? "fill" : "regular"} className={cn("h-4 w-4", active ? "text-white" : "text-[#9a9aa4]")} />
       <span className="flex-1 truncate">{item.label}</span>
       {item.soon ? <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-[10px] leading-[18px] text-[var(--lp-muted)]">Soon</span> : null}
     </Link>

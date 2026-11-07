@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, Check, Copy, ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
+import { BadgeCheck, Check, Copy, ExternalLink, Pencil, Plus, Trash2 } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { Monitor, SessionResponse, StatusPage, StatusPageListResponse, StatusPageMonitor } from "@/lib/types";
 import { cn } from "@/lib/utils";

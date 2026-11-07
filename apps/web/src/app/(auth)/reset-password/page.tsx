@@ -1,4 +1,4 @@
-import { LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "@/components/icons";
 import { AuthLayoutCard } from "@/components/auth/auth-layout-card";
 import { GuestOnly } from "@/components/auth/guest-only";
 import { ResetPasswordForm } from "@/components/forms/reset-password-form";

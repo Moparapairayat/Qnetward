@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { Check, Clock3, Minus } from "lucide-react";
+import { Check, Clock3, Minus } from "@/components/icons";
 
 type Feature = { label: string; planned?: boolean };
 type Period = "monthly" | "yearly";

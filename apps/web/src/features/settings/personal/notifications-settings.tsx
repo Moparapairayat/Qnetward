@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { BellRing, Mail, MessageSquare, Webhook } from "lucide-react";
+import { BellRing, Mail, MessageSquare, Webhook } from "@/components/icons";
 import { apiRequest } from "@/lib/api";
 import type { AlertRule, SessionResponse } from "@/lib/types";
 import { SettingsCard, SettingsPageTitle } from "@/components/settings/settings-ui";

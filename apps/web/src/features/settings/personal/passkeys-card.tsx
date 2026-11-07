@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Fingerprint, X } from "lucide-react";
+import { Fingerprint, X } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import { createPasskey, passkeyErrorMessage, passkeysSupported, type CreationOptionsJSON } from "@/lib/webauthn";
 import { formatDate, Notice, SettingsCard } from "@/components/settings/settings-ui";

@@ -2,7 +2,7 @@
 
 import Image, { type StaticImageData } from "next/image";
 import { useState } from "react";
-import { Activity, BellRing, Globe, History, Radar, Radio } from "lucide-react";
+import { Activity, BellRing, Globe, History, Radar, Radio } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import pingShot from "../../../public/landing/tool-ping.jpg";
 import portscanShot from "../../../public/landing/tool-portscan.jpg";

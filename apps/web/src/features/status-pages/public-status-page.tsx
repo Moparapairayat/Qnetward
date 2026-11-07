@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, CheckCircle2, CircleDashed, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleDashed, XCircle } from "@/components/icons";
 import type { PublicStatusComponent, PublicStatusResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { QnetwardMark } from "@/features/landing/qnetward-mark";

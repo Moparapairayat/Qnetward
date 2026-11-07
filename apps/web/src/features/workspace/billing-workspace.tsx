@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check, Lock } from "lucide-react";
+import { Check, Lock } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { BillingPayment, BillingResponse, PlanLimits, SessionResponse, WorkspaceTeamResponse, WorkspaceUsageResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";

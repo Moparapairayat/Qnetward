@@ -1,7 +1,7 @@
-import { Clock, FileSpreadsheet, Globe, Laptop, SquareTerminal, type LucideIcon } from "lucide-react";
+import { Clock, FileSpreadsheet, Globe, Laptop, SquareTerminal, type AppIcon } from "@/components/icons";
 import { QnetwardMark } from "./qnetward-mark";
 
-const rows: { before: string; after: string; icon: LucideIcon }[] = [
+const rows: { before: string; after: string; icon: AppIcon }[] = [
   { before: "ping and mtr in a terminal", after: "Live ICMP and TCP ping with loss streaks and jitter", icon: SquareTerminal },
   { before: "nmap on someone's laptop", after: "Port scans saved to history, visible to the team", icon: Laptop },
   { before: "dig, nslookup, and a DNS website", after: "DNS inspector with DNSSEC and reverse lookups", icon: Globe },

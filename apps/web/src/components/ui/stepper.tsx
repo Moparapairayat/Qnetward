@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 /** Numbered progress across the top of a multi-step dialog. */

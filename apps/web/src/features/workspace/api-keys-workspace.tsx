@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, KeyRound, Plus, X } from "lucide-react";
+import { Check, Copy, KeyRound, Plus, X } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { APIKey, APIKeyCreateResponse, APIKeyListResponse, SessionResponse, WorkspaceTeamResponse } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";

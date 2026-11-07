@@ -1,4 +1,4 @@
-import { KeyRound } from "lucide-react";
+import { KeyRound } from "@/components/icons";
 import { AuthLayoutCard } from "@/components/auth/auth-layout-card";
 import { GuestOnly } from "@/components/auth/guest-only";
 import { ForgotPasswordForm } from "@/components/forms/forgot-password-form";

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Activity, Clock } from "lucide-react";
+import { Activity, Clock } from "@/components/icons";
 import { apiRequest } from "@/lib/api";
 import type { MonitorSeries, MonitorSeriesResponse, MonitorSeriesWindow } from "@/lib/types";
 import { cn } from "@/lib/utils";

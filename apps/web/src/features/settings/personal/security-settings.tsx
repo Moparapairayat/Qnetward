@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, KeyRound, LogOut, Monitor, Smartphone } from "lucide-react";
+import { Eye, EyeOff, KeyRound, LogOut, Monitor, Smartphone } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { AccountSession, AuditPage, AuthMessageResponse, SessionResponse } from "@/lib/types";
 import { describeAuditEvent, shortUserAgent } from "@/lib/audit";

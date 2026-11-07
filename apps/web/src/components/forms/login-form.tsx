@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { KeyRound, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
+import { KeyRound, LockKeyhole, Mail, ShieldCheck } from "@/components/icons";
 import { AlternateSignIn } from "@/components/auth/alternate-sign-in";
 import { AuthInputField } from "@/components/auth/auth-input-field";
 import { apiRequest, ApiError } from "@/lib/api";

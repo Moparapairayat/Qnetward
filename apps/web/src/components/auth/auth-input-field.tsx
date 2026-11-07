@@ -1,14 +1,14 @@
 "use client";
 
 import { InputHTMLAttributes, KeyboardEvent, ReactNode, useState } from "react";
-import { Eye, EyeOff, LucideIcon } from "lucide-react";
+import { Eye, EyeOff, AppIcon } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 type AuthInputFieldProps = {
   id: string;
   label: string;
-  icon?: LucideIcon;
+  icon?: AppIcon;
   error?: string;
   passwordToggle?: boolean;
   /** Rendered right-aligned under the field, e.g. a "Forgot password?" link. */

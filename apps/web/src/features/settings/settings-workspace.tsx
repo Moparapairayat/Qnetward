@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import { RuntimeHealthDependency, RuntimeHealthResponse, SessionResponse } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";

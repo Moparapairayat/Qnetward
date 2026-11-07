@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ChevronDown, Play, SlidersHorizontal, Square } from "lucide-react";
+import { ChevronDown, Play, SlidersHorizontal, Square } from "@/components/icons";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";

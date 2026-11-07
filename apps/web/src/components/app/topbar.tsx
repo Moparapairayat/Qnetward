@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, BellRing, Check, ExternalLink, FileText, HelpCircle, Keyboard, Mail, Menu, Search, X } from "lucide-react";
+import { Bell, BellRing, Check, ExternalLink, FileText, HelpCircle, Keyboard, Mail, Menu, Search, X } from "@/components/icons";
 import { apiRequest } from "@/lib/api";
 import { AlertRule, SessionResponse, WorkspaceInvitationsResponse } from "@/lib/types";
 import { useShellStore } from "@/store/ui-store";

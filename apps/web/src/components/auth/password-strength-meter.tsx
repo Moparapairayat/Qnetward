@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check } from "@/components/icons";
 import { evaluatePasswordStrength } from "@/lib/password-strength";
 import { cn } from "@/lib/utils";
 

@@ -16,8 +16,8 @@ import {
   Search,
   Target,
   WifiOff,
-  type LucideIcon,
-} from "lucide-react";
+  type AppIcon,
+} from "@/components/icons";
 import type { HistoryPoint, RuntimeHealthResponse } from "@/lib/types";
 import type { OverviewTargetSnapshot } from "@/features/overview/overview-helpers";
 import { cn } from "@/lib/utils";
@@ -198,7 +198,7 @@ function samplesInOrder(historyMap: Map<string, HistoryPoint[]>) {
 /* ----------------------------------------------------------------- stats */
 
 type Stat = {
-  icon: LucideIcon;
+  icon: AppIcon;
   label: string;
   value: string;
   unit?: string;
@@ -222,7 +222,7 @@ function StatCard({ stat }: { stat: Stat }) {
     <div className="flex flex-col rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]">
       <div className="flex items-center gap-2.5 px-4 pt-4">
         <span className="grid h-7 w-7 place-items-center rounded-md border border-[var(--lp-border-strong)] bg-white/[0.03]">
-          <stat.icon className="h-3.5 w-3.5 text-[var(--lp-muted)]" />
+          <stat.icon weight="duotone" className="h-4 w-4 text-[var(--lp-muted)]" />
         </span>
         <span className="text-[13px] text-[var(--lp-text)]">{stat.label}</span>
       </div>

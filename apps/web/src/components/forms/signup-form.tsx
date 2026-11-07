@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, ChevronLeft, ChevronRight, KeyRound, LockKeyhole, Mail, UserRound } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, KeyRound, LockKeyhole, Mail, UserRound } from "@/components/icons";
 import { AlternateSignIn } from "@/components/auth/alternate-sign-in";
 import { AuthInputField } from "@/components/auth/auth-input-field";
 import { PasswordStrengthMeter } from "@/components/auth/password-strength-meter";

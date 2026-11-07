@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { KeyRound, Mail } from "lucide-react";
+import { KeyRound, Mail } from "@/components/icons";
 import { AuthInputField } from "@/components/auth/auth-input-field";
 import { apiRequest, ApiError } from "@/lib/api";
 import { AuthMessageResponse, SessionResponse } from "@/lib/types";

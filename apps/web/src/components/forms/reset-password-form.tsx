@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "@/components/icons";
 import { AuthInputField } from "@/components/auth/auth-input-field";
 import { PasswordStrengthMeter } from "@/components/auth/password-strength-meter";
 import { apiRequest, ApiError } from "@/lib/api";

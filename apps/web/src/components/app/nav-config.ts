@@ -36,13 +36,13 @@ import {
   Waypoints,
   Workflow,
   Zap,
-  type LucideIcon,
-} from "lucide-react";
+  type AppIcon,
+} from "@/components/icons";
 
 export type NavItem = {
   href: string;
   label: string;
-  icon: LucideIcon;
+  icon: AppIcon;
   keywords?: string;
   /** Planned feature: the page is a UI preview with sample data. */
   soon?: boolean;

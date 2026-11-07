@@ -1,4 +1,4 @@
-import { MailCheck } from "lucide-react";
+import { MailCheck } from "@/components/icons";
 import { AuthLayoutCard } from "@/components/auth/auth-layout-card";
 import { GuestOnly } from "@/components/auth/guest-only";
 import { VerifyEmailForm } from "@/components/forms/verify-email-form";

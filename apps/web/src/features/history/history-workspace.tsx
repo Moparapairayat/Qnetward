@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Download, History, RefreshCw, Search } from "lucide-react";
+import { Download, History, RefreshCw, Search } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import { HistoryPoint, RecentHistoryTarget } from "@/lib/types";
 import { cn, formatDateTime, formatMs } from "@/lib/utils";

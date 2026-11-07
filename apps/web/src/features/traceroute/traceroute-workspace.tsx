@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check, Copy, Route, Waypoints } from "lucide-react";
+import { Check, Copy, Route, Waypoints } from "@/components/icons";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { TracerouteHop, TracerouteResult } from "@/lib/types";

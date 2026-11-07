@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, Download, ShieldCheck } from "lucide-react";
+import { Check, Copy, Download, ShieldCheck } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { MFARecoveryResponse, MFASetupResponse, MFAStatus } from "@/lib/types";
 import { formatDate, Notice, SettingsCard } from "@/components/settings/settings-ui";

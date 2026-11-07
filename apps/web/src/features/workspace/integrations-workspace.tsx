@@ -2,7 +2,7 @@
 
 import { useState, type ComponentType, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, CheckCircle2, Copy, Pencil, Plus, Send, Trash2, Webhook, XCircle } from "lucide-react";
+import { Check, CheckCircle2, Copy, Pencil, Plus, Send, Trash2, Webhook, XCircle } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type {
   ChannelEvent,

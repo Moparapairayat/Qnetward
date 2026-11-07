@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Bell, Play, Radar, Users } from "lucide-react";
+import { ArrowRight, Bell, Play, Radar, Users } from "@/components/icons";
 import type { RuntimeHealthResponse } from "@/lib/types";
 import type { OverviewTargetSnapshot } from "@/features/overview/overview-helpers";
 import { cn } from "@/lib/utils";

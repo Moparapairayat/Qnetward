@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { SessionResponse } from "@/lib/types";
 

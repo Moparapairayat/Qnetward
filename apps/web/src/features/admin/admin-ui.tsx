@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { Search } from "lucide-react";
+import { Search } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 /* Small pieces shared by the platform admin pages. */

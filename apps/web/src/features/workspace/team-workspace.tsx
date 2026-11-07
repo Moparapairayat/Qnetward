@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, Send, Trash2, X } from "lucide-react";
+import { Search, Send, Trash2, X } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { AuthMessageResponse, SessionResponse, WorkspaceMember, WorkspaceTeamResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";

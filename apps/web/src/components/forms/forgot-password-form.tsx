@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail } from "lucide-react";
+import { Mail } from "@/components/icons";
 import { AuthInputField } from "@/components/auth/auth-input-field";
 import { apiRequest, ApiError } from "@/lib/api";
 import { AuthMessageResponse } from "@/lib/types";

@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Globe, ImageUp, Link2, Plus, Trash2, X } from "lucide-react";
+import { Globe, ImageUp, Link2, Plus, Trash2, X } from "@/components/icons";
 import { apiRequest, apiUpload, ApiError } from "@/lib/api";
 import type { AuthMessageResponse, SessionResponse, UserProfile, UserProfileResponse } from "@/lib/types";
 import { Avatar, Notice, SaveState, SettingsCard, SettingsPageTitle } from "@/components/settings/settings-ui";

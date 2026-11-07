@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Check, Mail } from "lucide-react";
+import { AlertTriangle, Check, Mail } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { AuthMessageResponse, SessionResponse } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";

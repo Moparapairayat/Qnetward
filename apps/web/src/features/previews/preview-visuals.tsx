@@ -1,4 +1,4 @@
-import { Bot, MessageSquare, Send, Sparkles } from "lucide-react";
+import { Bot, MessageSquare, Send, Sparkles } from "@/components/icons";
 
 /* Illustrative visuals for feature previews. All data below is sample data. */
 

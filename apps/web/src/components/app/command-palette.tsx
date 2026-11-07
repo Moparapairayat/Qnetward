@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CornerDownLeft, Search } from "lucide-react";
+import { CornerDownLeft, Search } from "@/components/icons";
 import { paletteSections, type NavItem } from "@/components/app/nav-config";
 import { useShellStore } from "@/store/ui-store";
 import { cn } from "@/lib/utils";

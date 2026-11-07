@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Database, HardDrive, Mail, RefreshCw, Zap } from "lucide-react";
+import { Database, HardDrive, Mail, RefreshCw, Zap } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { AdminSystemResponse, RuntimeHealthDependency, RuntimeHealthResponse } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";

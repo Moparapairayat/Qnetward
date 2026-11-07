@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, CheckCircle2, Copy, Loader2, Plus, RadioTower, Trash2 } from "lucide-react";
+import { Check, CheckCircle2, Copy, Loader2, Plus, RadioTower, Trash2 } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { ProbeAgent, ProbeAgentCreateResponse, ProbeAgentListResponse, SessionResponse, WorkspaceTeamResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
