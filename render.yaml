@@ -1,0 +1,39 @@
+# Render Blueprint: the whole app as one Docker web service.
+# Setup and caveats of the free plan: docs/deploy-render.md
+services:
+  - type: web
+    name: qnetward
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./deploy/render/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      # Secrets: Render asks for these when the Blueprint is created.
+      - key: QNETWARD_DB_DSN
+        sync: false
+      - key: QNETWARD_ENCRYPTION_KEY
+        sync: false
+      - key: QNETWARD_PUBLIC_BASE_URL
+        sync: false
+      - key: QNETWARD_RESEND_API_KEY
+        sync: false
+      - key: QNETWARD_EMAIL_FROM
+        sync: false
+      - key: QNETWARD_ADMIN_EMAILS
+        sync: false
+      # The free Neon plan allows few connections; keep the pool small.
+      - key: QNETWARD_DB_MAX_OPEN
+        value: "5"
+      - key: QNETWARD_DB_MAX_IDLE
+        value: "2"
+      - key: QNETWARD_DEMO_ENABLED
+        value: "true"
+      - key: QNETWARD_DEMO_NAME
+        value: Demo User
+      - key: QNETWARD_DEMO_EMAIL
+        value: demo@qnetward.com
+      - key: QNETWARD_DEMO_WORKSPACE
+        value: Kestrel Labs

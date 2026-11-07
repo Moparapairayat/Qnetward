@@ -49,6 +49,15 @@ jobs:
       - name: Traceroute with raw sockets
         run: sudo -E env "PATH=$PATH" go test -count=1 -run TestTraceLoopback -v ./internal/engine/traceroute
 
+  # The single-container image Render deploys (render.yaml). Built, not pushed,
+  # so a change that breaks the deploy fails here first.
+  render-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the Render image
+        run: docker build -f deploy/render/Dockerfile -t qnetward-render .
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
