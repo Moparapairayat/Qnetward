@@ -147,7 +147,11 @@ func (srv *Server) handleBillingCheckout(w http.ResponseWriter, r *http.Request)
 	}
 	// Send the browser back to the site it paid from, so a local or staging
 	// console doesn't land on production after paying.
-	base := srv.billingReturnBase(r, strings.TrimRight(r.Header.Get("Origin"), "/"))
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		origin = r.Header.Get("X-Qnetward-Origin") // set by the console's API proxy
+	}
+	base := srv.billingReturnBase(r, strings.TrimRight(origin, "/"))
 	paymentURL, err := srv.payments.CreateCharge(ctx, uddoktapay.Charge{
 		FullName: name,
 		Email:    user.Email,

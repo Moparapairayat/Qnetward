@@ -195,6 +195,62 @@ paths:
                               failed: { type: integer }
                               checks: { type: integer }
         "400": { $ref: "#/components/responses/Error" }
+  /api/status-pages:
+    get:
+      tags: [Status pages]
+      summary: List status pages
+      description: "Needs the `read` scope."
+      responses:
+        "200": { description: "The workspace's pages and the plan's page limit." }
+    post:
+      tags: [Status pages]
+      summary: Create or update a status page
+      description: "Needs the `write` scope. Send `id` to update. Monitors from other workspaces are ignored."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slug, title]
+              properties:
+                id: { type: integer }
+                slug: { type: string, description: "3 to 40 lowercase letters, numbers, or single hyphens; the page lives at /status/<slug>." }
+                title: { type: string }
+                description: { type: string }
+                published: { type: boolean }
+                monitors:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      monitor_id: { type: integer }
+                      label: { type: string, description: "The name visitors see; the monitor's own name when empty." }
+      responses:
+        "200": { description: Updated }
+        "201": { description: Created }
+        "400": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+    delete:
+      tags: [Status pages]
+      summary: Delete a status page
+      description: "Needs the `write` scope."
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Deleted }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/public/status/{slug}:
+    get:
+      tags: [Status pages]
+      summary: A published status page
+      description: "No authentication. Shows display names and outcomes only, never monitor targets. Cached for 30 seconds."
+      security: []
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "The page, its overall status (operational, degraded, outage, or unknown), and daily checks per service for the last 30 days." }
+        "404": { $ref: "#/components/responses/Error" }
   /api/alerts/rules:
     get:
       tags: [Alert rules]

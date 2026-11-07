@@ -32,3 +32,4 @@ patterns don't.
 | [0016](0016-google-sign-in-and-passkeys.md) | Google sign-in and passkeys in our own auth | Accepted |
 | [0017](0017-alert-channels.md) | Alert channels for chat tools and webhooks | Accepted |
 | [0018](0018-plans-paid-through-uddoktapay.md) | Paid plans through UddoktaPay, bought a period at a time | Accepted |
+| [0019](0019-public-status-pages.md) | Public status pages that never show what they watch | Accepted |

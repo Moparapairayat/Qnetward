@@ -7,7 +7,6 @@ import {
   TimelineVisual,
   TopologyVisual,
   TraceVisual,
-  UptimeVisual,
 } from "@/features/previews/preview-visuals";
 import { cn } from "@/lib/utils";
 
@@ -37,8 +36,6 @@ function CellView({ cell }: { cell: Cell }) {
 
 function Visual({ kind }: { kind: NonNullable<FeaturePreview["visual"]> }) {
   switch (kind) {
-    case "uptime":
-      return <UptimeVisual />;
     case "topology":
       return <TopologyVisual />;
     case "assistant":

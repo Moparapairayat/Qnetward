@@ -16,7 +16,7 @@ func TestHigherPlansNeverLimitMore(t *testing.T) {
 		lower, higher := For(IDs[i-1]).Limits, For(IDs[i]).Limits
 		if higher.Monitors < lower.Monitors || higher.APIKeys < lower.APIKeys || higher.Members < lower.Members ||
 			higher.ProbesPerHour < lower.ProbesPerHour || higher.ScansPerHour < lower.ScansPerHour ||
-			higher.APIRequestsPerMinute < lower.APIRequestsPerMinute {
+			higher.APIRequestsPerMinute < lower.APIRequestsPerMinute || higher.StatusPages < lower.StatusPages {
 			t.Errorf("%s limits fall below %s", IDs[i], IDs[i-1])
 		}
 	}

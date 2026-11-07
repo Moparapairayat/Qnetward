@@ -191,6 +191,8 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/alerts/rules", srv.handleAlertRules)
 	mux.HandleFunc("/api/monitors", srv.handleMonitors)
 	mux.HandleFunc("/api/monitors/series", srv.handleMonitorSeries)
+	mux.HandleFunc("/api/status-pages", srv.handleStatusPages)
+	mux.HandleFunc("GET /api/public/status/{slug}", srv.handlePublicStatusPage)
 	mux.HandleFunc("/api/workspace/channels", srv.handleChannels)
 	mux.HandleFunc("/api/workspace/channels/test", srv.handleChannelTest)
 	mux.HandleFunc("/ws", srv.handleWS)

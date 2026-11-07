@@ -585,3 +585,31 @@ export type BillingResponse = {
   can_pay: boolean;
   payments?: BillingPayment[];
 };
+
+export type StatusPageMonitor = { monitor_id: number; label: string };
+
+export type StatusPage = {
+  id: number;
+  slug: string;
+  title: string;
+  description: string;
+  published: boolean;
+  monitors: StatusPageMonitor[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type StatusPageListResponse = { pages: StatusPage[]; limit: number };
+
+export type PublicStatusComponent = {
+  name: string;
+  status: "up" | "down" | "pending" | "paused";
+  last_checked_at?: string | null;
+  days: { date: string; checks: number; failed: number }[];
+};
+
+export type PublicStatusResponse = {
+  page: { slug: string; title: string; description: string; components: PublicStatusComponent[]; updated_at: string };
+  status: "operational" | "degraded" | "outage" | "unknown";
+  days: number;
+};

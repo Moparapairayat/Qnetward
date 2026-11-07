@@ -13,6 +13,7 @@ type Limits struct {
 	ProbesPerHour        int `json:"probes_per_hour"`
 	ScansPerHour         int `json:"scans_per_hour"`
 	APIRequestsPerMinute int `json:"api_requests_per_minute"`
+	StatusPages          int `json:"status_pages"`
 }
 
 type Plan struct {
@@ -31,14 +32,17 @@ var catalog = map[string]Plan{
 	Free: {ID: Free, Name: "Free", Limits: Limits{
 		Monitors: 20, APIKeys: 10, Members: 25,
 		ProbesPerHour: 600, ScansPerHour: 30, APIRequestsPerMinute: 120,
+		StatusPages: 1,
 	}},
 	Pro: {ID: Pro, Name: "Pro", Limits: Limits{
 		Monitors: 200, APIKeys: 50, Members: 100,
 		ProbesPerHour: 3000, ScansPerHour: 200, APIRequestsPerMinute: 600,
+		StatusPages: 10,
 	}},
 	Enterprise: {ID: Enterprise, Name: "Enterprise", Limits: Limits{
 		Monitors: 2000, APIKeys: 200, Members: 1000,
 		ProbesPerHour: 20000, ScansPerHour: 1000, APIRequestsPerMinute: 3000,
+		StatusPages: 100,
 	}},
 }
 

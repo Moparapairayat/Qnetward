@@ -70,7 +70,7 @@ export const navSections: NavSection[] = [
     items: [
       { href: "/monitors", label: "Monitors", icon: Radio, keywords: "uptime scheduled checks down" },
       { href: "/agents", label: "Probe agents", icon: RadioTower, keywords: "regions enroll vantage", soon: true },
-      { href: "/status-pages", label: "Status pages", icon: BadgeCheck, keywords: "public uptime sla", soon: true },
+      { href: "/status-pages", label: "Status pages", icon: BadgeCheck, keywords: "public uptime sla customers incident" },
       { href: "/history", label: "History", icon: History, keywords: "results export csv" },
       { href: "/alerts", label: "Alert rules", icon: Bell, keywords: "notifications thresholds email" },
     ],

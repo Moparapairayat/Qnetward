@@ -18,7 +18,7 @@ export type FeaturePreview = {
   stats: { label: string; value: string; hint: string; tone?: Tone }[];
   table?: { title: string; columns: string[]; rows: Cell[][] };
   side?: { title: string; items: { label: string; value: string; tone?: Tone }[] };
-  visual?: "uptime" | "topology" | "assistant" | "flows" | "trace" | "timeline" | "schedule";
+  visual?: "topology" | "assistant" | "flows" | "trace" | "timeline" | "schedule";
   capabilities: string[];
 };
 
@@ -80,27 +80,6 @@ export const featurePreviews: FeaturePreview[] = [
       "One-time enrollment tokens, per-agent certificates",
       "Signed auto-updates with rollback",
       "Local buffering when the link drops",
-    ],
-  },
-  {
-    slug: "status-pages",
-    title: "Status pages",
-    description: "Public or private pages that show your customers what's up, what's down, and what you're doing about it.",
-    phase: 2,
-    phaseName: "Agents & monitoring",
-    primaryAction: "Create status page",
-    visual: "uptime",
-    stats: [
-      { label: "Pages", value: "2", hint: "1 public, 1 private" },
-      { label: "Subscribers", value: "318", hint: "email and RSS" },
-      { label: "Uptime (90d)", value: "99.96%", hint: "all components", tone: "good" },
-      { label: "Open incidents", value: "0", hint: "last one 9 days ago", tone: "good" },
-    ],
-    capabilities: [
-      "Custom domain and branding",
-      "Component groups backed by monitors",
-      "Incident updates and scheduled maintenance",
-      "Subscriber notifications",
     ],
   },
   {

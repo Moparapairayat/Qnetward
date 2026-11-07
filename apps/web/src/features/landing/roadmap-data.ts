@@ -47,7 +47,7 @@ export const roadmap: RoadmapTheme[] = [
       { name: "Uptime monitors", body: "HTTP(S), TCP, and ping checks every 30 seconds to every hour, with an email when a target goes down and when it's back.", horizon: "now" },
       { name: "Certificate expiry", body: "HTTPS monitors warn you two weeks before a certificate runs out.", horizon: "now" },
       { name: "Chat and webhook alerts", body: "Send monitor, certificate, and alert rule alerts to Slack, Discord, Telegram, or your own signed webhook.", horizon: "now" },
-      { name: "Status pages", body: "A public page your customers can check during an incident.", horizon: "next" },
+      { name: "Status pages", body: "A public page with each service's status and 30 days of history, under names you choose.", horizon: "now" },
       { name: "Incidents and on-call", body: "Group related alerts into one incident and page whoever is on call.", horizon: "later" },
     ],
   },

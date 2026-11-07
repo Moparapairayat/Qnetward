@@ -850,7 +850,6 @@ export function TargetsSummary({ targets, historyMap }: { targets: OverviewTarge
 /* ------------------------------------------------------------ coming next */
 
 const upcoming = [
-  { href: "/status-pages", title: "Status pages", body: "A public page your customers can check during an incident.", phase: 2 },
   { href: "/topology", title: "Topology", body: "A live map of your network built from LLDP and CDP.", phase: 3 },
   { href: "/attack-surface", title: "Attack surface", body: "Subdomains, open services, and certificates you didn't know about.", phase: 4 },
   { href: "/assistant", title: "AI assistant", body: "Ask about outages in plain language and get likely causes.", phase: 5 },

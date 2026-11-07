@@ -4,45 +4,6 @@ import { Bot, MessageSquare, Send, Sparkles } from "lucide-react";
 
 const card = "rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]";
 
-// Deterministic pseudo-random so server and client render the same bars.
-function seeded(n: number) {
-  const x = Math.sin(n * 9301 + 49297) * 233280;
-  return x - Math.floor(x);
-}
-
-export function UptimeVisual() {
-  const components = [
-    { name: "Public API", uptime: "99.98%" },
-    { name: "Checkout", uptime: "99.95%" },
-    { name: "Edge SGP", uptime: "99.40%" },
-  ];
-  return (
-    <section className={`${card} p-5`}>
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-[14px] font-medium">Uptime, last 90 days</h2>
-        <span className="text-[12px] text-[var(--lp-subtle)]">each bar is one day</span>
-      </div>
-      <div className="mt-5 space-y-5">
-        {components.map((comp, ci) => (
-          <div key={comp.name}>
-            <div className="mb-2 flex justify-between text-[13px]">
-              <span>{comp.name}</span>
-              <span className="lp-mono text-[var(--lp-muted)]">{comp.uptime}</span>
-            </div>
-            <div className="flex gap-[2px]">
-              {Array.from({ length: 90 }, (_, d) => {
-                const r = seeded(ci * 100 + d);
-                const color = r > 0.985 ? "#ff3d7f" : r > 0.95 ? "#fbbf24" : "#4ade80";
-                return <span key={d} className="h-7 flex-1 rounded-[2px]" style={{ background: color, opacity: color === "#4ade80" ? 0.75 : 1 }} />;
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export function TopologyVisual() {
   const nodes = [
     { id: "isp", x: 400, y: 40, label: "ISP uplink", kind: "cloud" },

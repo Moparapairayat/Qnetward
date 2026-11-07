@@ -10,8 +10,14 @@ async function forward(request: NextRequest, path: string[]) {
   target.search = request.nextUrl.search;
 
   const headers = new Headers(request.headers);
+  // The backend checks Origin itself only on direct calls; through this proxy
+  // it learns the browser's origin from this header, to send people back to
+  // the same site after a payment. It's matched against the allowed origins.
+  const origin = request.headers.get("origin");
   headers.delete("host");
   headers.delete("origin");
+  headers.delete("x-qnetward-origin");
+  if (origin) headers.set("x-qnetward-origin", origin);
 
   const init: RequestInit = {
     method: request.method,
