@@ -202,7 +202,11 @@ func (srv *Server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) 
 		srv.recordAudit(r, 0, user, "auth.signup", auditTarget{}, map[string]any{"provider": "google"})
 	}
 	if info.Picture != "" {
-		go srv.importProviderPicture(user.ID, info.Picture)
+		srv.background.Add(1)
+		go func() {
+			defer srv.background.Done()
+			srv.importProviderPicture(user.ID, info.Picture)
+		}()
 	}
 
 	if mfa, _, err := srv.store.GetMFA(ctx, user.ID); err != nil {

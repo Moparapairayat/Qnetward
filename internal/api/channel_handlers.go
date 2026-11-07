@@ -280,7 +280,9 @@ func (srv *Server) notifyChannels(workspaceID int64, event string, msg notify.Me
 	if srv.store == nil {
 		return
 	}
+	srv.background.Add(1)
 	go func() {
+		defer srv.background.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		channels, err := srv.store.ChannelsFor(ctx, workspaceID, event)

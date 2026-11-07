@@ -250,7 +250,9 @@ func (srv *Server) enqueueAlertEvaluation(user actor, protocol, target string, p
 		sample.LatencyAvgMs = &avgMs
 	}
 
+	srv.background.Add(1)
 	go func() {
+		defer srv.background.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 

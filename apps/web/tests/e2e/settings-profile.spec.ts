@@ -26,5 +26,5 @@ test("settings and profile pages render runtime and operator details", async ({ 
   await expect(page.getByRole("button", { name: /email me a reset link/i })).toBeVisible();
 
   await page.goto("/settings/workspaces");
-  await expect(page.getByText("Contributor Demo Workspace").first()).toBeVisible();
+  await expect(page.getByText("Kestrel Labs").first()).toBeVisible();
 });

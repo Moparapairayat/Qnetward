@@ -49,6 +49,8 @@ func installTestStore(t *testing.T) *store.Store {
 	testSrv.cache = nil
 	testSrv.objects = nil
 	t.Cleanup(func() {
+		// Alert deliveries and rule checks still running from this test read the store.
+		testSrv.background.Wait()
 		testSrv.store = oldStore
 		testSrv.cache = oldCache
 		testSrv.objects = oldObjectStore

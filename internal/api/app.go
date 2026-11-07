@@ -4,6 +4,7 @@ import (
 	"crypto/x509"
 	"net/http"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -78,6 +79,9 @@ type Server struct {
 	payments       *uddoktapay.Client
 	// events fans live updates out to open consoles.
 	events *eventHub
+	// background tracks work that outlives its request, such as alert
+	// deliveries, so shutdown and tests can wait for it.
+	background sync.WaitGroup
 	// telegramAPI overrides the Telegram Bot API base; tests only.
 	telegramAPI string
 	// pictureTestHost is a host allowed to serve provider pictures; tests only.
