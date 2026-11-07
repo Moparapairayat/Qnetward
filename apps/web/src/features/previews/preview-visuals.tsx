@@ -163,47 +163,6 @@ export function FlowsVisual() {
   );
 }
 
-export function TraceVisual() {
-  const hops = [
-    ["1", "192.168.1.1", "gateway", "0.8", "0%"],
-    ["2", "100.64.0.1", "ISP CGNAT", "4.1", "0%"],
-    ["3", "103.4.144.1", "AS58715", "6.3", "0%"],
-    ["4", "ae1.dac-core", "AS58715", "9.0", "0%"],
-    ["5", "be3.sgp1", "AS4637", "38.2", "0%"],
-    ["6", "ae2.sgp1", "AS3356", "41.7", "6%"],
-    ["7", "104.16.0.1", "Cloudflare", "42.4", "0%"],
-  ];
-  return (
-    <section className={`${card} overflow-hidden`}>
-      <div className="px-5 py-4 text-[14px] font-medium">Path to api.example.com</div>
-      <table className="w-full text-[13px]">
-        <thead>
-          <tr className="border-y border-[var(--lp-border)] text-left text-[12px] text-[var(--lp-subtle)]">
-            {["Hop", "Address", "Network", "Avg (ms)", "Loss"].map((h) => (
-              <th key={h} className="px-5 py-2 font-medium">
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {hops.map((h) => (
-            <tr key={h[0]} className="border-b border-[var(--lp-border)] last:border-0">
-              <td className="lp-mono px-5 py-2.5 text-[var(--lp-subtle)]">{h[0]}</td>
-              <td className="lp-mono px-5 py-2.5">{h[1]}</td>
-              <td className="px-5 py-2.5 text-[var(--lp-muted)]">{h[2]}</td>
-              <td className="lp-mono px-5 py-2.5">{h[3]}</td>
-              <td className="lp-mono px-5 py-2.5" style={{ color: h[4] === "0%" ? "var(--lp-muted)" : "var(--lp-amber)" }}>
-                {h[4]}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
-  );
-}
-
 export function TimelineVisual() {
   const events = [
     ["20:29", "Alert", "Mail MX TCP 25 failing from Frankfurt (3 of 3 probes)", "#ff3d7f"],

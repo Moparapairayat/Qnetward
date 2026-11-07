@@ -18,7 +18,7 @@ export type FeaturePreview = {
   stats: { label: string; value: string; hint: string; tone?: Tone }[];
   table?: { title: string; columns: string[]; rows: Cell[][] };
   side?: { title: string; items: { label: string; value: string; tone?: Tone }[] };
-  visual?: "topology" | "assistant" | "flows" | "trace" | "timeline" | "schedule";
+  visual?: "topology" | "assistant" | "flows" | "timeline" | "schedule";
   capabilities: string[];
 };
 
@@ -30,27 +30,6 @@ const i = (text: string): Cell => ({ text, tone: "info" });
 const c = (text: string): Cell => ({ text, mono: true });
 
 export const featurePreviews: FeaturePreview[] = [
-  {
-    slug: "traceroute",
-    title: "Traceroute & MTR",
-    description: "Follow the path to a host hop by hop, with loss and latency per hop and alerts when the route changes.",
-    phase: 2,
-    phaseName: "Agents & monitoring",
-    primaryAction: "Run traceroute",
-    visual: "trace",
-    stats: [
-      { label: "Hops", value: "11", hint: "to api.example.com" },
-      { label: "End-to-end", value: "184 ms", hint: "median over 10 cycles" },
-      { label: "Worst hop loss", value: "6%", hint: "hop 7 · ae2.sgp1", tone: "warn" },
-      { label: "Path changes", value: "2", hint: "in the last 24h" },
-    ],
-    capabilities: [
-      "ICMP, UDP, and TCP traceroute",
-      "Continuous MTR with per-hop loss and jitter",
-      "ASN and location per hop",
-      "Alert when the path changes",
-    ],
-  },
   {
     slug: "agents",
     title: "Probe agents",

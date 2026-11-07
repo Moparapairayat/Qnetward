@@ -44,6 +44,11 @@ jobs:
       - name: Go test (race)
         run: go test -race -p 1 ./...
 
+      # Traceroute needs raw ICMP sockets; as root it traces loopback for real
+      # instead of skipping.
+      - name: Traceroute with raw sockets
+        run: sudo -E env "PATH=$PATH" go test -count=1 -run TestTraceLoopback -v ./internal/engine/traceroute
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

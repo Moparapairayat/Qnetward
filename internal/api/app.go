@@ -185,6 +185,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/tcpping", srv.handleTCPPing)
 	mux.HandleFunc("/api/portscan", srv.handlePortScan)
 	mux.HandleFunc("/api/dnslookup", srv.handleDNSLookup)
+	mux.HandleFunc("/api/traceroute", srv.handleTraceroute)
 	mux.HandleFunc("/api/history", srv.handleHistory)
 	mux.HandleFunc("/api/history/recent-targets", srv.handleRecentHistoryTargets)
 	mux.HandleFunc("/api/export/history", srv.handleHistoryExport)

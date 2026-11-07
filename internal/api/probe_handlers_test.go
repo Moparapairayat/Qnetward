@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"qnetward/internal/store"
+
+	"qnetward/internal/platform/netguard"
 )
 
 func TestHandlePingRejectsInvalidPayload(t *testing.T) {
@@ -201,5 +203,29 @@ func TestHandleTCPPingRejectsContinuousOverHTTP(t *testing.T) {
 	}
 	if !strings.Contains(rr.Body.String(), "continuous mode requires realtime streaming") {
 		t.Fatalf("unexpected body: %s", rr.Body.String())
+	}
+}
+
+// Traceroute refuses private targets and out-of-range settings before
+// sending anything.
+func TestTracerouteValidatesRequests(t *testing.T) {
+	st := installTestStore(t)
+	_, cookie := issueTestSession(t, st)
+	withTargetPolicy(t, netguard.Policy{})
+	for body, want := range map[string]int{
+		`{"target":""}`:                        http.StatusBadRequest,
+		`{"target":"10.0.0.1"}`:                http.StatusBadRequest,
+		`{"target":"8.8.8.8","max_hops":90}`:   http.StatusBadRequest,
+		`{"target":"8.8.8.8","timeout_ms":10}`: http.StatusBadRequest,
+		`{"target":"8.8.8.8","queries":12}`:    http.StatusBadRequest,
+	} {
+		req := httptest.NewRequest(http.MethodPost, "/api/traceroute", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.AddCookie(cookie)
+		rr := httptest.NewRecorder()
+		testSrv.handleTraceroute(rr, req)
+		if rr.Code != want {
+			t.Errorf("%s: expected %d, got %d: %s", body, want, rr.Code, rr.Body.String())
+		}
 	}
 }

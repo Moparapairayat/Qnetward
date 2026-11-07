@@ -613,3 +613,24 @@ export type PublicStatusResponse = {
   status: "operational" | "degraded" | "outage" | "unknown";
   days: number;
 };
+
+export type TracerouteHop = {
+  ttl: number;
+  addr?: string;
+  name?: string;
+  rtts_ms: number[];
+  loss_percent: number;
+  best_ms?: number;
+  avg_ms?: number;
+  worst_ms?: number;
+  reached?: boolean;
+};
+
+export type TracerouteResult = {
+  target: string;
+  addr: string;
+  ipv6: boolean;
+  reached: boolean;
+  hops: TracerouteHop[];
+  duration_ms: number;
+};

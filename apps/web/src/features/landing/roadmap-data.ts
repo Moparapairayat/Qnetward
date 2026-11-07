@@ -34,7 +34,7 @@ export const roadmap: RoadmapTheme[] = [
       { name: "Ping and TCP ping", body: "Streamed replies with a live latency chart, loss, and jitter.", horizon: "now" },
       { name: "Port scan", body: "Up to 4,096 ports per run, with service names and handshake times.", horizon: "now" },
       { name: "DNS lookup", body: "Every record type, any resolver, with DNSSEC and mail checks.", horizon: "now" },
-      { name: "Traceroute", body: "Hop-by-hop paths with latency per hop.", horizon: "next" },
+      { name: "Traceroute", body: "Hop-by-hop paths with loss and latency per hop, and reverse DNS names.", horizon: "now" },
     ],
   },
   {

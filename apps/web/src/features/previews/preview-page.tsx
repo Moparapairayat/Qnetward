@@ -6,7 +6,6 @@ import {
   ScheduleVisual,
   TimelineVisual,
   TopologyVisual,
-  TraceVisual,
 } from "@/features/previews/preview-visuals";
 import { cn } from "@/lib/utils";
 
@@ -42,8 +41,6 @@ function Visual({ kind }: { kind: NonNullable<FeaturePreview["visual"]> }) {
       return <AssistantVisual />;
     case "flows":
       return <FlowsVisual />;
-    case "trace":
-      return <TraceVisual />;
     case "timeline":
       return <TimelineVisual />;
     case "schedule":

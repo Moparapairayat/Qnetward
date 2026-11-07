@@ -62,7 +62,7 @@ export const navSections: NavSection[] = [
       { href: "/tcp-ping", label: "TCP ping", icon: Zap, keywords: "port handshake connect" },
       { href: "/port-scan", label: "Port scan", icon: Radar, keywords: "ports open services" },
       { href: "/dns-lookup", label: "DNS lookup", icon: Globe, keywords: "records mx txt dnssec" },
-      { href: "/traceroute", label: "Traceroute", icon: Waypoints, keywords: "mtr hops path", soon: true },
+      { href: "/traceroute", label: "Traceroute", icon: Waypoints, keywords: "mtr hops path route latency loss" },
     ],
   },
   {
