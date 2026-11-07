@@ -298,7 +298,7 @@ function NavLink({
     >
       {active && !collapsed ? <span className="absolute -left-3 top-2 bottom-2 w-[3px] rounded-r-full bg-[var(--lp-accent)]" aria-hidden="true" /> : null}
       <item.icon
-        weight={active ? "fill" : "regular"}
+        weight={active ? "fill" : "bold"}
         className={cn("h-4 w-4 shrink-0", active ? "text-[var(--lp-accent)]" : "text-[#9a9aa4] group-hover:text-[#d0d0d7]")}
       />
       {collapsed ? null : <span className="flex-1 truncate">{item.label}</span>}
