@@ -12,7 +12,7 @@ test("settings and profile pages render runtime and operator details", async ({ 
   await page.goto("/profile");
   await expect(page).toHaveURL(/\/settings\/profile$/);
   await expect(page.getByRole("heading", { name: "Public profile" })).toBeVisible();
-  await expect(page.getByText("Your personal account")).toBeVisible();
+  await expect(page.getByText("Your account", { exact: true })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Display name" })).toBeVisible();
   await expect(page.getByLabel("Bio")).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Timezone" })).toBeVisible();

@@ -15,9 +15,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/qnetwar
 
 FROM node:22-bookworm-slim AS web
 ENV PNPM_HOME="/pnpm" PATH="/pnpm:$PATH" NEXT_TELEMETRY_DISABLED=1
-RUN corepack enable
+# Same pnpm as CI; the newest one refuses the build scripts we deliberately skip.
+RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 WORKDIR /app
-COPY apps/web/package.json apps/web/pnpm-lock.yaml ./
+COPY apps/web/package.json apps/web/pnpm-lock.yaml apps/web/pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY apps/web ./
 RUN pnpm build
