@@ -10,6 +10,7 @@ import { apiRequest, ApiError } from "@/lib/api";
 import { AlertRule, AlertRulePayload, SessionResponse } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
 import { Field, PageHeader, Panel, RunStatus, StatStrip, Toggle } from "@/components/tools/probe-ui";
+import { useLiveInterval } from "@/lib/live";
 
 const optionalPositiveNumber = z.preprocess((value) => {
   if (value === "" || value === null || typeof value === "undefined") {
@@ -407,10 +408,11 @@ export function AlertRulesWorkspace() {
     queryFn: () => apiRequest<SessionResponse>("/api/auth/session"),
   });
 
+  const liveInterval = useLiveInterval(15_000);
   const alertRulesQuery = useQuery({
     queryKey: ["alert-rules"],
     queryFn: () => apiRequest<AlertRule[]>("/api/alerts/rules"),
-    refetchInterval: 15_000,
+    refetchInterval: liveInterval,
   });
 
   const saveAlertRuleMutation = useMutation({

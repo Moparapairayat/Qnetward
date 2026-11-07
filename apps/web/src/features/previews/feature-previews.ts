@@ -31,37 +31,6 @@ const c = (text: string): Cell => ({ text, mono: true });
 
 export const featurePreviews: FeaturePreview[] = [
   {
-    slug: "agents",
-    title: "Probe agents",
-    description: "A small outbound-only agent you install on a VPS, Raspberry Pi, or Kubernetes cluster to probe from inside private networks.",
-    phase: 2,
-    phaseName: "Agents & monitoring",
-    primaryAction: "Enroll an agent",
-    stats: [
-      { label: "Agents", value: "6", hint: "4 online", tone: "good" },
-      { label: "Regions", value: "4", hint: "SG · DAC · FRA · VA" },
-      { label: "Checks / min", value: "1,240", hint: "across all agents" },
-      { label: "Out of date", value: "1", hint: "auto-update pending", tone: "warn" },
-    ],
-    table: {
-      title: "Enrolled agents",
-      columns: ["Agent", "Location", "Version", "Platform", "Status", "Last seen"],
-      rows: [
-        ["sg-edge-01", "Singapore", c("0.4.2"), "linux/amd64", g("Online"), "8s ago"],
-        ["dhaka-office", "Dhaka", c("0.4.2"), "linux/arm64 · Pi", g("Online"), "3s ago"],
-        ["fra-dc-02", "Frankfurt", c("0.4.1"), "docker", w("Update pending"), "12s ago"],
-        ["va-k8s", "Virginia", c("0.4.2"), "kubernetes", g("Online"), "5s ago"],
-        ["branch-ctg", "Chattogram", c("0.4.2"), "windows", m("Offline"), "2h ago"],
-      ],
-    },
-    capabilities: [
-      "Single static binary, outbound-only over mTLS",
-      "One-time enrollment tokens, per-agent certificates",
-      "Signed auto-updates with rollback",
-      "Local buffering when the link drops",
-    ],
-  },
-  {
     slug: "incidents",
     title: "Incidents",
     description: "One place for an outage: the alerts that triggered it, who's on it, the timeline, and the postmortem afterwards.",

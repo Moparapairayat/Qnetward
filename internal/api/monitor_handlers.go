@@ -307,6 +307,8 @@ func (srv *Server) checkMonitor(ctx context.Context, m store.Monitor) {
 		return
 	}
 
+	srv.events.publish(m.WorkspaceID, liveEvent{Type: "monitor.check", MonitorID: m.ID, Status: map[bool]string{true: "up", false: "down"}[check.OK]})
+
 	// Ping and TCP samples also feed the workspace's alert rules.
 	if summary != nil && summary.Sent > 0 {
 		srv.enqueueAlertEvaluation(actor{User: store.User{ID: m.UserID}, WorkspaceID: m.WorkspaceID},

@@ -33,3 +33,5 @@ patterns don't.
 | [0017](0017-alert-channels.md) | Alert channels for chat tools and webhooks | Accepted |
 | [0018](0018-plans-paid-through-uddoktapay.md) | Paid plans through UddoktaPay, bought a period at a time | Accepted |
 | [0019](0019-public-status-pages.md) | Public status pages that never show what they watch | Accepted |
+| [0020](0020-live-updates-over-server-sent-events.md) | Live updates over Server-Sent Events | Accepted |
+| [0021](0021-probe-agents-enroll-with-one-time-tokens.md) | Probe agents enroll with one-time tokens and connect outbound | Accepted |

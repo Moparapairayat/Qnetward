@@ -10,6 +10,7 @@ import { apiRequest, ApiError } from "@/lib/api";
 import type { Monitor, MonitorCheck, MonitorPayload, MonitorProtocol, SessionResponse } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
 import { Field, PageHeader, Panel, RunStatus, StatStrip, Toggle } from "@/components/tools/probe-ui";
+import { useLiveInterval } from "@/lib/live";
 
 const MAX_MONITORS = 20;
 const RECENT_SLOTS = 30;
@@ -437,10 +438,11 @@ export function MonitorsWorkspace() {
   const [filter, setFilter] = useState<MonitorFilter>("all");
 
   const sessionQuery = useQuery({ queryKey: ["session"], queryFn: () => apiRequest<SessionResponse>("/api/auth/session") });
+  const liveInterval = useLiveInterval(15_000);
   const monitorsQuery = useQuery({
     queryKey: ["monitors"],
     queryFn: () => apiRequest<Monitor[]>("/api/monitors"),
-    refetchInterval: 15_000,
+    refetchInterval: liveInterval,
   });
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["monitors"] });

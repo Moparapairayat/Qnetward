@@ -12,6 +12,9 @@ type ShellState = {
   /** Sections the user opened (true) or folded (false). Unset ones use the section default. Persisted. */
   sectionState: Record<string, boolean>;
   setSectionOpen: (label: string, open: boolean) => void;
+  /** Whether the live event stream is connected; polling slows down while it is. Not persisted. */
+  liveConnected: boolean;
+  setLiveConnected: (connected: boolean) => void;
   /** Command palette (Ctrl/Cmd+K). */
   paletteOpen: boolean;
   setPaletteOpen: (open: boolean) => void;
@@ -27,6 +30,8 @@ export const useShellStore = create<ShellState>()(
       toggleSidebarCollapsed: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       sectionState: {},
       setSectionOpen: (label, open) => set((state) => ({ sectionState: { ...state.sectionState, [label]: open } })),
+      liveConnected: false,
+      setLiveConnected: (connected) => set({ liveConnected: connected }),
       paletteOpen: false,
       setPaletteOpen: (open) => set({ paletteOpen: open }),
     }),

@@ -259,6 +259,9 @@ func (srv *Server) enqueueAlertEvaluation(user actor, protocol, target string, p
 			log.Printf("alert evaluation failed for %s/%s: %v", protocol, target, err)
 			return
 		}
+		if len(decisions) > 0 {
+			srv.events.publish(user.WorkspaceID, liveEvent{Type: "alert.changed"})
+		}
 		for _, decision := range decisions {
 			alertTitle := decision.Rule.Name
 			if strings.TrimSpace(alertTitle) == "" {

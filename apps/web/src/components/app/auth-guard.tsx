@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { apiRequest } from "@/lib/api";
 import { SessionResponse } from "@/lib/types";
 import { Sidebar } from "@/components/app/sidebar";
+import { LiveEvents } from "@/components/app/live-events";
 import { Topbar } from "@/components/app/topbar";
 import { CommandPalette } from "@/components/app/command-palette";
 import { QnetwardMark } from "@/features/landing/qnetward-mark";
@@ -54,6 +55,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
+      <LiveEvents />
       <Sidebar session={session.data} />
       <CommandPalette isAdmin={session.data.platform_role === "admin"} />
       <div className="flex min-w-0 flex-1 flex-col">

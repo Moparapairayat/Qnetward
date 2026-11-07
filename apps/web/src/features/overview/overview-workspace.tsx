@@ -13,6 +13,7 @@ import { buildOverviewDemoData } from "@/features/overview/overview-demo-data";
 import { GettingStarted } from "@/features/overview/overview-view";
 import { ComingNext, ResponseTimeChart, StatCards, TargetHealthCard, TargetsSummary, WelcomeHeader } from "@/features/overview/overview-dashboard";
 import { MonitorResponseChart } from "@/features/overview/monitor-response-chart";
+import { useLiveInterval } from "@/lib/live";
 
 function mergeTrackedRules(alertRules: AlertRule[], recentTargets: RecentHistoryTarget[]) {
   const merged = new Map<string, AlertRule>();
@@ -98,6 +99,10 @@ export function OverviewWorkspace() {
   const isDemo = sessionQuery.data?.read_only === true;
   const demoData = useMemo(() => buildOverviewDemoData(), []);
 
+  // Live events refetch these as monitors check in; polling is the fallback.
+  const historyInterval = useLiveInterval(5_000);
+  const alertsInterval = useLiveInterval(20_000);
+
   const runtimeHealthQuery = useQuery({
     queryKey: ["runtime-health"],
     queryFn: () => apiRequest<RuntimeHealthResponse>("/api/healthz"),
@@ -107,14 +112,14 @@ export function OverviewWorkspace() {
   const alertRulesQuery = useQuery({
     queryKey: ["alert-rules"],
     queryFn: () => apiRequest<AlertRule[]>("/api/alerts/rules"),
-    refetchInterval: 20_000,
+    refetchInterval: alertsInterval,
     enabled: sessionQuery.data?.authenticated === true && !isDemo,
   });
 
   const recentTargetsQuery = useQuery({
     queryKey: ["recent-history-targets"],
     queryFn: () => apiRequest<RecentHistoryTarget[]>("/api/history/recent-targets?limit=12"),
-    refetchInterval: 5_000,
+    refetchInterval: historyInterval,
     enabled: sessionQuery.data?.authenticated === true && !isDemo,
   });
 
@@ -146,7 +151,7 @@ export function OverviewWorkspace() {
       return {
         queryKey: ["overview-history", rule.protocol, rule.target, rule.port ?? 0],
         queryFn: () => apiRequest<HistoryPoint[]>(`/api/history?${params.toString()}`),
-        refetchInterval: 5_000,
+        refetchInterval: historyInterval,
       };
     }),
   });

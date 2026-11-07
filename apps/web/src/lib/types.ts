@@ -634,3 +634,22 @@ export type TracerouteResult = {
   hops: TracerouteHop[];
   duration_ms: number;
 };
+
+export type ProbeAgent = {
+  id: number;
+  name: string;
+  enrolled: boolean;
+  enroll_expires_at?: string | null;
+  enrolled_at?: string | null;
+  last_seen_at?: string | null;
+  online: boolean;
+  version?: string;
+  hostname?: string;
+  platform?: string;
+  remote_ip?: string;
+  created_at: string;
+};
+
+export type ProbeAgentListResponse = { agents: ProbeAgent[]; limit: number };
+
+export type ProbeAgentCreateResponse = { agent: ProbeAgent; enroll_token: string; expires_at: string };

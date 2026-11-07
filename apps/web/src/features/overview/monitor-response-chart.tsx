@@ -9,6 +9,7 @@ import type { MonitorSeries, MonitorSeriesResponse, MonitorSeriesWindow } from "
 import { cn } from "@/lib/utils";
 import { LivePill, smoothPath, usePrefersReducedMotion } from "@/components/charts/live-signal-chart";
 import { clockTime, formatMs, useElementSize, useNow } from "@/features/overview/overview-dashboard";
+import { useLiveInterval } from "@/lib/live";
 
 const COLORS = ["#ff3d7f", "#22c3d6", "#a78bfa", "#4ade80", "#fbbf24", "#60a5fa", "#f472b6", "#2dd4bf"];
 const DOWN = "#ff5c5c";
@@ -51,11 +52,12 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
   const now = useNow(1_000);
   const reducedMotion = usePrefersReducedMotion();
 
+  const liveInterval = useLiveInterval(5_000);
   const query = useQuery({
     queryKey: ["monitor-series", win],
     queryFn: () => apiRequest<MonitorSeriesResponse>(`/api/monitors/series?window=${win}`),
     enabled,
-    refetchInterval: 5_000,
+    refetchInterval: liveInterval,
     placeholderData: (previous) => previous,
   });
   const data = query.data;

@@ -76,6 +76,8 @@ type Server struct {
 	monitorRootCAs *x509.CertPool
 	billing        Billing
 	payments       *uddoktapay.Client
+	// events fans live updates out to open consoles.
+	events *eventHub
 	// telegramAPI overrides the Telegram Bot API base; tests only.
 	telegramAPI string
 	// pictureTestHost is a host allowed to serve provider pictures; tests only.
@@ -105,6 +107,7 @@ func New(deps Deps, opts Options) *Server {
 		demoFullAccess: opts.DemoFullAccess,
 		demoWorkspace:  strings.TrimSpace(opts.DemoWorkspace),
 		billing:        opts.Billing,
+		events:         newEventHub(),
 		payments:       &uddoktapay.Client{BaseURL: strings.TrimSpace(opts.Billing.UddoktaPayURL), APIKey: strings.TrimSpace(opts.Billing.UddoktaPayKey)},
 		demoCreatedAt:  time.Now().UTC(),
 		targetPolicy:   opts.TargetPolicy,
@@ -192,6 +195,10 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/alerts/rules", srv.handleAlertRules)
 	mux.HandleFunc("/api/monitors", srv.handleMonitors)
 	mux.HandleFunc("/api/monitors/series", srv.handleMonitorSeries)
+	mux.HandleFunc("/api/events", srv.handleEvents)
+	mux.HandleFunc("/api/agents", srv.handleAgents)
+	mux.HandleFunc("/api/agent/enroll", srv.handleAgentEnroll)
+	mux.HandleFunc("/api/agent/heartbeat", srv.handleAgentHeartbeat)
 	mux.HandleFunc("/api/status-pages", srv.handleStatusPages)
 	mux.HandleFunc("GET /api/public/status/{slug}", srv.handlePublicStatusPage)
 	mux.HandleFunc("/api/workspace/channels", srv.handleChannels)
