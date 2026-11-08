@@ -189,9 +189,9 @@ export function SignupForm() {
       ) : null}
 
       {step === 1 ? (
-        <div className="grid gap-3.5">
+        <div className="grid gap-3.5 sm:short:gap-2.5">
           <AlternateSignIn mode="signup" />
-          <div className="grid gap-3.5 sm:grid-cols-2">
+          <div className="grid gap-3.5 sm:grid-cols-2 sm:short:gap-2.5">
             <AuthInputField
               id="signup-first-name"
               label="First name"
@@ -231,7 +231,7 @@ export function SignupForm() {
       ) : null}
 
       {step === 2 ? (
-        <form className="grid gap-3.5" onSubmit={submitSignup}>
+        <form className="grid gap-3.5 sm:short:gap-2.5" onSubmit={submitSignup}>
           <div className="auth-password-stage">
             <div className="auth-password-stage-main">
               <div className="grid gap-1.5">
@@ -286,7 +286,7 @@ export function SignupForm() {
       ) : null}
 
       {step === 3 ? (
-        <div className="grid gap-3.5">
+        <div className="grid gap-3.5 sm:short:gap-2.5">
           <div className="auth-step-panel">
             <p className="text-[13px] text-[var(--lp-muted)]">Verification target</p>
             <p className="mt-2 text-base font-medium text-slate-100">{signupEmail}</p>

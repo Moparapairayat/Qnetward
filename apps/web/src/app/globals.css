@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Screens short enough that the auth card would scroll, like most laptops. */
+@custom-variant short (@media (max-height: 820px));
+
 @theme {
   --font-display: var(--font-sora), sans-serif;
   --font-body: var(--font-space-grotesk), sans-serif;
@@ -1448,5 +1451,20 @@ body {
   .auth-muted-button,
   .auth-provider-button {
     min-height: 2.65rem;
+  }
+}
+
+/* Laptops: a shorter auth form so the whole card fits without scrolling. */
+@media (min-width: 640px) and (max-height: 820px) {
+  .auth-input {
+    min-height: 2.7rem;
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+  }
+
+  .auth-primary-button,
+  .auth-muted-button,
+  .auth-provider-button {
+    min-height: 2.5rem;
   }
 }

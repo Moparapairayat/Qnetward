@@ -59,7 +59,7 @@ export function AlternateSignIn({ mode }: { mode: "signin" | "signup" }) {
   }
 
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-3 sm:short:gap-2.5">
       <div className="grid grid-cols-2 gap-3">
         {google ? (
           // A full page load on purpose: <Link> would prefetch the API route and start OAuth by itself.

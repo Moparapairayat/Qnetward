@@ -155,7 +155,7 @@ export function LoginForm() {
   }
 
   return (
-    <form className="grid gap-3.5" noValidate onSubmit={form.handleSubmit((values) => login.mutate(values))}>
+    <form className="grid gap-3.5 sm:short:gap-2.5" noValidate onSubmit={form.handleSubmit((values) => login.mutate(values))}>
       <AlternateSignIn mode="signin" />
       {oauthError ? (
         <p className="auth-notice-error" role="alert">
