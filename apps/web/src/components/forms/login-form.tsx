@@ -136,7 +136,13 @@ export function LoginForm() {
       }
       await finish();
     },
-    onError: (error: ApiError) => {
+    onError: (error: ApiError, values) => {
+      // Right password, unverified email: finish verifying instead of failing.
+      const payload = error.payload as { verification_required?: boolean; email?: string } | undefined;
+      if (error.status === 403 && payload?.verification_required) {
+        router.push(`/verify-email?email=${encodeURIComponent(payload.email || values.email)}`);
+        return;
+      }
       form.setError("root", { message: error.message });
     },
   });

@@ -31,7 +31,7 @@ const RESEND_SECONDS = 60;
 // Survives a refresh while the visitor fetches the code from their inbox.
 const PENDING_KEY = "qnetward:signup-pending";
 
-type Pending = { email: string };
+export type Pending = { email: string };
 
 function readPending(): Pending | null {
   try {
@@ -188,18 +188,25 @@ function AccountStep({ initialEmail, onCreated }: { initialEmail?: string; onCre
   );
 }
 
-function VerifyStep({
+/**
+ * The six-box code entry, with resend and a way back to fix the email. Signup
+ * uses it right after sending the code; the verify page asks for a fresh one
+ * when it opens (sendOnMount), since the visitor may have lost the first.
+ */
+export function VerifyStep({
   pending,
   previewCode,
   onPreviewCode,
   onChangeEmail,
   onVerified,
+  sendOnMount = false,
 }: {
   pending: Pending;
   previewCode: string | null;
   onPreviewCode: (code: string | null) => void;
   onChangeEmail: () => void;
   onVerified: () => void;
+  sendOnMount?: boolean;
 }) {
   const queryClient = useQueryClient();
   const [code, setCode] = useState("");
@@ -231,12 +238,22 @@ function VerifyStep({
     mutationFn: () => apiRequest<AuthMessageResponse>("/api/auth/resend-verification", { method: "POST", body: JSON.stringify({ email: pending.email }) }),
     onSuccess: (response) => {
       setError(null);
-      setNotice(response.message || "We sent a new code.");
+      setNotice(/still active/i.test(response.message ?? "") ? "Your last code still works. Check your inbox." : "We sent a new code.");
       if (response.preview_code) onPreviewCode(response.preview_code);
       setWait(RESEND_SECONDS);
     },
     onError: (err: ApiError) => setError(err.message),
   });
+
+  const asked = useRef(false);
+  useEffect(() => {
+    if (sendOnMount && !asked.current) {
+      asked.current = true;
+      resend.mutate();
+    }
+    // Once, on open; resend is a fresh object each render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sendOnMount]);
 
   const submit = (value: string) => {
     setNotice(null);
