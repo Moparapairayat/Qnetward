@@ -463,6 +463,8 @@ export type MonitorCheck = {
   loss_percent: number;
   status_code?: number | null;
   error?: string;
+  /** The probe agent that ran the check; absent when the server did. */
+  agent_id?: number | null;
 };
 
 export type MonitorProtocol = "http" | "tcpping" | "ping";
@@ -488,6 +490,9 @@ export type Monitor = {
   created_at: string;
   uptime_24h?: number | null;
   recent_checks: MonitorCheck[];
+  /** The probe agent the monitor runs from; absent when the server runs it. */
+  agent_id?: number | null;
+  agent_name?: string;
 };
 
 export type MonitorSeriesWindow = "15m" | "1h" | "6h" | "24h";
@@ -522,6 +527,8 @@ export type MonitorPayload = {
   interval_seconds: number;
   notify_email: string;
   enabled: boolean;
+  /** 0 runs the monitor from the server. */
+  agent_id?: number;
 };
 
 export type RuntimeHealthDependency = {

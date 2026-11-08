@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 // An agent is created in the console, enrolls once with its token, checks in
@@ -92,5 +93,124 @@ func TestAgentEnrollHeartbeatAndRemove(t *testing.T) {
 	}
 	if rr := agentCall(testSrv.handleAgentHeartbeat, enrolled.Secret, `{}`); rr.Code != http.StatusUnauthorized {
 		t.Fatalf("a removed agent must be refused, got %d", rr.Code)
+	}
+}
+
+// A monitor set to run from an agent reaches it in the heartbeat, its results
+// are recorded with the agent's id, and the agent can't report for monitors
+// it doesn't run.
+func TestAgentRunsAssignedMonitors(t *testing.T) {
+	st := installTestStore(t)
+	_, cookie := issueTestSession(t, st)
+
+	call := func(handler http.HandlerFunc, method, path, secret, body string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(method, path, strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		if secret != "" {
+			req.Header.Set("Authorization", "Bearer "+secret)
+		} else {
+			req.AddCookie(cookie)
+		}
+		rr := httptest.NewRecorder()
+		handler(rr, req)
+		return rr
+	}
+
+	rr := call(testSrv.handleAgents, http.MethodPost, "/api/agents", "", `{"name":"Office"}`)
+	var created agentCreateResponse
+	_ = json.Unmarshal(rr.Body.Bytes(), &created)
+	rr = call(testSrv.handleAgentEnroll, http.MethodPost, "/api/agent/enroll", "", fmt.Sprintf(`{"token":%q}`, created.EnrollToken))
+	var enrolled struct {
+		Secret string `json:"secret"`
+	}
+	_ = json.Unmarshal(rr.Body.Bytes(), &enrolled)
+	if enrolled.Secret == "" {
+		t.Fatalf("enroll failed: %s", rr.Body.String())
+	}
+
+	if rr := call(testSrv.handleMonitors, http.MethodPost, "/api/monitors", "", `{"protocol":"tcpping","target":"10.0.0.5","port":22,"interval_seconds":60,"agent_id":987654}`); rr.Code != http.StatusBadRequest {
+		t.Fatalf("an unknown agent must be refused, got %d: %s", rr.Code, rr.Body.String())
+	}
+	rr = call(testSrv.handleMonitors, http.MethodPost, "/api/monitors", "", fmt.Sprintf(`{"name":"NAS","protocol":"tcpping","target":"10.0.0.5","port":22,"interval_seconds":60,"agent_id":%d}`, created.Agent.ID))
+	if rr.Code != http.StatusCreated {
+		t.Fatalf("create monitor: got %d: %s", rr.Code, rr.Body.String())
+	}
+	var onAgent struct {
+		ID        int64  `json:"id"`
+		AgentID   int64  `json:"agent_id"`
+		AgentName string `json:"agent_name"`
+	}
+	_ = json.Unmarshal(rr.Body.Bytes(), &onAgent)
+	if onAgent.AgentID != created.Agent.ID || onAgent.AgentName != "Office" {
+		t.Fatalf("monitor should name its agent: %s", rr.Body.String())
+	}
+	rr = call(testSrv.handleMonitors, http.MethodPost, "/api/monitors", "", `{"name":"Site","protocol":"http","target":"https://example.com/","interval_seconds":60}`)
+	var onServer struct {
+		ID int64 `json:"id"`
+	}
+	_ = json.Unmarshal(rr.Body.Bytes(), &onServer)
+
+	// The server's scheduler leaves the agent's monitor alone.
+	due, err := st.ClaimDueMonitors(t.Context(), 50)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, m := range due {
+		if m.ID == onAgent.ID {
+			t.Fatal("the server must not claim a monitor that runs from an agent")
+		}
+	}
+
+	rr = call(testSrv.handleAgentHeartbeat, http.MethodPost, "/api/agent/heartbeat", enrolled.Secret, `{}`)
+	var beat struct {
+		Jobs []agentJob `json:"jobs"`
+	}
+	_ = json.Unmarshal(rr.Body.Bytes(), &beat)
+	if len(beat.Jobs) != 1 || beat.Jobs[0].MonitorID != onAgent.ID || beat.Jobs[0].Target != "10.0.0.5" || beat.Jobs[0].Port == nil || *beat.Jobs[0].Port != 22 {
+		t.Fatalf("heartbeat should carry the agent's monitor: %s", rr.Body.String())
+	}
+
+	now := time.Now().UTC().Format(time.RFC3339Nano)
+	body := fmt.Sprintf(`{"results":[
+		{"monitor_id":%d,"checked_at":%q,"ok":true,"rtt_ms":4.2,"loss_percent":0},
+		{"monitor_id":%d,"checked_at":%q,"ok":false,"error":"forged"}
+	]}`, onAgent.ID, now, onServer.ID, now)
+	if rr := call(testSrv.handleAgentResults, http.MethodPost, "/api/agent/results", "qna_wrong", body); rr.Code != http.StatusUnauthorized {
+		t.Fatalf("bad secret: expected 401, got %d", rr.Code)
+	}
+	rr = call(testSrv.handleAgentResults, http.MethodPost, "/api/agent/results", enrolled.Secret, body)
+	if rr.Code != http.StatusOK || !strings.Contains(strings.ReplaceAll(rr.Body.String(), " ", ""), `"accepted":1`) {
+		t.Fatalf("results: got %d: %s", rr.Code, rr.Body.String())
+	}
+	testSrv.background.Wait()
+
+	rr = call(testSrv.handleMonitors, http.MethodGet, "/api/monitors", "", "")
+	var list []struct {
+		ID           int64  `json:"id"`
+		Status       string `json:"status"`
+		RecentChecks []struct {
+			OK      bool  `json:"ok"`
+			AgentID int64 `json:"agent_id"`
+		} `json:"recent_checks"`
+	}
+	_ = json.Unmarshal(rr.Body.Bytes(), &list)
+	for _, m := range list {
+		switch m.ID {
+		case onAgent.ID:
+			if m.Status != "up" || len(m.RecentChecks) != 1 || m.RecentChecks[0].AgentID != created.Agent.ID {
+				t.Fatalf("the agent's check should be recorded with its id: %+v", m)
+			}
+		case onServer.ID:
+			if len(m.RecentChecks) != 0 || m.Status != "pending" {
+				t.Fatalf("an agent must not report for a monitor it doesn't run: %+v", m)
+			}
+		}
+	}
+
+	// Removing the agent hands its monitor back to the server.
+	call(testSrv.handleAgents, http.MethodDelete, fmt.Sprintf("/api/agents?id=%d", created.Agent.ID), "", "")
+	rr = call(testSrv.handleMonitors, http.MethodGet, "/api/monitors", "", "")
+	if strings.Contains(rr.Body.String(), `"agent_name"`) {
+		t.Fatalf("monitor should be back on the server: %s", rr.Body.String())
 	}
 }

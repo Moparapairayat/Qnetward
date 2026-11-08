@@ -44,6 +44,8 @@ type monitorRequest struct {
 	NotifyEmail     string `json:"notify_email"`
 	Enabled         *bool  `json:"enabled,omitempty"`
 	ExpectedStatus  *int   `json:"expected_status,omitempty"`
+	// AgentID runs the monitor from a probe agent; omitted or 0 means the server.
+	AgentID *int64 `json:"agent_id,omitempty"`
 }
 
 func (srv *Server) handleMonitors(w http.ResponseWriter, r *http.Request) {
@@ -190,6 +192,10 @@ func normalizeMonitorRequest(user actor, req monitorRequest) (store.Monitor, err
 		Enabled:         enabled,
 		ExpectedStatus:  req.ExpectedStatus,
 	}
+	if req.AgentID != nil && *req.AgentID > 0 {
+		id := *req.AgentID
+		m.AgentID = &id
+	}
 
 	if protocol == "http" {
 		target, err := httpcheck.NormalizeURL(req.Target)
@@ -280,8 +286,7 @@ func (srv *Server) RunMonitors(ctx context.Context) {
 	}
 }
 
-// checkMonitor runs one check, records it, and emails on a change between up
-// and down or when an HTTPS certificate nears expiry.
+// checkMonitor runs one check from the server and records it.
 func (srv *Server) checkMonitor(ctx context.Context, m store.Monitor) {
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
@@ -296,15 +301,19 @@ func (srv *Server) checkMonitor(ctx context.Context, m store.Monitor) {
 	if ctx.Err() != nil && errors.Is(ctx.Err(), context.Canceled) {
 		return // shutting down
 	}
+	if err := srv.recordMonitorCheck(m, check, summary); err != nil && !errors.Is(err, store.ErrMonitorNotFound) {
+		log.Printf("recording check for monitor %d failed: %v", m.ID, err)
+	}
+}
 
+// recordMonitorCheck stores a check, from the server or an agent, and alerts
+// on a change between up and down or when an HTTPS certificate nears expiry.
+func (srv *Server) recordMonitorCheck(m store.Monitor, check store.MonitorCheck, summary *report.Summary) error {
 	saveCtx, saveCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer saveCancel()
 	outcome, err := srv.store.RecordMonitorCheck(saveCtx, m, check)
 	if err != nil {
-		if !errors.Is(err, store.ErrMonitorNotFound) {
-			log.Printf("recording check for monitor %d failed: %v", m.ID, err)
-		}
-		return
+		return err
 	}
 
 	srv.events.publish(m.WorkspaceID, liveEvent{Type: "monitor.check", MonitorID: m.ID, Status: map[bool]string{true: "up", false: "down"}[check.OK]})
@@ -325,7 +334,7 @@ func (srv *Server) checkMonitor(ctx context.Context, m store.Monitor) {
 	}
 
 	if m.NotifyEmail == "" || srv.mailer == nil {
-		return
+		return nil
 	}
 	if wentDown || recovered {
 		srv.sendMonitorEmail(saveCtx, m, check, recovered)
@@ -333,6 +342,7 @@ func (srv *Server) checkMonitor(ctx context.Context, m store.Monitor) {
 	if outcome.WarnTLS {
 		srv.sendCertificateWarning(saveCtx, m, *check.TLSExpiresAt)
 	}
+	return nil
 }
 
 func monitorEvent(recovered bool) string {

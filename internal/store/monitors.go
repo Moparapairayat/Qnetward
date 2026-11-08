@@ -15,6 +15,7 @@ var (
 	ErrMonitorNotFound  = errors.New("monitor not found")
 	ErrMonitorLimit     = errors.New("this workspace has reached its plan's monitor limit")
 	ErrMonitorDuplicate = errors.New("this target is already monitored")
+	ErrMonitorAgent     = errors.New("that agent isn't in this workspace")
 )
 
 // MonitorIntervals are the check intervals a monitor can use, in seconds.
@@ -27,28 +28,31 @@ const monitorRecentChecks = 30
 const MonitorTLSWarnWithin = 14 * 24 * time.Hour
 
 type Monitor struct {
-	ID                 int64          `json:"id"`
-	WorkspaceID        int64          `json:"-"`
-	UserID             int64          `json:"-"`
-	Name               string         `json:"name"`
-	Protocol           string         `json:"protocol"`
-	Target             string         `json:"target"`
-	Port               *int           `json:"port,omitempty"`
-	IntervalSeconds    int            `json:"interval_seconds"`
-	NotifyEmail        string         `json:"notify_email"`
-	Enabled            bool           `json:"enabled"`
-	Status             string         `json:"status"`
-	LastCheckedAt      *time.Time     `json:"last_checked_at,omitempty"`
-	LastStatusChangeAt *time.Time     `json:"last_status_change_at,omitempty"`
-	LastRttMs          *float64       `json:"last_rtt_ms,omitempty"`
-	LastError          string         `json:"last_error,omitempty"`
-	ExpectedStatus     *int           `json:"expected_status,omitempty"`
-	LastStatusCode     *int           `json:"last_status_code,omitempty"`
-	TLSExpiresAt       *time.Time     `json:"tls_expires_at,omitempty"`
-	NextRunAt          time.Time      `json:"next_run_at"`
-	CreatedAt          time.Time      `json:"created_at"`
-	Uptime24h          *float64       `json:"uptime_24h,omitempty"`
-	RecentChecks       []MonitorCheck `json:"recent_checks"`
+	ID                 int64      `json:"id"`
+	WorkspaceID        int64      `json:"-"`
+	UserID             int64      `json:"-"`
+	Name               string     `json:"name"`
+	Protocol           string     `json:"protocol"`
+	Target             string     `json:"target"`
+	Port               *int       `json:"port,omitempty"`
+	IntervalSeconds    int        `json:"interval_seconds"`
+	NotifyEmail        string     `json:"notify_email"`
+	Enabled            bool       `json:"enabled"`
+	Status             string     `json:"status"`
+	LastCheckedAt      *time.Time `json:"last_checked_at,omitempty"`
+	LastStatusChangeAt *time.Time `json:"last_status_change_at,omitempty"`
+	LastRttMs          *float64   `json:"last_rtt_ms,omitempty"`
+	LastError          string     `json:"last_error,omitempty"`
+	ExpectedStatus     *int       `json:"expected_status,omitempty"`
+	LastStatusCode     *int       `json:"last_status_code,omitempty"`
+	TLSExpiresAt       *time.Time `json:"tls_expires_at,omitempty"`
+	// AgentID is the probe agent that runs the monitor; nil means the server.
+	AgentID      *int64         `json:"agent_id,omitempty"`
+	AgentName    string         `json:"agent_name,omitempty"`
+	NextRunAt    time.Time      `json:"next_run_at"`
+	CreatedAt    time.Time      `json:"created_at"`
+	Uptime24h    *float64       `json:"uptime_24h,omitempty"`
+	RecentChecks []MonitorCheck `json:"recent_checks"`
 }
 
 type MonitorCheck struct {
@@ -60,6 +64,8 @@ type MonitorCheck struct {
 	Error       string    `json:"error,omitempty"`
 	// TLSExpiresAt is the certificate expiry seen by an HTTPS check.
 	TLSExpiresAt *time.Time `json:"-"`
+	// AgentID is the probe agent that ran the check; nil means the server.
+	AgentID *int64 `json:"agent_id,omitempty"`
 }
 
 // MonitorOutcome is what recording a check changed.
@@ -74,7 +80,8 @@ type MonitorOutcome struct {
 const monitorColumns = `id, workspace_id, COALESCE(user_id, 0), name, protocol, target, port,
 	interval_seconds, notify_email, enabled, status, last_checked_at,
 	last_status_change_at, last_rtt_ms, last_error, next_run_at, created_at,
-	expected_status, last_status_code, tls_expires_at`
+	expected_status, last_status_code, tls_expires_at, agent_id,
+	COALESCE((SELECT a.name FROM probe_agents a WHERE a.id = agent_id), '')`
 
 // SaveMonitor creates a monitor, or updates one in the same workspace. A new
 // or re-pointed monitor is checked right away. limit caps how many monitors
@@ -93,6 +100,17 @@ func (s *Store) SaveMonitor(ctx context.Context, m Monitor, limit int) (Monitor,
 	}
 	defer func() { _ = tx.Rollback() }()
 
+	// The foreign key alone would accept another workspace's agent.
+	if m.AgentID != nil {
+		var found bool
+		if err := tx.QueryRowContext(ctx, `SELECT EXISTS (SELECT 1 FROM probe_agents WHERE id = $1 AND workspace_id = $2)`, *m.AgentID, m.WorkspaceID).Scan(&found); err != nil {
+			return Monitor{}, err
+		}
+		if !found {
+			return Monitor{}, ErrMonitorAgent
+		}
+	}
+
 	var saved Monitor
 	if m.ID == 0 {
 		if limit > 0 {
@@ -105,10 +123,10 @@ func (s *Store) SaveMonitor(ctx context.Context, m Monitor, limit int) (Monitor,
 			}
 		}
 		err = scanMonitor(tx.QueryRowContext(ctx, `
-			INSERT INTO monitors (workspace_id, user_id, name, protocol, target, port, interval_seconds, notify_email, enabled, expected_status)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+			INSERT INTO monitors (workspace_id, user_id, name, protocol, target, port, interval_seconds, notify_email, enabled, expected_status, agent_id)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 			RETURNING `+monitorColumns,
-			m.WorkspaceID, nullableID(m.UserID), m.Name, m.Protocol, m.Target, m.Port, m.IntervalSeconds, m.NotifyEmail, m.Enabled, m.ExpectedStatus,
+			m.WorkspaceID, nullableID(m.UserID), m.Name, m.Protocol, m.Target, m.Port, m.IntervalSeconds, m.NotifyEmail, m.Enabled, m.ExpectedStatus, m.AgentID,
 		), &saved)
 	} else {
 		// Pointing a monitor somewhere else discards the old target's status.
@@ -122,7 +140,7 @@ func (s *Store) SaveMonitor(ctx context.Context, m Monitor, limit int) (Monitor,
 				last_status_code = CASE WHEN protocol = $3 AND target = $4 AND port IS NOT DISTINCT FROM $5 THEN last_status_code END,
 				tls_expires_at = CASE WHEN protocol = $3 AND target = $4 AND port IS NOT DISTINCT FROM $5 THEN tls_expires_at END,
 				next_run_at = CASE
-					WHEN protocol = $3 AND target = $4 AND port IS NOT DISTINCT FROM $5 AND (enabled OR NOT $9) THEN next_run_at
+					WHEN protocol = $3 AND target = $4 AND port IS NOT DISTINCT FROM $5 AND (enabled OR NOT $9) AND agent_id IS NOT DISTINCT FROM $11 THEN next_run_at
 					ELSE NOW()
 				END,
 				name = $6,
@@ -132,10 +150,11 @@ func (s *Store) SaveMonitor(ctx context.Context, m Monitor, limit int) (Monitor,
 				interval_seconds = $7,
 				notify_email = $8,
 				enabled = $9,
-				expected_status = $10
+				expected_status = $10,
+				agent_id = $11
 			WHERE id = $1 AND workspace_id = $2
 			RETURNING `+monitorColumns,
-			m.ID, m.WorkspaceID, m.Protocol, m.Target, m.Port, m.Name, m.IntervalSeconds, m.NotifyEmail, m.Enabled, m.ExpectedStatus,
+			m.ID, m.WorkspaceID, m.Protocol, m.Target, m.Port, m.Name, m.IntervalSeconds, m.NotifyEmail, m.Enabled, m.ExpectedStatus, m.AgentID,
 		), &saved)
 	}
 	if errors.Is(err, sql.ErrNoRows) {
@@ -214,7 +233,7 @@ func (s *Store) ListMonitors(ctx context.Context, workspaceID int64) ([]Monitor,
 	uptime.Close()
 
 	checks, err := tx.QueryContext(ctx, `
-		SELECT monitor_id, checked_at, ok, rtt_ms, loss_percent, status_code, error
+		SELECT monitor_id, checked_at, ok, rtt_ms, loss_percent, status_code, error, agent_id
 		FROM (
 			SELECT *, ROW_NUMBER() OVER (PARTITION BY monitor_id ORDER BY checked_at DESC) AS n
 			FROM monitor_checks
@@ -231,11 +250,15 @@ func (s *Store) ListMonitors(ctx context.Context, workspaceID int64) ([]Monitor,
 		var id int64
 		var c MonitorCheck
 		var rtt sql.NullFloat64
-		var code sql.NullInt64
-		if err := checks.Scan(&id, &c.CheckedAt, &c.OK, &rtt, &c.LossPercent, &code, &c.Error); err != nil {
+		var code, agent sql.NullInt64
+		if err := checks.Scan(&id, &c.CheckedAt, &c.OK, &rtt, &c.LossPercent, &code, &c.Error, &agent); err != nil {
 			return nil, err
 		}
 		c.StatusCode = nullIntPtr(code)
+		if agent.Valid {
+			v := agent.Int64
+			c.AgentID = &v
+		}
 		if rtt.Valid {
 			v := rtt.Float64
 			c.RttMs = &v
@@ -269,7 +292,8 @@ func (s *Store) DeleteMonitor(ctx context.Context, workspaceID, monitorID int64)
 
 // ClaimDueMonitors picks up to limit enabled monitors whose check is due and
 // moves their next run one interval ahead, so another instance won't take
-// them. It works across workspaces and runs as the login role.
+// them. Monitors that run from an agent are left to it. It works across
+// workspaces and runs as the login role.
 func (s *Store) ClaimDueMonitors(ctx context.Context, limit int) ([]Monitor, error) {
 	if s == nil {
 		return nil, nil
@@ -279,7 +303,7 @@ func (s *Store) ClaimDueMonitors(ctx context.Context, limit int) ([]Monitor, err
 		SET next_run_at = NOW() + make_interval(secs => m.interval_seconds)
 		WHERE m.id IN (
 			SELECT id FROM monitors
-			WHERE enabled AND next_run_at <= NOW()
+			WHERE enabled AND agent_id IS NULL AND next_run_at <= NOW()
 			ORDER BY next_run_at
 			LIMIT $1
 			FOR UPDATE SKIP LOCKED
@@ -322,9 +346,9 @@ func (s *Store) RecordMonitorCheck(ctx context.Context, m Monitor, check Monitor
 	}
 
 	if _, err := tx.ExecContext(ctx, `
-		INSERT INTO monitor_checks (monitor_id, workspace_id, checked_at, ok, rtt_ms, loss_percent, status_code, error)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-	`, m.ID, m.WorkspaceID, check.CheckedAt.UTC(), check.OK, check.RttMs, check.LossPercent, check.StatusCode, check.Error); err != nil {
+		INSERT INTO monitor_checks (monitor_id, workspace_id, checked_at, ok, rtt_ms, loss_percent, status_code, error, agent_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	`, m.ID, m.WorkspaceID, check.CheckedAt.UTC(), check.OK, check.RttMs, check.LossPercent, check.StatusCode, check.Error, check.AgentID); err != nil {
 		return MonitorOutcome{}, err
 	}
 
@@ -350,7 +374,10 @@ func (s *Store) RecordMonitorCheck(ctx context.Context, m Monitor, check Monitor
 			last_error = $5,
 			last_status_code = $6,
 			tls_expires_at = COALESCE($7, tls_expires_at),
-			tls_warned_expiry = $8
+			tls_warned_expiry = $8,
+			-- The server moves its own monitors ahead when it claims them;
+			-- an agent's run on the agent's clock, so show when the next is due.
+			next_run_at = CASE WHEN agent_id IS NOT NULL THEN $3::timestamptz + make_interval(secs => interval_seconds) ELSE next_run_at END
 		WHERE id = $1
 	`, m.ID, next, check.CheckedAt.UTC(), check.RttMs, check.Error, check.StatusCode, check.TLSExpiresAt, warnedExpiry); err != nil {
 		return MonitorOutcome{}, err
@@ -437,13 +464,19 @@ func scanMonitor(scanner monitorScanner, m *Monitor) error {
 	var lastRtt sql.NullFloat64
 	var expected, lastCode sql.NullInt64
 	var tlsExpires sql.NullTime
+	var agentID sql.NullInt64
 	if err := scanner.Scan(
 		&m.ID, &m.WorkspaceID, &m.UserID, &m.Name, &m.Protocol, &m.Target, &port,
 		&m.IntervalSeconds, &m.NotifyEmail, &m.Enabled, &m.Status, &lastChecked,
 		&lastChange, &lastRtt, &m.LastError, &m.NextRunAt, &m.CreatedAt,
-		&expected, &lastCode, &tlsExpires,
+		&expected, &lastCode, &tlsExpires, &agentID, &m.AgentName,
 	); err != nil {
 		return err
+	}
+	m.AgentID = nil
+	if agentID.Valid {
+		v := agentID.Int64
+		m.AgentID = &v
 	}
 	m.ExpectedStatus = nullIntPtr(expected)
 	m.LastStatusCode = nullIntPtr(lastCode)

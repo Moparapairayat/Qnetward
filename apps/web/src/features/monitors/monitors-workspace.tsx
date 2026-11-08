@@ -7,7 +7,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil, Plus, Radio, Trash2, X } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
-import type { Monitor, MonitorCheck, MonitorPayload, MonitorProtocol, SessionResponse } from "@/lib/types";
+import type { Monitor, MonitorCheck, MonitorPayload, MonitorProtocol, ProbeAgent, ProbeAgentListResponse, SessionResponse } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
 import { Field, PageHeader, Panel, RunStatus, StatStrip, Toggle } from "@/components/tools/probe-ui";
 import { useLiveInterval } from "@/lib/live";
@@ -38,6 +38,7 @@ const monitorSchema = z
     interval_seconds: z.number().int(),
     notify_email: z.union([z.literal(""), z.string().trim().email("Enter a valid email or leave it empty")]),
     enabled: z.boolean(),
+    agent_id: z.number().int(),
   })
   .superRefine((value, ctx) => {
     if (value.protocol === "tcpping" && (!value.port || value.port < 1 || value.port > 65535)) {
@@ -96,6 +97,13 @@ function relativeTime(value?: string | null, future = false) {
   return future ? `in ${text}` : `${text} ago`;
 }
 
+/** An agent that stops reporting leaves the last status standing, so flag it. */
+function agentSilent(m: Monitor) {
+  if (!m.agent_name || !m.enabled) return false;
+  const lastSeen = new Date(m.last_checked_at ?? m.created_at).getTime();
+  return Date.now() - lastSeen > Math.max(3 * m.interval_seconds, 180) * 1000;
+}
+
 function formatUptime(value?: number | null) {
   if (typeof value !== "number") return "—";
   return value >= 99.995 ? "100%" : `${value.toFixed(value >= 99 ? 2 : 1)}%`;
@@ -142,9 +150,10 @@ function monitorDefaults(editing: Monitor | null, email: string): MonitorFormInp
       interval_seconds: editing.interval_seconds,
       notify_email: editing.notify_email,
       enabled: editing.enabled,
+      agent_id: editing.agent_id ?? 0,
     };
   }
-  return { id: undefined, name: "", protocol: "http", target: "", port: 443, expected_status: undefined, interval_seconds: 300, notify_email: email, enabled: true };
+  return { id: undefined, name: "", protocol: "http", target: "", port: 443, expected_status: undefined, interval_seconds: 300, notify_email: email, enabled: true, agent_id: 0 };
 }
 
 function monitorPayload(m: Monitor, overrides: Partial<MonitorPayload> = {}): MonitorPayload {
@@ -158,6 +167,7 @@ function monitorPayload(m: Monitor, overrides: Partial<MonitorPayload> = {}): Mo
     interval_seconds: m.interval_seconds,
     notify_email: m.notify_email,
     enabled: m.enabled,
+    agent_id: m.agent_id ?? 0,
     ...overrides,
   };
 }
@@ -165,6 +175,7 @@ function monitorPayload(m: Monitor, overrides: Partial<MonitorPayload> = {}): Mo
 function MonitorForm({
   editing,
   defaultEmail,
+  agents,
   busy,
   atLimit,
   onCancel,
@@ -172,6 +183,7 @@ function MonitorForm({
 }: {
   editing: Monitor | null;
   defaultEmail: string;
+  agents: ProbeAgent[];
   busy: boolean;
   atLimit: boolean;
   onCancel: () => void;
@@ -187,7 +199,9 @@ function MonitorForm({
   const target = useWatch({ control: form.control, name: "target" });
   const port = useWatch({ control: form.control, name: "port" });
   const email = useWatch({ control: form.control, name: "notify_email" });
+  const agentId = useWatch({ control: form.control, name: "agent_id" }) ?? 0;
   const errors = form.formState.errors;
+  const agent = agents.find((a) => a.id === agentId);
 
   const where = target?.trim() ? (protocol === "tcpping" && port ? `${target.trim()}:${port}` : target.trim()) : null;
   const expected = Number(expectedStatus) || null;
@@ -206,6 +220,7 @@ function MonitorForm({
           interval_seconds: values.interval_seconds,
           notify_email: values.notify_email.trim(),
           enabled: values.enabled,
+          agent_id: values.agent_id,
         }),
       )}
     >
@@ -252,6 +267,25 @@ function MonitorForm({
         ) : null}
       </div>
 
+      {agents.length ? (
+        <Field label="Run from" hint={agent ? "Checks start inside that agent's network, so private addresses work." : "Qnetward's servers, over the public internet."}>
+          <select
+            id="monitor-agent"
+            className="h-9 w-full px-3"
+            value={agentId}
+            onChange={(e) => form.setValue("agent_id", Number(e.target.value))}
+          >
+            <option value={0}>Qnetward cloud</option>
+            {agents.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+                {a.online ? "" : " (offline)"}
+              </option>
+            ))}
+          </select>
+        </Field>
+      ) : null}
+
       <div>
         <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Check every</span>
         <div className="grid grid-cols-3 gap-1 rounded-lg border border-[var(--lp-border-strong)] bg-white/[0.03] p-1 sm:grid-cols-6" role="radiogroup" aria-label="Check every">
@@ -286,7 +320,13 @@ function MonitorForm({
       <p className="rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2.5 text-[12px] leading-relaxed text-[var(--lp-muted)]">
         {where ? (
           <>
-            Every <span className="text-[var(--lp-text)]">{intervalLabel(Number(interval) || 300)}</span>,{" "}
+            Every <span className="text-[var(--lp-text)]">{intervalLabel(Number(interval) || 300)}</span>
+            {agent ? (
+              <>
+                , from <span className="text-[var(--lp-text)]">{agent.name}</span>
+              </>
+            ) : null}
+            ,{" "}
             {protocol === "http" ? (
               <>
                 request <span className="lp-mono break-all text-[var(--lp-text)]">{where}</span>. Mark it down unless it answers with{" "}
@@ -307,7 +347,9 @@ function MonitorForm({
             )}{" "}
             {protocol === "http"
               ? `HTTPS certificates get a warning ${TLS_WARN_DAYS} days before they expire.`
-              : "Samples also land in History and your alert rules."}
+              : agent
+                ? null
+                : "Samples also land in History and your alert rules."}
           </>
         ) : (
           "Add a target to see what this monitor will do."
@@ -351,6 +393,7 @@ function MonitorRow({
   const checked = relativeTime(monitor.last_checked_at);
   const since = relativeTime(monitor.last_status_change_at);
   const certDays = monitor.protocol === "http" ? daysUntil(monitor.tls_expires_at) : null;
+  const stale = agentSilent(monitor);
 
   return (
     <li className={cn("px-4 py-4 transition-colors", editing ? "bg-[rgba(255,61,127,0.05)]" : "hover:bg-white/[0.015]")}>
@@ -374,6 +417,7 @@ function MonitorRow({
               </>
             ) : null}
             <span className="text-[var(--lp-subtle)]"> · every {intervalLabel(monitor.interval_seconds)}</span>
+            {monitor.agent_name ? <span className="text-[var(--lp-subtle)]"> · from {monitor.agent_name}</span> : null}
           </p>
           <div className="mt-3 grid grid-cols-1 items-center gap-x-4 gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_auto]">
             <CheckStrip checks={monitor.recent_checks} />
@@ -395,6 +439,7 @@ function MonitorRow({
                 {certDays < 0 ? "Certificate expired" : certDays === 0 ? "Certificate expires today" : `Certificate expires in ${certDays}d`}
               </span>
             ) : null}
+            {stale ? <span className="text-[#fbbf24]">{monitor.agent_name} hasn&apos;t reported since {checked ?? "it was added"}</span> : null}
             {state === "down" && monitor.last_error ? <span className="max-w-full truncate text-[#ff8fb3]" title={monitor.last_error}>{monitor.last_error}</span> : null}
             {monitor.enabled ? <span title={formatDateTime(monitor.next_run_at)}>Next {relativeTime(monitor.next_run_at, true) ?? "soon"}</span> : null}
             <span>{monitor.notify_email ? `Emails ${monitor.notify_email}` : "No emails"}</span>
@@ -444,6 +489,10 @@ export function MonitorsWorkspace() {
     queryFn: () => apiRequest<Monitor[]>("/api/monitors"),
     refetchInterval: liveInterval,
   });
+
+  // Only enrolled agents can run checks.
+  const agentsQuery = useQuery({ queryKey: ["agents"], queryFn: () => apiRequest<ProbeAgentListResponse>("/api/agents") });
+  const agents = useMemo(() => (agentsQuery.data?.agents ?? []).filter((a) => a.enrolled), [agentsQuery.data]);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["monitors"] });
 
@@ -641,6 +690,7 @@ export function MonitorsWorkspace() {
             key={`${editing?.id ?? "new"}:${sessionQuery.data?.user?.email ?? ""}`}
             editing={editing}
             defaultEmail={sessionQuery.data?.user?.email ?? ""}
+            agents={agents}
             busy={save.isPending}
             atLimit={monitors.length >= MAX_MONITORS}
             onCancel={() => setEditing(null)}

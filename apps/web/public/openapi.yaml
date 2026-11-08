@@ -426,6 +426,7 @@ components:
         expected_status: { type: integer, description: "http only. Without it, any 2xx or 3xx is up." }
         notify_email: { type: string, description: Emailed when the monitor goes down or comes back. Empty for none. }
         enabled: { type: boolean, default: true }
+        agent_id: { type: integer, description: "Run from this probe agent. 0 or absent runs it from Qnetward's servers." }
     Monitor:
       allOf:
         - $ref: "#/components/schemas/MonitorInput"
@@ -440,6 +441,7 @@ components:
             tls_expires_at: { type: string, format: date-time }
             next_run_at: { type: string, format: date-time }
             uptime_24h: { type: number }
+            agent_name: { type: string, description: Name of the probe agent the monitor runs from. }
             recent_checks:
               type: array
               items:
@@ -451,6 +453,7 @@ components:
                   loss_percent: { type: number }
                   status_code: { type: integer }
                   error: { type: string }
+                  agent_id: { type: integer, description: The probe agent that ran the check. Absent when the server did. }
     AlertRuleInput:
       type: object
       required: [protocol, target]

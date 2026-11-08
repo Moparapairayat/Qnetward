@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -169,8 +170,9 @@ func (srv *Server) handleAgentEnroll(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleAgentHeartbeat is the agent checking in with its secret. Later it
-// will also hand out checks to run.
+// handleAgentHeartbeat is the agent checking in with its secret. The answer
+// lists the monitors the agent runs, so a change in the console reaches it
+// within one heartbeat.
 func (srv *Server) handleAgentHeartbeat(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
@@ -203,10 +205,130 @@ func (srv *Server) handleAgentHeartbeat(w http.ResponseWriter, r *http.Request) 
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: "heartbeat failed"})
 		return
 	}
+	monitors, err := srv.store.AgentMonitors(ctx, agent.WorkspaceID, agent.ID)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, apiError{Error: "heartbeat failed"})
+		return
+	}
+	jobs := make([]agentJob, 0, len(monitors))
+	for _, m := range monitors {
+		jobs = append(jobs, agentJob{MonitorID: m.ID, Protocol: m.Protocol, Target: m.Target, Port: m.Port, IntervalSeconds: m.IntervalSeconds, ExpectedStatus: m.ExpectedStatus})
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"agent_id":          agent.ID,
 		"name":              agent.Name,
 		"heartbeat_seconds": int(agentHeartbeatEvery / time.Second),
-		"jobs":              []any{},
+		"jobs":              jobs,
 	})
+}
+
+// agentJob is a monitor an agent checks on its own schedule.
+type agentJob struct {
+	MonitorID       int64  `json:"monitor_id"`
+	Protocol        string `json:"protocol"`
+	Target          string `json:"target"`
+	Port            *int   `json:"port,omitempty"`
+	IntervalSeconds int    `json:"interval_seconds"`
+	ExpectedStatus  *int   `json:"expected_status,omitempty"`
+}
+
+// agentResult is one check an agent ran.
+type agentResult struct {
+	MonitorID    int64      `json:"monitor_id"`
+	CheckedAt    time.Time  `json:"checked_at"`
+	OK           bool       `json:"ok"`
+	RttMs        *float64   `json:"rtt_ms,omitempty"`
+	LossPercent  float64    `json:"loss_percent"`
+	StatusCode   *int       `json:"status_code,omitempty"`
+	Error        string     `json:"error,omitempty"`
+	TLSExpiresAt *time.Time `json:"tls_expires_at,omitempty"`
+}
+
+const (
+	agentResultsMax = 100
+	// Results older than this are dropped: the monitor has moved on.
+	agentResultMaxAge = time.Hour
+)
+
+// handleAgentResults takes checks an agent ran and records them as if the
+// server had run them. Results for monitors the agent doesn't run are skipped.
+func (srv *Server) handleAgentResults(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
+		return
+	}
+	if srv.store == nil {
+		writeJSON(w, http.StatusServiceUnavailable, apiError{Error: "storage not available"})
+		return
+	}
+	secret, ok := bearerToken(r)
+	if !ok || !strings.HasPrefix(secret, agentSecretPrefix) {
+		writeJSON(w, http.StatusUnauthorized, apiError{Error: store.ErrAgentCredentials.Error()})
+		return
+	}
+	var req struct {
+		Results []agentResult `json:"results"`
+	}
+	if err := decodeJSON(w, r, &req); err != nil {
+		writeJSON(w, http.StatusBadRequest, apiError{Error: err.Error()})
+		return
+	}
+	if len(req.Results) > agentResultsMax {
+		writeJSON(w, http.StatusBadRequest, apiError{Error: "send at most 100 results at a time"})
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 20*time.Second)
+	defer cancel()
+	agent, err := srv.store.AgentHeartbeat(ctx, hashOpaqueToken(secret), store.AgentInfo{RemoteIP: clientIPFromRequest(r)})
+	if err != nil {
+		if errors.Is(err, store.ErrAgentCredentials) {
+			writeJSON(w, http.StatusUnauthorized, apiError{Error: "this agent was removed or its secret is wrong; enroll it again"})
+			return
+		}
+		writeJSON(w, http.StatusInternalServerError, apiError{Error: "saving results failed"})
+		return
+	}
+
+	now := time.Now()
+	accepted := 0
+	for _, res := range req.Results {
+		if res.CheckedAt.IsZero() || now.Sub(res.CheckedAt) > agentResultMaxAge {
+			continue
+		}
+		if res.CheckedAt.After(now) {
+			res.CheckedAt = now
+		}
+		m, err := srv.store.AgentMonitor(ctx, agent.WorkspaceID, agent.ID, res.MonitorID)
+		if err != nil {
+			continue
+		}
+		if err := srv.recordMonitorCheck(m, res.check(agent.ID), nil); err != nil {
+			if !errors.Is(err, store.ErrMonitorNotFound) {
+				log.Printf("recording agent %d check for monitor %d failed: %v", agent.ID, m.ID, err)
+			}
+			continue
+		}
+		accepted++
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"accepted": accepted})
+}
+
+func (res agentResult) check(agentID int64) store.MonitorCheck {
+	check := store.MonitorCheck{
+		CheckedAt:    res.CheckedAt,
+		OK:           res.OK,
+		RttMs:        res.RttMs,
+		LossPercent:  min(max(res.LossPercent, 0), 100),
+		StatusCode:   res.StatusCode,
+		Error:        strings.TrimSpace(res.Error),
+		TLSExpiresAt: res.TLSExpiresAt,
+		AgentID:      &agentID,
+	}
+	if len(check.Error) > 500 {
+		check.Error = check.Error[:500]
+	}
+	if check.RttMs != nil && (*check.RttMs < 0 || *check.RttMs > 600000) {
+		check.RttMs = nil
+	}
+	return check
 }

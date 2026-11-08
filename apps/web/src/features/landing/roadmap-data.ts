@@ -56,7 +56,7 @@ export const roadmap: RoadmapTheme[] = [
     name: "Reach every network",
     summary: "See inside private networks and the gear you already run.",
     items: [
-      { name: "Probe agents", body: "An outbound-only agent for private networks and remote sites.", horizon: "next" },
+      { name: "Probe agents", body: "An outbound-only agent that runs your monitors from private networks and remote sites.", horizon: "now" },
       { name: "Device collector", body: "SNMP, gNMI, Redfish, and syslog from routers, switches, and servers.", horizon: "later" },
       { name: "Topology", body: "A live map of your network built from neighbour discovery.", horizon: "later" },
     ],

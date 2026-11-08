@@ -203,6 +203,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/agents", srv.handleAgents)
 	mux.HandleFunc("/api/agent/enroll", srv.handleAgentEnroll)
 	mux.HandleFunc("/api/agent/heartbeat", srv.handleAgentHeartbeat)
+	mux.HandleFunc("/api/agent/results", srv.handleAgentResults)
 	mux.HandleFunc("/api/status-pages", srv.handleStatusPages)
 	mux.HandleFunc("GET /api/public/status/{slug}", srv.handlePublicStatusPage)
 	mux.HandleFunc("/api/workspace/channels", srv.handleChannels)

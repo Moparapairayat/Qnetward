@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -90,29 +91,78 @@ func agentMain(ctx context.Context, server, token, stateDir string, once bool, o
 	}
 
 	c := &agentClient{server: state.Server, http: &http.Client{Timeout: 20 * time.Second}, hostname: hostname}
-	interval := 30 * time.Second
+	if once {
+		hb, err := c.heartbeat(ctx, state.Secret)
+		if err == nil {
+			fmt.Fprintf(out, "Checked in with %s as %q; %d monitors to run\n", state.Server, state.Name, len(hb.Jobs))
+		}
+		return err
+	}
+
+	runner := newJobRunner()
+	var wg sync.WaitGroup
+	defer wg.Wait()
+	ctx, stop := context.WithCancel(ctx)
+	defer stop()
+
+	beat := time.NewTimer(0)
+	defer beat.Stop()
+	tick := time.NewTicker(time.Second)
+	defer tick.Stop()
+	flush := time.NewTicker(agentFlushEvery)
+	defer flush.Stop()
+	jobs := -1
 	for {
-		next, err := c.heartbeat(ctx, state.Secret)
-		switch {
-		case errors.Is(err, errAgentRemoved):
-			return err
-		case err != nil:
-			fmt.Fprintln(out, "heartbeat failed, retrying:", err)
-		default:
-			if next > 0 {
-				interval = next
-			}
-		}
-		if once {
-			if err == nil {
-				fmt.Fprintf(out, "Checked in with %s as %q\n", state.Server, state.Name)
-			}
-			return err
-		}
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case <-time.After(interval):
+		case <-beat.C:
+			interval := 30 * time.Second
+			hb, err := c.heartbeat(ctx, state.Secret)
+			switch {
+			case errors.Is(err, errAgentRemoved):
+				return err
+			case err != nil:
+				fmt.Fprintln(out, "heartbeat failed, retrying:", err)
+			default:
+				runner.sync(hb.Jobs)
+				if n := runner.count(); n != jobs {
+					fmt.Fprintf(out, "Running %d monitors\n", n)
+					jobs = n
+				}
+				if hb.HeartbeatSeconds > 0 {
+					interval = time.Duration(hb.HeartbeatSeconds) * time.Second
+				}
+			}
+			beat.Reset(interval)
+		case <-tick.C:
+			runner.startDue(ctx, &wg)
+		case <-flush.C:
+			if err := c.sendResults(ctx, state.Secret, runner); errors.Is(err, errAgentRemoved) {
+				return err
+			} else if err != nil {
+				fmt.Fprintln(out, "sending results failed, will retry:", err)
+			}
+		}
+	}
+}
+
+// agentFlushEvery is how often finished checks are sent to the console.
+var agentFlushEvery = 5 * time.Second
+
+// sendResults sends finished checks in batches, keeping any that fail to send.
+func (c *agentClient) sendResults(ctx context.Context, secret string, runner *jobRunner) error {
+	for {
+		batch := runner.take(100)
+		if len(batch) == 0 {
+			return nil
+		}
+		var resp struct {
+			Accepted int `json:"accepted"`
+		}
+		if err := c.post(ctx, "/api/agent/results", secret, map[string]any{"results": batch}, &resp); err != nil {
+			runner.putBack(batch)
+			return err
 		}
 	}
 }
@@ -133,14 +183,16 @@ func (c *agentClient) enroll(ctx context.Context, token string) (*agentState, er
 	return &agentState{Server: c.server, AgentID: resp.AgentID, Name: resp.Name, Secret: resp.Secret}, nil
 }
 
-func (c *agentClient) heartbeat(ctx context.Context, secret string) (time.Duration, error) {
-	var resp struct {
-		HeartbeatSeconds int `json:"heartbeat_seconds"`
-	}
-	if err := c.post(ctx, "/api/agent/heartbeat", secret, c.hello(""), &resp); err != nil {
-		return 0, err
-	}
-	return time.Duration(resp.HeartbeatSeconds) * time.Second, nil
+// heartbeatReply is the console's answer to a check-in.
+type heartbeatReply struct {
+	HeartbeatSeconds int        `json:"heartbeat_seconds"`
+	Jobs             []agentJob `json:"jobs"`
+}
+
+func (c *agentClient) heartbeat(ctx context.Context, secret string) (heartbeatReply, error) {
+	var resp heartbeatReply
+	err := c.post(ctx, "/api/agent/heartbeat", secret, c.hello(""), &resp)
+	return resp, err
 }
 
 func (c *agentClient) post(ctx context.Context, path, secret string, body, out any) error {
