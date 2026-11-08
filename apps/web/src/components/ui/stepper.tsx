@@ -2,9 +2,9 @@ import { Check } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 /** Numbered progress across the top of a multi-step dialog. */
-export function Stepper({ steps, step }: { steps: readonly string[]; step: number }) {
+export function Stepper({ steps, step, className = "mb-5" }: { steps: readonly string[]; step: number; className?: string }) {
   return (
-    <ol className="mb-5 flex items-center gap-2" aria-label="Steps">
+    <ol className={cn("flex items-center gap-2", className)} aria-label="Steps">
       {steps.map((label, i) => {
         const done = i < step;
         const current = i === step;

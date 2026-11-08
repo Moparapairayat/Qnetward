@@ -708,3 +708,49 @@ func TestDemoLoginSeedsAnEmptyWorkspace(t *testing.T) {
 		t.Fatalf("expected one demo alert rule, got %d (err %v)", len(rules), err)
 	}
 }
+
+// Signing up again before verifying, say after going back to fix a detail,
+// starts over with the new name, password, and code. Once the email is
+// verified, signing up with it again is refused.
+func TestAuthSignupAgainBeforeVerifying(t *testing.T) {
+	installTestStore(t)
+	resetAuthRateLimiterForTest(t)
+
+	email := fmt.Sprintf("again_%d@example.com", time.Now().UnixNano())
+	post := func(handler http.HandlerFunc, path, body string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		handler(rr, req)
+		return rr
+	}
+	signup := func(name, password string) *httptest.ResponseRecorder {
+		return post(testSrv.handleAuthSignup, "/api/auth/signup", fmt.Sprintf(`{"name":%q,"email":%q,"password":%q}`, name, email, password))
+	}
+
+	if rr := signup("First Try", "FirstPass123!"); rr.Code != http.StatusAccepted {
+		t.Fatalf("first signup: got %d: %s", rr.Code, rr.Body.String())
+	}
+	rr := signup("Second Try", "SecondPass123!")
+	if rr.Code != http.StatusAccepted {
+		t.Fatalf("signing up again before verifying should work, got %d: %s", rr.Code, rr.Body.String())
+	}
+	var second authMessageResponse
+	_ = json.Unmarshal(rr.Body.Bytes(), &second)
+
+	if rr := post(testSrv.handleAuthVerifyEmail, "/api/auth/verify-email", fmt.Sprintf(`{"email":%q,"code":%q}`, email, second.PreviewCode)); rr.Code != http.StatusOK {
+		t.Fatalf("verify with the new code: got %d: %s", rr.Code, rr.Body.String())
+	}
+	if rr := post(testSrv.handleAuthLogin, "/api/auth/login", fmt.Sprintf(`{"email":%q,"password":"FirstPass123!"}`, email)); rr.Code == http.StatusOK {
+		t.Fatal("the first password must no longer work")
+	}
+	rr = post(testSrv.handleAuthLogin, "/api/auth/login", fmt.Sprintf(`{"email":%q,"password":"SecondPass123!"}`, email))
+	if rr.Code != http.StatusOK || !strings.Contains(rr.Body.String(), "Second Try") {
+		t.Fatalf("login with the new password: got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	rr = signup("Intruder", "IntruderPass123!")
+	if rr.Code != http.StatusConflict || !strings.Contains(rr.Body.String(), "Sign in instead") {
+		t.Fatalf("a verified email must not be taken over, got %d: %s", rr.Code, rr.Body.String())
+	}
+}

@@ -7,7 +7,12 @@ import { useRouter } from "next/navigation";
 import { apiRequest } from "@/lib/api";
 import { SessionResponse } from "@/lib/types";
 
-export function GuestOnly({ children }: { children: ReactNode }) {
+/**
+ * Shows its children only to signed-out visitors and sends anyone signed in to
+ * the console. hold keeps a flow on screen after it signs the visitor in, like
+ * signup's last step.
+ */
+export function GuestOnly({ children, hold = false }: { children: ReactNode; hold?: boolean }) {
   const router = useRouter();
   const session = useQuery({
     queryKey: ["session"],
@@ -15,10 +20,10 @@ export function GuestOnly({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    if (!session.isLoading && session.data?.authenticated) {
+    if (!hold && !session.isLoading && session.data?.authenticated) {
       router.replace("/overview");
     }
-  }, [router, session.data?.authenticated, session.isLoading]);
+  }, [hold, router, session.data?.authenticated, session.isLoading]);
 
   if (session.isLoading) {
     return (
@@ -30,7 +35,7 @@ export function GuestOnly({ children }: { children: ReactNode }) {
     );
   }
 
-  if (session.data?.authenticated) {
+  if (session.data?.authenticated && !hold) {
     return null;
   }
 

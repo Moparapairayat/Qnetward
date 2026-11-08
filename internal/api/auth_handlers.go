@@ -199,12 +199,12 @@ func (srv *Server) handleAuthSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name, err := normalizeSignupDisplayName(req.Name, req.FirstName, req.LastName)
+	email, err := store.NormalizeEmail(req.Email)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, apiError{Error: err.Error()})
 		return
 	}
-	email, err := store.NormalizeEmail(req.Email)
+	name, err := normalizeSignupDisplayName(req.Name, req.FirstName, req.LastName, email)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, apiError{Error: err.Error()})
 		return
@@ -233,10 +233,15 @@ func (srv *Server) handleAuthSignup(w http.ResponseWriter, r *http.Request) {
 	_ = srv.store.DeleteExpiredSessions(ctx)
 	_ = srv.store.DeleteExpiredEmailVerificationCodes(ctx)
 	user, err := srv.store.CreateUser(ctx, name, email, string(passwordHash), true)
+	if errors.Is(err, store.ErrUserExists) {
+		// Signing up again before verifying, say to fix the email's owner name or
+		// after going back a step, starts over with a fresh code.
+		user, err = srv.store.ReclaimUnverifiedUser(ctx, name, email, string(passwordHash))
+	}
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrUserExists):
-			writeJSON(w, http.StatusConflict, apiError{Error: "user already exists"})
+			writeJSON(w, http.StatusConflict, apiError{Error: "An account with this email already exists. Sign in instead."})
 		default:
 			writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 		}
@@ -865,7 +870,10 @@ func normalizeDisplayName(value string) (string, error) {
 	return value, nil
 }
 
-func normalizeSignupDisplayName(name, firstName, lastName string) (string, error) {
+// normalizeSignupDisplayName picks the new account's name. The console asks
+// for it after the email is verified, so signup may leave it out; the part of
+// the email before the @ stands in until then.
+func normalizeSignupDisplayName(name, firstName, lastName, email string) (string, error) {
 	name = strings.TrimSpace(name)
 	if name != "" {
 		return normalizeDisplayName(name)
@@ -873,6 +881,10 @@ func normalizeSignupDisplayName(name, firstName, lastName string) (string, error
 
 	firstName = strings.TrimSpace(firstName)
 	lastName = strings.TrimSpace(lastName)
+	if firstName == "" && lastName == "" {
+		local, _, _ := strings.Cut(email, "@")
+		return normalizeDisplayName(local)
+	}
 	if firstName == "" {
 		return "", fmt.Errorf("first name is required")
 	}

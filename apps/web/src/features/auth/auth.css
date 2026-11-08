@@ -651,3 +651,58 @@
     background: #1d1d21;
   }
 }
+
+/* Six-box verification code */
+.lp-auth .auth-code-box {
+  height: 52px;
+  width: 100%;
+  min-width: 0;
+  border-radius: 10px;
+  border: 1px solid var(--lp-border-strong);
+  background: var(--lp-input-bg);
+  color: var(--lp-text);
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 22px;
+  font-weight: 500;
+  text-align: center;
+  caret-color: var(--lp-accent);
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.lp-auth .auth-code-box:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.lp-auth .auth-code-box:focus {
+  border-color: var(--lp-accent);
+  box-shadow: 0 0 0 3px rgba(255, 61, 127, 0.16);
+}
+
+.lp-auth .auth-code-box-invalid {
+  border-color: rgba(255, 61, 127, 0.6);
+}
+
+.lp-auth .auth-code-box:disabled {
+  opacity: 0.6;
+}
+
+@media (min-width: 640px) and (max-height: 820px) {
+  .lp-auth .auth-code-box {
+    height: 46px;
+  }
+}
+
+/* Laptops: shorter fields so a whole auth step fits without scrolling. */
+@media (min-width: 640px) and (max-height: 820px) {
+  .lp-auth .auth-input {
+    height: 40px;
+    min-height: 0;
+  }
+
+  .lp-auth .auth-input-group {
+    gap: 6px;
+  }
+}

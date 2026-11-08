@@ -1,4 +1,3 @@
-import { Check } from "@/components/icons";
 import { evaluatePasswordStrength } from "@/lib/password-strength";
 import { cn } from "@/lib/utils";
 
@@ -9,16 +8,18 @@ type PasswordStrengthMeterProps = {
 };
 
 /**
- * Strength bar and a checklist of the rules, shown only once the person starts
- * typing so an empty form stays short.
+ * Strength bar and what the password still lacks, shown only once the person
+ * starts typing so an empty form stays short.
  */
 export function PasswordStrengthMeter({ password }: PasswordStrengthMeterProps) {
   if (!password) return null;
   const strength = evaluatePasswordStrength(password);
   const activeBars = Math.max(strength.score, 1);
+  // Only what's left to do, in one line, so the form stays short.
+  const missing = strength.rules.filter((rule) => !rule.met);
 
   return (
-    <div className="grid gap-2" aria-live="polite">
+    <div className="grid gap-1.5" aria-live="polite">
       <div className="flex items-center gap-3">
         <div className="grid flex-1 grid-cols-4 gap-1.5">
           {Array.from({ length: 4 }).map((_, index) => (
@@ -30,15 +31,11 @@ export function PasswordStrengthMeter({ password }: PasswordStrengthMeterProps) 
         </div>
         <span className={cn("shrink-0 text-[12px] font-medium", strength.accentClassName)}>{strength.label}</span>
       </div>
-      <ul className="flex flex-wrap gap-x-3 gap-y-1">
-        {strength.rules.map((rule) => (
-          <li key={rule.id} className={cn("flex items-center gap-1 text-[12px]", rule.met ? "text-[#86efac]" : "text-[var(--lp-subtle)]")}>
-            <Check className={cn("h-3 w-3", rule.met ? "opacity-100" : "opacity-30")} aria-hidden="true" />
-            {rule.label}
-            <span className="sr-only">{rule.met ? "(done)" : "(missing)"}</span>
-          </li>
-        ))}
-      </ul>
+      {missing.length ? (
+        <p className="text-[12px] text-[var(--lp-subtle)]">
+          Add {missing.map((rule) => rule.label.charAt(0).toLowerCase() + rule.label.slice(1)).join(", ").replace(/, ([^,]*)$/, " and $1")}.
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -9,17 +9,12 @@ test("signup and verify flow reaches the dashboard", async ({ page }) => {
 
   await page.goto("/signup");
 
-  await page.getByLabel("First name").fill(firstName);
-  await page.getByLabel("Last name").fill(lastName);
-  await page.getByLabel("Email").fill(email);
-  await page.getByRole("button", { name: /continue/i }).click();
+  await page.getByLabel("Work email").fill(email);
+  await page.locator("#signup-password").fill(password);
 
   const signupResponsePromise = page.waitForResponse((response) =>
     response.url().includes("/api/auth/signup") && response.request().method() === "POST",
   );
-
-  await page.locator("#signup-password").fill(password);
-  await page.locator("#signup-confirm-password").fill(password);
   await page.getByRole("button", { name: /create account/i }).click();
 
   const signupResponse = await signupResponsePromise;
@@ -27,28 +22,42 @@ test("signup and verify flow reaches the dashboard", async ({ page }) => {
   const signupPayload = await signupResponse.json();
   expect(signupPayload.preview_code).toBeTruthy();
 
+  await expect(page.getByRole("heading", { name: /check your inbox/i })).toBeVisible();
   await expect(page.getByText(email)).toBeVisible();
+
+  // Going back to fix the email and signing up again must work before verifying.
+  await page.getByRole("button", { name: /change it/i }).click();
+  await page.locator("#signup-password").fill(password);
+  const retryPromise = page.waitForResponse((response) =>
+    response.url().includes("/api/auth/signup") && response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: /create account/i }).click();
+  const retry = await retryPromise;
+  expect(retry.ok()).toBeTruthy();
+  const retryPayload = await retry.json();
 
   const verifyResponsePromise = page.waitForResponse((response) =>
     response.url().includes("/api/auth/verify-email") && response.request().method() === "POST",
   );
-
-  await page.locator("#verify-code").fill(signupPayload.preview_code);
-  await page.getByRole("button", { name: /verify email/i }).click();
+  // Pasting the whole code fills every box and submits it.
+  await page.locator("#verify-code").focus();
+  await page.evaluate((code) => {
+    const data = new DataTransfer();
+    data.setData("text", code);
+    document.querySelector("#verify-code")?.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
+  }, retryPayload.preview_code);
 
   const verifyResponse = await verifyResponsePromise;
   expect(verifyResponse.ok()).toBeTruthy();
 
-  const successHeading = page.getByText("Account ready");
-  const dashboardHeading = page.getByRole("heading", { name: /welcome back/i });
+  await expect(page.getByRole("heading", { name: /set up your workspace/i })).toBeVisible();
+  await page.getByLabel("First name").fill(firstName);
+  await page.getByLabel("Last name").fill(lastName);
+  await expect(page.locator("#signup-workspace")).toHaveValue(`${firstName}'s workspace`);
+  await page.locator("#signup-workspace").fill("Signup Labs");
+  await page.getByRole("button", { name: /continue to dashboard/i }).click();
 
-  try {
-    await expect(successHeading).toBeVisible({ timeout: 5_000 });
-    await page.getByRole("button", { name: /open dashboard/i }).click();
-  } catch {
-    // The success step auto-redirects after a short hold, so the dashboard may already be open.
-  }
-
-  await expect(dashboardHeading).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("heading", { name: /welcome back/i })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText("Signup Labs").first()).toBeVisible();
 });
 

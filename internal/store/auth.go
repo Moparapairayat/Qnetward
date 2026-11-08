@@ -84,6 +84,31 @@ func (s *Store) CreateUser(ctx context.Context, name, email, passwordHash string
 	return user, nil
 }
 
+// ReclaimUnverifiedUser lets someone sign up again with an email whose account
+// was never verified, for a typo in the name or a forgotten password before the
+// code arrived. Nobody could have used that account, so it takes the new name
+// and password. A verified account is never touched: it returns ErrUserExists.
+func (s *Store) ReclaimUnverifiedUser(ctx context.Context, name, email, passwordHash string) (User, error) {
+	email, err := NormalizeEmail(email)
+	if err != nil {
+		return User{}, err
+	}
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return User{}, errors.New("name is required")
+	}
+	var user User
+	err = s.db.QueryRowContext(ctx, `
+		UPDATE users SET name = $2, password_hash = $3
+		WHERE email = $1 AND verification_required AND email_verified_at IS NULL
+		RETURNING id, name, email, verification_required, email_verified_at, created_at
+	`, email, name, passwordHash).Scan(&user.ID, &user.Name, &user.Email, &user.VerificationRequired, &user.EmailVerifiedAt, &user.CreatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return User{}, ErrUserExists
+	}
+	return user, err
+}
+
 func (s *Store) AuthenticateUser(ctx context.Context, email string) (User, string, error) {
 	email, err := NormalizeEmail(email)
 	if err != nil {
