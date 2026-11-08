@@ -39,19 +39,19 @@ export function AuthLayoutCard({
       <div
         className={cn(
           // One size for every auth page, so moving between sign in, sign up, and its steps doesn't make the card jump.
-          "grid w-full max-w-[480px] overflow-hidden sm:rounded-2xl sm:border sm:border-[var(--lp-border)] sm:bg-[#1d1d21] sm:shadow-[0_24px_80px_rgba(0,0,0,0.45)] lg:min-h-[680px] lg:max-w-[920px] lg:grid-cols-2",
+          "grid w-full max-w-[480px] overflow-hidden sm:rounded-2xl sm:border sm:border-[var(--lp-border)] sm:bg-[#1d1d21] sm:shadow-[0_24px_80px_rgba(0,0,0,0.45)] lg:min-h-[620px] lg:max-w-[920px] lg:grid-cols-2",
         )}
       >
-        <div className="flex flex-col px-5 py-7 sm:px-10 sm:py-11">
-          <Link href="/" className="mb-7 flex w-fit items-center gap-2 sm:mb-8" aria-label="Qnetward home">
-            <QnetwardMark size={22} />
-            <span className="text-[15px] font-semibold tracking-tight">Qnetward</span>
+        <div className="flex flex-col px-5 py-7 sm:px-10 sm:py-9">
+          <Link href="/" className="mb-7 flex w-fit items-center gap-2.5 sm:mb-7" aria-label="Qnetward home">
+            <QnetwardMark size={30} />
+            <span className="text-[18px] font-semibold tracking-[-0.01em]">Qnetward</span>
           </Link>
           <h1 className="text-[22px] font-semibold tracking-[-0.02em] sm:text-[24px]">{title}</h1>
           <div className="mt-1.5 text-[14px] leading-relaxed text-[var(--lp-muted)]">{subtitle}</div>
-          <div className={cn("mt-7 flex-1", contentClassName)}>{children}</div>
+          <div className={cn("mt-6 flex-1", contentClassName)}>{children}</div>
           {headerAction ? (
-            <p className="mt-7 text-center text-[14px] text-[var(--lp-muted)]">
+            <p className="mt-6 text-center text-[14px] text-[var(--lp-muted)]">
               {headerAction.prompt}{" "}
               <Link href={headerAction.href} className="auth-footer-link">
                 {headerAction.label}
@@ -59,7 +59,7 @@ export function AuthLayoutCard({
             </p>
           ) : null}
         </div>
-        <div className="relative hidden min-h-[560px] lg:block">
+        <div className="relative hidden min-h-[520px] lg:block">
           <AuthArt />
         </div>
       </div>
