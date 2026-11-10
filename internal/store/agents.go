@@ -33,6 +33,9 @@ type Agent struct {
 	Platform        string     `json:"platform,omitempty"`
 	RemoteIP        string     `json:"remote_ip,omitempty"`
 	CreatedAt       time.Time  `json:"created_at"`
+	// BackOnline is set by a heartbeat from an agent that had been reported
+	// offline, so the caller can say it's back.
+	BackOnline bool `json:"-"`
 }
 
 const agentColumns = `id, workspace_id, name, secret_hash IS NOT NULL, enroll_expires_at, enrolled_at, last_seen_at, version, hostname, platform, remote_ip, created_at`
@@ -197,18 +200,106 @@ func (s *Store) AgentHeartbeat(ctx context.Context, secretHash string, info Agen
 		return Agent{}, errors.New("store is not available")
 	}
 	info = info.clipped()
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return Agent{}, err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	var offline sql.NullTime
+	err = tx.QueryRowContext(ctx, `SELECT offline_since FROM probe_agents WHERE secret_hash = $1 FOR UPDATE`, secretHash).Scan(&offline)
+	if errors.Is(err, sql.ErrNoRows) {
+		return Agent{}, ErrAgentCredentials
+	}
+	if err != nil {
+		return Agent{}, err
+	}
 	var a Agent
-	err := scanAgent(s.db.QueryRowContext(ctx, `
+	err = scanAgent(tx.QueryRowContext(ctx, `
 		UPDATE probe_agents SET
 			last_seen_at = NOW(),
+			offline_since = NULL,
 			version = COALESCE(NULLIF($2, ''), version),
 			hostname = COALESCE(NULLIF($3, ''), hostname),
 			platform = COALESCE(NULLIF($4, ''), platform),
 			remote_ip = $5
 		WHERE secret_hash = $1
 		RETURNING `+agentColumns, secretHash, info.Version, info.Hostname, info.Platform, info.RemoteIP), &a)
-	if errors.Is(err, sql.ErrNoRows) {
-		return Agent{}, ErrAgentCredentials
+	if err != nil {
+		return Agent{}, err
 	}
-	return a, err
+	a.BackOnline = offline.Valid
+	return a, tx.Commit()
+}
+
+// SilentAgent is an agent that stopped checking in while monitors depend on it.
+type SilentAgent struct {
+	Agent
+	Monitors     int
+	CreatorEmail string
+	CreatorName  string
+}
+
+// ClaimSilentAgents marks enrolled agents that haven't checked in for
+// silentFor and run at least one enabled monitor, and returns them. Each is
+// returned once until it checks in again. It works across workspaces and runs
+// as the login role.
+func (s *Store) ClaimSilentAgents(ctx context.Context, silentFor time.Duration) ([]SilentAgent, error) {
+	if s == nil {
+		return nil, nil
+	}
+	rows, err := s.db.QueryContext(ctx, `
+		UPDATE probe_agents a SET offline_since = a.last_seen_at
+		WHERE a.secret_hash IS NOT NULL AND a.offline_since IS NULL
+			AND a.last_seen_at < NOW() - make_interval(secs => $1)
+			AND EXISTS (SELECT 1 FROM monitors m WHERE m.agent_id = a.id AND m.enabled)
+		RETURNING `+agentColumns+`,
+			(SELECT COUNT(*) FROM monitors m WHERE m.agent_id = a.id AND m.enabled),
+			COALESCE((SELECT u.email FROM users u WHERE u.id = a.created_by), ''),
+			COALESCE((SELECT u.name FROM users u WHERE u.id = a.created_by), '')`, silentFor.Seconds())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []SilentAgent
+	for rows.Next() {
+		var sa SilentAgent
+		var extra struct {
+			n           int
+			email, name string
+		}
+		if err := scanAgent(scanWithExtra{rows, []any{&extra.n, &extra.email, &extra.name}}, &sa.Agent); err != nil {
+			return nil, err
+		}
+		sa.Monitors, sa.CreatorEmail, sa.CreatorName = extra.n, extra.email, extra.name
+		out = append(out, sa)
+	}
+	return out, rows.Err()
+}
+
+// scanWithExtra lets scanAgent read a row that has more columns after the
+// agent's own.
+type scanWithExtra struct {
+	scanner interface{ Scan(...any) error }
+	extra   []any
+}
+
+func (w scanWithExtra) Scan(dest ...any) error {
+	return w.scanner.Scan(append(dest, w.extra...)...)
+}
+
+// AgentCreator returns the email and name of whoever added the agent.
+func (s *Store) AgentCreator(ctx context.Context, agentID int64) (string, string, error) {
+	if s == nil {
+		return "", "", errors.New("store is not available")
+	}
+	var email, name string
+	err := s.db.QueryRowContext(ctx, `
+		SELECT COALESCE(u.email, ''), COALESCE(u.name, '')
+		FROM probe_agents a LEFT JOIN users u ON u.id = a.created_by
+		WHERE a.id = $1`, agentID).Scan(&email, &name)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", "", ErrAgentNotFound
+	}
+	return email, name, err
 }

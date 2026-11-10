@@ -547,7 +547,7 @@ export type RuntimeHealthResponse = {
 };
 
 export type ChannelKind = "slack" | "discord" | "telegram" | "webhook";
-export type ChannelEvent = "monitors" | "certificates" | "alert_rules";
+export type ChannelEvent = "monitors" | "certificates" | "alert_rules" | "agents";
 
 export type NotificationChannel = {
   id: number;

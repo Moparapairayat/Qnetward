@@ -226,6 +226,8 @@ func dashboardRoutePath(panel string) string {
 		return "/alerts"
 	case "monitors":
 		return "/monitors"
+	case "agents":
+		return "/agents"
 	case "settings":
 		return "/settings"
 	case "profile":

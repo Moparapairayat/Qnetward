@@ -72,6 +72,7 @@ const eventInfo: Record<ChannelEvent, { label: string; detail: string }> = {
   monitors: { label: "Monitors", detail: "When a monitor goes down, and when it comes back up" },
   certificates: { label: "Certificates", detail: "When an HTTPS monitor's certificate is 14 days from expiring" },
   alert_rules: { label: "Alert rules", detail: "When a latency or packet loss rule fires or clears" },
+  agents: { label: "Probe agents", detail: "When an agent running your monitors goes offline, and when it's back" },
 };
 const allEvents = Object.keys(eventInfo) as ChannelEvent[];
 

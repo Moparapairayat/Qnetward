@@ -205,6 +205,9 @@ func (srv *Server) handleAgentHeartbeat(w http.ResponseWriter, r *http.Request) 
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: "heartbeat failed"})
 		return
 	}
+	if agent.BackOnline {
+		srv.agentBackOnline(agent)
+	}
 	monitors, err := srv.store.AgentMonitors(ctx, agent.WorkspaceID, agent.ID)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: "heartbeat failed"})
@@ -287,6 +290,9 @@ func (srv *Server) handleAgentResults(w http.ResponseWriter, r *http.Request) {
 		}
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: "saving results failed"})
 		return
+	}
+	if agent.BackOnline {
+		srv.agentBackOnline(agent)
 	}
 
 	now := time.Now()

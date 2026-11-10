@@ -236,6 +236,8 @@ func (srv *Server) RunMonitors(ctx context.Context) {
 	defer poll.Stop()
 	prune := time.NewTicker(monitorPruneEvery)
 	defer prune.Stop()
+	agents := time.NewTicker(agentWatchEvery)
+	defer agents.Stop()
 
 	slots := make(chan struct{}, monitorConcurrency)
 	var wg sync.WaitGroup
@@ -245,6 +247,8 @@ func (srv *Server) RunMonitors(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
+		case <-agents.C:
+			srv.watchAgents(ctx)
 		case <-prune.C:
 			pruneCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 			if err := srv.store.PruneMonitorChecks(pruneCtx, time.Now().Add(-monitorCheckRetention)); err != nil {
