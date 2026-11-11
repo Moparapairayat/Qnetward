@@ -401,6 +401,10 @@ export type PlanLimits = {
   probes_per_hour: number;
   scans_per_hour: number;
   api_requests_per_minute: number;
+  status_pages: number;
+  agents: number;
+  /** How many places one monitor may run from. */
+  monitor_locations: number;
 };
 
 export type Plan = { id: "free" | "pro" | "enterprise"; name: string; limits: PlanLimits };
@@ -490,9 +494,20 @@ export type Monitor = {
   created_at: string;
   uptime_24h?: number | null;
   recent_checks: MonitorCheck[];
-  /** The probe agent the monitor runs from; absent when the server runs it. */
-  agent_id?: number | null;
-  agent_name?: string;
+  /** The places the monitor runs from, Qnetward's servers first. */
+  locations: MonitorLocation[];
+};
+
+export type MonitorLocation = {
+  /** 0 for Qnetward's servers, otherwise a probe agent's id. */
+  agent_id: number;
+  name?: string;
+  status: "pending" | "up" | "down";
+  last_checked_at?: string | null;
+  last_rtt_ms?: number | null;
+  last_error?: string;
+  /** False for an agent that stopped checking in; its result no longer counts. */
+  online: boolean;
 };
 
 export type MonitorSeriesWindow = "15m" | "1h" | "6h" | "24h";
@@ -527,8 +542,8 @@ export type MonitorPayload = {
   interval_seconds: number;
   notify_email: string;
   enabled: boolean;
-  /** 0 runs the monitor from the server. */
-  agent_id?: number;
+  /** Where to run from: 0 for Qnetward's servers, or probe agent ids. */
+  locations?: number[];
 };
 
 export type RuntimeHealthDependency = {

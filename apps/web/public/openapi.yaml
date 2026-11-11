@@ -426,7 +426,11 @@ components:
         expected_status: { type: integer, description: "http only. Without it, any 2xx or 3xx is up." }
         notify_email: { type: string, description: Emailed when the monitor goes down or comes back. Empty for none. }
         enabled: { type: boolean, default: true }
-        agent_id: { type: integer, description: "Run from this probe agent. 0 or absent runs it from Qnetward's servers." }
+        locations:
+          type: array
+          items: { type: integer }
+          description: "Where to run from: 0 for Qnetward's servers, or probe agent ids. Left out, a new monitor runs from the servers and an existing one keeps its places. With several, the monitor is down only when every place still reporting sees it down."
+        agent_id: { type: integer, deprecated: true, description: "Use locations. Runs the monitor from this one probe agent, or the servers when 0." }
     Monitor:
       allOf:
         - $ref: "#/components/schemas/MonitorInput"
@@ -441,7 +445,19 @@ components:
             tls_expires_at: { type: string, format: date-time }
             next_run_at: { type: string, format: date-time }
             uptime_24h: { type: number }
-            agent_name: { type: string, description: Name of the probe agent the monitor runs from. }
+            locations:
+              type: array
+              description: The places the monitor runs from, each with its latest result.
+              items:
+                type: object
+                properties:
+                  agent_id: { type: integer, description: 0 for Qnetward's servers. }
+                  name: { type: string }
+                  status: { type: string, enum: [pending, up, down] }
+                  last_checked_at: { type: string, format: date-time }
+                  last_rtt_ms: { type: number }
+                  last_error: { type: string }
+                  online: { type: boolean, description: False for an agent that stopped checking in. Its result no longer counts. }
             recent_checks:
               type: array
               items:

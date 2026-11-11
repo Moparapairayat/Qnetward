@@ -44,7 +44,11 @@ type monitorRequest struct {
 	NotifyEmail     string `json:"notify_email"`
 	Enabled         *bool  `json:"enabled,omitempty"`
 	ExpectedStatus  *int   `json:"expected_status,omitempty"`
-	// AgentID runs the monitor from a probe agent; omitted or 0 means the server.
+	// Locations are the places to run from: 0 for Qnetward's servers, or a
+	// probe agent's id. Left out, a new monitor runs from the servers and an
+	// existing one keeps its places.
+	Locations *[]int64 `json:"locations,omitempty"`
+	// AgentID is the older, single-place form of Locations.
 	AgentID *int64 `json:"agent_id,omitempty"`
 }
 
@@ -192,9 +196,17 @@ func normalizeMonitorRequest(user actor, req monitorRequest) (store.Monitor, err
 		Enabled:         enabled,
 		ExpectedStatus:  req.ExpectedStatus,
 	}
-	if req.AgentID != nil && *req.AgentID > 0 {
-		id := *req.AgentID
-		m.AgentID = &id
+	switch {
+	case req.Locations != nil:
+		if len(*req.Locations) == 0 {
+			return store.Monitor{}, errors.New("pick at least one place to run the monitor from")
+		}
+		if limit := user.Plan.Limits.MonitorLocations; limit > 0 && len(*req.Locations) > limit {
+			return store.Monitor{}, fmt.Errorf("your plan runs a monitor from up to %d places", limit)
+		}
+		m.LocationIDs = *req.Locations
+	case req.AgentID != nil:
+		m.LocationIDs = []int64{max(*req.AgentID, 0)}
 	}
 
 	if protocol == "http" {
@@ -320,7 +332,7 @@ func (srv *Server) recordMonitorCheck(m store.Monitor, check store.MonitorCheck,
 		return err
 	}
 
-	srv.events.publish(m.WorkspaceID, liveEvent{Type: "monitor.check", MonitorID: m.ID, Status: map[bool]string{true: "up", false: "down"}[check.OK]})
+	srv.events.publish(m.WorkspaceID, liveEvent{Type: "monitor.check", MonitorID: m.ID, Status: outcome.Status})
 
 	// Ping and TCP samples also feed the workspace's alert rules.
 	if summary != nil && summary.Sent > 0 {
@@ -328,8 +340,10 @@ func (srv *Server) recordMonitorCheck(m store.Monitor, check store.MonitorCheck,
 			m.Protocol, m.Target, monitorPort(m), *summary, srv.buildConfiguredDashboardURL("alerts"))
 	}
 
-	wentDown := !check.OK && outcome.Previous != "down"
-	recovered := check.OK && outcome.Previous == "down"
+	// The status counts every place the monitor runs from, so one failing
+	// place among several doesn't alert.
+	wentDown := outcome.Status == "down" && outcome.Previous != "down"
+	recovered := outcome.Status == "up" && outcome.Previous == "down"
 	if wentDown || recovered {
 		srv.notifyChannels(m.WorkspaceID, store.ChannelEventMonitors, toNotice(srv.monitorAlert(m, check, recovered), monitorEvent(recovered)))
 	}

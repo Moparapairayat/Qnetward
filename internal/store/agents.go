@@ -149,6 +149,17 @@ func (s *Store) DeleteAgent(ctx context.Context, workspaceID, id int64) (Agent, 
 	if err != nil {
 		return Agent{}, err
 	}
+	// Monitors that ran only from this agent go back to the server.
+	if _, err := tx.ExecContext(ctx, `
+		WITH orphan AS (
+			UPDATE monitors m SET cloud = TRUE, next_run_at = NOW()
+			WHERE m.workspace_id = $1 AND NOT m.cloud
+				AND NOT EXISTS (SELECT 1 FROM monitor_locations l WHERE l.monitor_id = m.id)
+			RETURNING m.id, m.workspace_id
+		)
+		INSERT INTO monitor_locations (monitor_id, workspace_id) SELECT id, workspace_id FROM orphan`, workspaceID); err != nil {
+		return Agent{}, err
+	}
 	return a, tx.Commit()
 }
 
@@ -252,9 +263,9 @@ func (s *Store) ClaimSilentAgents(ctx context.Context, silentFor time.Duration) 
 		UPDATE probe_agents a SET offline_since = a.last_seen_at
 		WHERE a.secret_hash IS NOT NULL AND a.offline_since IS NULL
 			AND a.last_seen_at < NOW() - make_interval(secs => $1)
-			AND EXISTS (SELECT 1 FROM monitors m WHERE m.agent_id = a.id AND m.enabled)
+			AND EXISTS (SELECT 1 FROM monitor_locations l JOIN monitors m ON m.id = l.monitor_id WHERE l.agent_id = a.id AND m.enabled)
 		RETURNING `+agentColumns+`,
-			(SELECT COUNT(*) FROM monitors m WHERE m.agent_id = a.id AND m.enabled),
+			(SELECT COUNT(*) FROM monitor_locations l JOIN monitors m ON m.id = l.monitor_id WHERE l.agent_id = a.id AND m.enabled),
 			COALESCE((SELECT u.email FROM users u WHERE u.id = a.created_by), ''),
 			COALESCE((SELECT u.name FROM users u WHERE u.id = a.created_by), '')`, silentFor.Seconds())
 	if err != nil {

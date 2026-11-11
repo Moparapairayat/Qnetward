@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -46,9 +47,14 @@ type Monitor struct {
 	ExpectedStatus     *int       `json:"expected_status,omitempty"`
 	LastStatusCode     *int       `json:"last_status_code,omitempty"`
 	TLSExpiresAt       *time.Time `json:"tls_expires_at,omitempty"`
-	// AgentID is the probe agent that runs the monitor; nil means the server.
-	AgentID      *int64         `json:"agent_id,omitempty"`
-	AgentName    string         `json:"agent_name,omitempty"`
+	// Cloud says the server is one of the places the monitor runs from.
+	Cloud bool `json:"-"`
+	// Locations are the places the monitor runs from, each with its latest result.
+	Locations []MonitorLocation `json:"locations"`
+	// LocationIDs sets those places on save: 0 is Qnetward's servers, anything
+	// else a probe agent's id. Nil keeps them as they are, or means the servers
+	// alone for a new monitor.
+	LocationIDs  []int64        `json:"-"`
 	NextRunAt    time.Time      `json:"next_run_at"`
 	CreatedAt    time.Time      `json:"created_at"`
 	Uptime24h    *float64       `json:"uptime_24h,omitempty"`
@@ -68,10 +74,29 @@ type MonitorCheck struct {
 	AgentID *int64 `json:"agent_id,omitempty"`
 }
 
+// MonitorLocation is one place a monitor runs from and what it last saw.
+type MonitorLocation struct {
+	// AgentID is 0 for Qnetward's servers.
+	AgentID       int64      `json:"agent_id"`
+	Name          string     `json:"name,omitempty"`
+	Status        string     `json:"status"`
+	LastCheckedAt *time.Time `json:"last_checked_at,omitempty"`
+	LastRttMs     *float64   `json:"last_rtt_ms,omitempty"`
+	LastError     string     `json:"last_error,omitempty"`
+	// Online is false for an agent that stopped checking in; its last result
+	// no longer counts towards the monitor's status.
+	Online bool `json:"online"`
+}
+
+// MaxMonitorLocations is the most places any plan lets one monitor run from.
+const MaxMonitorLocations = 20
+
 // MonitorOutcome is what recording a check changed.
 type MonitorOutcome struct {
 	// Previous is the status before the check: pending, up, or down.
 	Previous string
+	// Status is the monitor's status after it, across all its locations.
+	Status string
 	// WarnTLS is set the first time a certificate is seen within
 	// MonitorTLSWarnWithin of expiring.
 	WarnTLS bool
@@ -80,8 +105,7 @@ type MonitorOutcome struct {
 const monitorColumns = `id, workspace_id, COALESCE(user_id, 0), name, protocol, target, port,
 	interval_seconds, notify_email, enabled, status, last_checked_at,
 	last_status_change_at, last_rtt_ms, last_error, next_run_at, created_at,
-	expected_status, last_status_code, tls_expires_at, agent_id,
-	COALESCE((SELECT a.name FROM probe_agents a WHERE a.id = agent_id), '')`
+	expected_status, last_status_code, tls_expires_at, cloud`
 
 // SaveMonitor creates a monitor, or updates one in the same workspace. A new
 // or re-pointed monitor is checked right away. limit caps how many monitors
@@ -100,10 +124,20 @@ func (s *Store) SaveMonitor(ctx context.Context, m Monitor, limit int) (Monitor,
 	}
 	defer func() { _ = tx.Rollback() }()
 
+	locations, err := cleanLocationIDs(m.LocationIDs)
+	if err != nil {
+		return Monitor{}, err
+	}
+	if m.ID == 0 && locations == nil {
+		locations = []int64{0}
+	}
 	// The foreign key alone would accept another workspace's agent.
-	if m.AgentID != nil {
+	for _, id := range locations {
+		if id == 0 {
+			continue
+		}
 		var found bool
-		if err := tx.QueryRowContext(ctx, `SELECT EXISTS (SELECT 1 FROM probe_agents WHERE id = $1 AND workspace_id = $2)`, *m.AgentID, m.WorkspaceID).Scan(&found); err != nil {
+		if err := tx.QueryRowContext(ctx, `SELECT EXISTS (SELECT 1 FROM probe_agents WHERE id = $1 AND workspace_id = $2)`, id, m.WorkspaceID).Scan(&found); err != nil {
 			return Monitor{}, err
 		}
 		if !found {
@@ -123,10 +157,10 @@ func (s *Store) SaveMonitor(ctx context.Context, m Monitor, limit int) (Monitor,
 			}
 		}
 		err = scanMonitor(tx.QueryRowContext(ctx, `
-			INSERT INTO monitors (workspace_id, user_id, name, protocol, target, port, interval_seconds, notify_email, enabled, expected_status, agent_id)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			INSERT INTO monitors (workspace_id, user_id, name, protocol, target, port, interval_seconds, notify_email, enabled, expected_status)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 			RETURNING `+monitorColumns,
-			m.WorkspaceID, nullableID(m.UserID), m.Name, m.Protocol, m.Target, m.Port, m.IntervalSeconds, m.NotifyEmail, m.Enabled, m.ExpectedStatus, m.AgentID,
+			m.WorkspaceID, nullableID(m.UserID), m.Name, m.Protocol, m.Target, m.Port, m.IntervalSeconds, m.NotifyEmail, m.Enabled, m.ExpectedStatus,
 		), &saved)
 	} else {
 		// Pointing a monitor somewhere else discards the old target's status.
@@ -140,7 +174,7 @@ func (s *Store) SaveMonitor(ctx context.Context, m Monitor, limit int) (Monitor,
 				last_status_code = CASE WHEN protocol = $3 AND target = $4 AND port IS NOT DISTINCT FROM $5 THEN last_status_code END,
 				tls_expires_at = CASE WHEN protocol = $3 AND target = $4 AND port IS NOT DISTINCT FROM $5 THEN tls_expires_at END,
 				next_run_at = CASE
-					WHEN protocol = $3 AND target = $4 AND port IS NOT DISTINCT FROM $5 AND (enabled OR NOT $9) AND agent_id IS NOT DISTINCT FROM $11 THEN next_run_at
+					WHEN protocol = $3 AND target = $4 AND port IS NOT DISTINCT FROM $5 AND (enabled OR NOT $9) THEN next_run_at
 					ELSE NOW()
 				END,
 				name = $6,
@@ -150,11 +184,10 @@ func (s *Store) SaveMonitor(ctx context.Context, m Monitor, limit int) (Monitor,
 				interval_seconds = $7,
 				notify_email = $8,
 				enabled = $9,
-				expected_status = $10,
-				agent_id = $11
+				expected_status = $10
 			WHERE id = $1 AND workspace_id = $2
 			RETURNING `+monitorColumns,
-			m.ID, m.WorkspaceID, m.Protocol, m.Target, m.Port, m.Name, m.IntervalSeconds, m.NotifyEmail, m.Enabled, m.ExpectedStatus, m.AgentID,
+			m.ID, m.WorkspaceID, m.Protocol, m.Target, m.Port, m.Name, m.IntervalSeconds, m.NotifyEmail, m.Enabled, m.ExpectedStatus,
 		), &saved)
 	}
 	if errors.Is(err, sql.ErrNoRows) {
@@ -168,7 +201,119 @@ func (s *Store) SaveMonitor(ctx context.Context, m Monitor, limit int) (Monitor,
 		return Monitor{}, err
 	}
 	saved.RecentChecks = []MonitorCheck{}
+
+	if locations != nil {
+		cloud := slices.Contains(locations, 0)
+		for _, id := range locations {
+			var agent any
+			if id != 0 {
+				agent = id
+			}
+			if _, err := tx.ExecContext(ctx, `INSERT INTO monitor_locations (monitor_id, workspace_id, agent_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, saved.ID, saved.WorkspaceID, agent); err != nil {
+				return Monitor{}, err
+			}
+		}
+		existing, err := tx.QueryContext(ctx, `SELECT id, COALESCE(agent_id, 0) FROM monitor_locations WHERE monitor_id = $1`, saved.ID)
+		if err != nil {
+			return Monitor{}, err
+		}
+		var drop []int64
+		for existing.Next() {
+			var rowID, agentID int64
+			if err := existing.Scan(&rowID, &agentID); err != nil {
+				existing.Close()
+				return Monitor{}, err
+			}
+			if !slices.Contains(locations, agentID) {
+				drop = append(drop, rowID)
+			}
+		}
+		if err := existing.Err(); err != nil {
+			return Monitor{}, err
+		}
+		existing.Close()
+		for _, rowID := range drop {
+			if _, err := tx.ExecContext(ctx, `DELETE FROM monitor_locations WHERE id = $1`, rowID); err != nil {
+				return Monitor{}, err
+			}
+		}
+		// A monitor the server starts running is checked right away.
+		if err := tx.QueryRowContext(ctx, `
+			UPDATE monitors SET cloud = $2, next_run_at = CASE WHEN cloud = $2 THEN next_run_at ELSE NOW() END
+			WHERE id = $1 RETURNING cloud, next_run_at`, saved.ID, cloud).Scan(&saved.Cloud, &saved.NextRunAt); err != nil {
+			return Monitor{}, err
+		}
+	}
+	// A new or re-pointed monitor starts over in every location.
+	if saved.Status == "pending" && saved.LastCheckedAt == nil {
+		if _, err := tx.ExecContext(ctx, `UPDATE monitor_locations SET status = 'pending', last_checked_at = NULL, last_rtt_ms = NULL, last_error = '' WHERE monitor_id = $1`, saved.ID); err != nil {
+			return Monitor{}, err
+		}
+	}
+	byMonitor, err := loadMonitorLocations(ctx, tx, saved.WorkspaceID, saved.ID)
+	if err != nil {
+		return Monitor{}, err
+	}
+	saved.Locations = byMonitor[saved.ID]
 	return saved, tx.Commit()
+}
+
+// cleanLocationIDs drops repeats and rejects ids that can't be a location.
+func cleanLocationIDs(ids []int64) ([]int64, error) {
+	if ids == nil {
+		return nil, nil
+	}
+	out := make([]int64, 0, len(ids))
+	for _, id := range ids {
+		if id < 0 {
+			return nil, errors.New("locations must be 0 for Qnetward's servers or a probe agent's id")
+		}
+		if !slices.Contains(out, id) {
+			out = append(out, id)
+		}
+	}
+	if len(out) == 0 {
+		return nil, errors.New("pick at least one place to run the monitor from")
+	}
+	if len(out) > MaxMonitorLocations {
+		return nil, fmt.Errorf("a monitor can run from at most %d places", MaxMonitorLocations)
+	}
+	return out, nil
+}
+
+// loadMonitorLocations returns each monitor's locations, servers first.
+// monitorID 0 loads them for the whole workspace.
+func loadMonitorLocations(ctx context.Context, tx *sql.Tx, workspaceID, monitorID int64) (map[int64][]MonitorLocation, error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT l.monitor_id, COALESCE(l.agent_id, 0), COALESCE(a.name, ''), l.status, l.last_checked_at, l.last_rtt_ms, l.last_error,
+			l.agent_id IS NULL OR COALESCE(a.last_seen_at > NOW() - make_interval(secs => $3), FALSE)
+		FROM monitor_locations l LEFT JOIN probe_agents a ON a.id = l.agent_id
+		WHERE l.workspace_id = $1 AND ($2 = 0 OR l.monitor_id = $2)
+		ORDER BY l.monitor_id, l.agent_id NULLS FIRST`, workspaceID, monitorID, AgentOnlineWithin.Seconds())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[int64][]MonitorLocation{}
+	for rows.Next() {
+		var id int64
+		var l MonitorLocation
+		var checked sql.NullTime
+		var rtt sql.NullFloat64
+		if err := rows.Scan(&id, &l.AgentID, &l.Name, &l.Status, &checked, &rtt, &l.LastError, &l.Online); err != nil {
+			return nil, err
+		}
+		if checked.Valid {
+			t := checked.Time
+			l.LastCheckedAt = &t
+		}
+		if rtt.Valid {
+			v := rtt.Float64
+			l.LastRttMs = &v
+		}
+		out[id] = append(out[id], l)
+	}
+	return out, rows.Err()
 }
 
 // ListMonitors returns the workspace's monitors with their uptime over the
@@ -196,6 +341,7 @@ func (s *Store) ListMonitors(ctx context.Context, workspaceID int64) ([]Monitor,
 			return nil, err
 		}
 		m.RecentChecks = []MonitorCheck{}
+		m.Locations = []MonitorLocation{}
 		index[m.ID] = len(monitors)
 		monitors = append(monitors, m)
 	}
@@ -205,6 +351,16 @@ func (s *Store) ListMonitors(ctx context.Context, workspaceID int64) ([]Monitor,
 	rows.Close()
 	if len(monitors) == 0 {
 		return monitors, nil
+	}
+
+	locations, err := loadMonitorLocations(ctx, tx, workspaceID, 0)
+	if err != nil {
+		return nil, err
+	}
+	for id, list := range locations {
+		if i, ok := index[id]; ok {
+			monitors[i].Locations = list
+		}
 	}
 
 	uptime, err := tx.QueryContext(ctx, `
@@ -292,7 +448,7 @@ func (s *Store) DeleteMonitor(ctx context.Context, workspaceID, monitorID int64)
 
 // ClaimDueMonitors picks up to limit enabled monitors whose check is due and
 // moves their next run one interval ahead, so another instance won't take
-// them. Monitors that run from an agent are left to it. It works across
+// them. Monitors that run only from agents are left to them. It works across
 // workspaces and runs as the login role.
 func (s *Store) ClaimDueMonitors(ctx context.Context, limit int) ([]Monitor, error) {
 	if s == nil {
@@ -303,7 +459,7 @@ func (s *Store) ClaimDueMonitors(ctx context.Context, limit int) ([]Monitor, err
 		SET next_run_at = NOW() + make_interval(secs => m.interval_seconds)
 		WHERE m.id IN (
 			SELECT id FROM monitors
-			WHERE enabled AND agent_id IS NULL AND next_run_at <= NOW()
+			WHERE enabled AND cloud AND next_run_at <= NOW()
 			ORDER BY next_run_at
 			LIMIT $1
 			FOR UPDATE SKIP LOCKED
@@ -324,7 +480,11 @@ func (s *Store) ClaimDueMonitors(ctx context.Context, limit int) ([]Monitor, err
 	return due, rows.Err()
 }
 
-// RecordMonitorCheck stores one check and moves the monitor to up or down.
+// RecordMonitorCheck stores one check from one of the monitor's locations
+// (check.AgentID, nil for the server) and works out the monitor's status from
+// all of them: up when any location that is still reporting sees it up, down
+// only when every one of them sees it down. A lone failing location never
+// takes the monitor down, and an offline agent's stale result doesn't count.
 func (s *Store) RecordMonitorCheck(ctx context.Context, m Monitor, check MonitorCheck) (MonitorOutcome, error) {
 	if s == nil {
 		return MonitorOutcome{}, errors.New("store is not available")
@@ -345,6 +505,22 @@ func (s *Store) RecordMonitorCheck(ctx context.Context, m Monitor, check Monitor
 		return MonitorOutcome{}, err
 	}
 
+	seen := "down"
+	if check.OK {
+		seen = "up"
+	}
+	placed, err := tx.ExecContext(ctx, `
+		UPDATE monitor_locations SET status = $3, last_checked_at = $4, last_rtt_ms = $5, last_error = $6
+		WHERE monitor_id = $1 AND agent_id IS NOT DISTINCT FROM $2
+	`, m.ID, check.AgentID, seen, check.CheckedAt.UTC(), check.RttMs, check.Error)
+	if err != nil {
+		return MonitorOutcome{}, err
+	}
+	// The monitor no longer runs from there; drop the late result.
+	if n, _ := placed.RowsAffected(); n == 0 {
+		return MonitorOutcome{}, ErrMonitorNotFound
+	}
+
 	if _, err := tx.ExecContext(ctx, `
 		INSERT INTO monitor_checks (monitor_id, workspace_id, checked_at, ok, rtt_ms, loss_percent, status_code, error, agent_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -361,25 +537,43 @@ func (s *Store) RecordMonitorCheck(ctx context.Context, m Monitor, check Monitor
 		warnedExpiry = exp.UTC()
 	}
 
-	next := "down"
-	if check.OK {
-		next = "up"
+	var up, down, reporting int
+	if err := tx.QueryRowContext(ctx, `
+		SELECT COUNT(*) FILTER (WHERE l.status = 'up'), COUNT(*) FILTER (WHERE l.status = 'down'), COUNT(*)
+		FROM monitor_locations l LEFT JOIN probe_agents a ON a.id = l.agent_id
+		WHERE l.monitor_id = $1 AND (l.agent_id IS NULL OR a.last_seen_at > NOW() - make_interval(secs => $2))
+	`, m.ID, AgentOnlineWithin.Seconds()).Scan(&up, &down, &reporting); err != nil {
+		return MonitorOutcome{}, err
 	}
+	// Some locations down while others haven't reported yet leaves it as it was.
+	out.Status = out.Previous
+	switch {
+	case up > 0:
+		out.Status = "up"
+	case reporting == 0:
+		out.Status = seen
+	case down == reporting:
+		out.Status = "down"
+	}
+	// The monitor's own latest numbers follow the check that speaks for its
+	// status: any passing check, or a failing one once it is down.
+	adopt := check.OK || out.Status == "down"
+
 	if _, err := tx.ExecContext(ctx, `
 		UPDATE monitors SET
 			status = $2,
 			last_checked_at = $3,
 			last_status_change_at = CASE WHEN status = $2 THEN last_status_change_at ELSE $3 END,
-			last_rtt_ms = $4,
-			last_error = $5,
-			last_status_code = $6,
+			last_rtt_ms = CASE WHEN $9::boolean THEN $4::double precision ELSE last_rtt_ms END,
+			last_error = CASE WHEN $9::boolean THEN $5 ELSE last_error END,
+			last_status_code = CASE WHEN $9::boolean THEN $6::integer ELSE last_status_code END,
 			tls_expires_at = COALESCE($7, tls_expires_at),
 			tls_warned_expiry = $8,
 			-- The server moves its own monitors ahead when it claims them;
-			-- an agent's run on the agent's clock, so show when the next is due.
-			next_run_at = CASE WHEN agent_id IS NOT NULL THEN $3::timestamptz + make_interval(secs => interval_seconds) ELSE next_run_at END
+			-- agents run on their own clocks, so show when the next is due.
+			next_run_at = CASE WHEN cloud THEN next_run_at ELSE $3::timestamptz + make_interval(secs => interval_seconds) END
 		WHERE id = $1
-	`, m.ID, next, check.CheckedAt.UTC(), check.RttMs, check.Error, check.StatusCode, check.TLSExpiresAt, warnedExpiry); err != nil {
+	`, m.ID, out.Status, check.CheckedAt.UTC(), check.RttMs, check.Error, check.StatusCode, check.TLSExpiresAt, warnedExpiry, adopt); err != nil {
 		return MonitorOutcome{}, err
 	}
 	return out, tx.Commit()
@@ -464,19 +658,13 @@ func scanMonitor(scanner monitorScanner, m *Monitor) error {
 	var lastRtt sql.NullFloat64
 	var expected, lastCode sql.NullInt64
 	var tlsExpires sql.NullTime
-	var agentID sql.NullInt64
 	if err := scanner.Scan(
 		&m.ID, &m.WorkspaceID, &m.UserID, &m.Name, &m.Protocol, &m.Target, &port,
 		&m.IntervalSeconds, &m.NotifyEmail, &m.Enabled, &m.Status, &lastChecked,
 		&lastChange, &lastRtt, &m.LastError, &m.NextRunAt, &m.CreatedAt,
-		&expected, &lastCode, &tlsExpires, &agentID, &m.AgentName,
+		&expected, &lastCode, &tlsExpires, &m.Cloud,
 	); err != nil {
 		return err
-	}
-	m.AgentID = nil
-	if agentID.Valid {
-		v := agentID.Int64
-		m.AgentID = &v
 	}
 	m.ExpectedStatus = nullIntPtr(expected)
 	m.LastStatusCode = nullIntPtr(lastCode)

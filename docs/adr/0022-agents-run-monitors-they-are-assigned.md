@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted. Second step of probe agents, after ADR 0021.
+Accepted. Second step of probe agents, after ADR 0021. ADR 0023 replaces
+"one place per monitor" with several.
 
 ## Context
 

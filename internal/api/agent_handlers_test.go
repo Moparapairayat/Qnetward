@@ -136,12 +136,14 @@ func TestAgentRunsAssignedMonitors(t *testing.T) {
 		t.Fatalf("create monitor: got %d: %s", rr.Code, rr.Body.String())
 	}
 	var onAgent struct {
-		ID        int64  `json:"id"`
-		AgentID   int64  `json:"agent_id"`
-		AgentName string `json:"agent_name"`
+		ID        int64 `json:"id"`
+		Locations []struct {
+			AgentID int64  `json:"agent_id"`
+			Name    string `json:"name"`
+		} `json:"locations"`
 	}
 	_ = json.Unmarshal(rr.Body.Bytes(), &onAgent)
-	if onAgent.AgentID != created.Agent.ID || onAgent.AgentName != "Office" {
+	if len(onAgent.Locations) != 1 || onAgent.Locations[0].AgentID != created.Agent.ID || onAgent.Locations[0].Name != "Office" {
 		t.Fatalf("monitor should name its agent: %s", rr.Body.String())
 	}
 	rr = call(testSrv.handleMonitors, http.MethodPost, "/api/monitors", "", `{"name":"Site","protocol":"http","target":"https://example.com/","interval_seconds":60}`)
@@ -217,7 +219,7 @@ func TestAgentRunsAssignedMonitors(t *testing.T) {
 	// Removing the agent hands its monitor back to the server.
 	call(testSrv.handleAgents, http.MethodDelete, fmt.Sprintf("/api/agents?id=%d", created.Agent.ID), "", "")
 	rr = call(testSrv.handleMonitors, http.MethodGet, "/api/monitors", "", "")
-	if strings.Contains(rr.Body.String(), `"agent_name"`) {
+	if strings.Contains(rr.Body.String(), `"Office"`) {
 		t.Fatalf("monitor should be back on the server: %s", rr.Body.String())
 	}
 }

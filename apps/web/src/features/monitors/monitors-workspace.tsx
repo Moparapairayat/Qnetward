@@ -7,7 +7,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil, Plus, Radio, Trash2, X } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
-import type { Monitor, MonitorCheck, MonitorPayload, MonitorProtocol, ProbeAgent, ProbeAgentListResponse, SessionResponse } from "@/lib/types";
+import type { Monitor, MonitorCheck, MonitorLocation, MonitorPayload, MonitorProtocol, ProbeAgent, ProbeAgentListResponse, SessionResponse, WorkspaceUsageResponse } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
 import { Field, PageHeader, Panel, RunStatus, StatStrip, Toggle } from "@/components/tools/probe-ui";
 import { useLiveInterval } from "@/lib/live";
@@ -38,7 +38,7 @@ const monitorSchema = z
     interval_seconds: z.number().int(),
     notify_email: z.union([z.literal(""), z.string().trim().email("Enter a valid email or leave it empty")]),
     enabled: z.boolean(),
-    agent_id: z.number().int(),
+    locations: z.array(z.number().int()).min(1, "Pick at least one place"),
   })
   .superRefine((value, ctx) => {
     if (value.protocol === "tcpping" && (!value.port || value.port < 1 || value.port > 65535)) {
@@ -97,11 +97,41 @@ function relativeTime(value?: string | null, future = false) {
   return future ? `in ${text}` : `${text} ago`;
 }
 
-/** An agent that stops reporting leaves the last status standing, so flag it. */
-function agentSilent(m: Monitor) {
-  if (!m.agent_name || !m.enabled) return false;
-  const lastSeen = new Date(m.last_checked_at ?? m.created_at).getTime();
-  return Date.now() - lastSeen > Math.max(3 * m.interval_seconds, 180) * 1000;
+const CLOUD = "Qnetward cloud";
+
+function locationName(l: Pick<MonitorLocation, "agent_id" | "name">) {
+  return l.agent_id === 0 ? CLOUD : l.name || "Agent";
+}
+
+/** One dot per place the monitor runs from, with what that place last saw. */
+function LocationChips({ locations, http }: { locations: MonitorLocation[]; http: boolean }) {
+  return (
+    <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Locations">
+      {locations.map((l) => {
+        const tone = !l.online ? "#85858e" : l.status === "up" ? "#4ade80" : l.status === "down" ? "#ff3d7f" : "#a78bfa";
+        const detail = !l.online
+          ? "offline"
+          : l.status === "up"
+            ? typeof l.last_rtt_ms === "number"
+              ? `${l.last_rtt_ms.toFixed(http ? 0 : 1)} ms`
+              : "up"
+            : l.status === "down"
+              ? "down"
+              : "waiting";
+        return (
+          <li
+            key={l.agent_id}
+            title={!l.online ? "This agent stopped checking in, so its result doesn't count" : l.status === "down" && l.last_error ? l.last_error : undefined}
+            className="inline-flex items-center gap-1.5 rounded-md border border-[var(--lp-border)] bg-white/[0.02] px-1.5 py-0.5 text-[12px] text-[var(--lp-muted)]"
+          >
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: tone }} />
+            {locationName(l)}
+            <span className={l.online && l.status === "down" ? "text-[#ff8fb3]" : "text-[var(--lp-subtle)]"}>{detail}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 function formatUptime(value?: number | null) {
@@ -150,10 +180,10 @@ function monitorDefaults(editing: Monitor | null, email: string): MonitorFormInp
       interval_seconds: editing.interval_seconds,
       notify_email: editing.notify_email,
       enabled: editing.enabled,
-      agent_id: editing.agent_id ?? 0,
+      locations: editing.locations.length ? editing.locations.map((l) => l.agent_id) : [0],
     };
   }
-  return { id: undefined, name: "", protocol: "http", target: "", port: 443, expected_status: undefined, interval_seconds: 300, notify_email: email, enabled: true, agent_id: 0 };
+  return { id: undefined, name: "", protocol: "http", target: "", port: 443, expected_status: undefined, interval_seconds: 300, notify_email: email, enabled: true, locations: [0] };
 }
 
 function monitorPayload(m: Monitor, overrides: Partial<MonitorPayload> = {}): MonitorPayload {
@@ -167,7 +197,7 @@ function monitorPayload(m: Monitor, overrides: Partial<MonitorPayload> = {}): Mo
     interval_seconds: m.interval_seconds,
     notify_email: m.notify_email,
     enabled: m.enabled,
-    agent_id: m.agent_id ?? 0,
+    locations: m.locations.map((l) => l.agent_id),
     ...overrides,
   };
 }
@@ -176,6 +206,7 @@ function MonitorForm({
   editing,
   defaultEmail,
   agents,
+  maxLocations,
   busy,
   atLimit,
   onCancel,
@@ -184,6 +215,7 @@ function MonitorForm({
   editing: Monitor | null;
   defaultEmail: string;
   agents: ProbeAgent[];
+  maxLocations: number;
   busy: boolean;
   atLimit: boolean;
   onCancel: () => void;
@@ -199,9 +231,13 @@ function MonitorForm({
   const target = useWatch({ control: form.control, name: "target" });
   const port = useWatch({ control: form.control, name: "port" });
   const email = useWatch({ control: form.control, name: "notify_email" });
-  const agentId = useWatch({ control: form.control, name: "agent_id" }) ?? 0;
+  const picked = useWatch({ control: form.control, name: "locations" }) ?? [0];
   const errors = form.formState.errors;
-  const agent = agents.find((a) => a.id === agentId);
+  const places = [{ id: 0, name: CLOUD, online: true }, ...agents.map((a) => ({ id: a.id, name: a.name, online: a.online }))];
+  const pickedNames = places.filter((p) => picked.includes(p.id)).map((p) => p.name);
+  const onlyAgents = !picked.includes(0);
+  const togglePlace = (id: number) =>
+    form.setValue("locations", picked.includes(id) ? picked.filter((v) => v !== id) : [...picked, id], { shouldValidate: true });
 
   const where = target?.trim() ? (protocol === "tcpping" && port ? `${target.trim()}:${port}` : target.trim()) : null;
   const expected = Number(expectedStatus) || null;
@@ -220,7 +256,7 @@ function MonitorForm({
           interval_seconds: values.interval_seconds,
           notify_email: values.notify_email.trim(),
           enabled: values.enabled,
-          agent_id: values.agent_id,
+          locations: values.locations,
         }),
       )}
     >
@@ -268,22 +304,40 @@ function MonitorForm({
       </div>
 
       {agents.length ? (
-        <Field label="Run from" hint={agent ? "Checks start inside that agent's network, so private addresses work." : "Qnetward's servers, over the public internet."}>
-          <select
-            id="monitor-agent"
-            className="h-9 w-full px-3"
-            value={agentId}
-            onChange={(e) => form.setValue("agent_id", Number(e.target.value))}
-          >
-            <option value={0}>Qnetward cloud</option>
-            {agents.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-                {a.online ? "" : " (offline)"}
-              </option>
-            ))}
-          </select>
-        </Field>
+        <div>
+          <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Run from</span>
+          <div className="grid gap-1 rounded-lg border border-[var(--lp-border-strong)] bg-white/[0.03] p-1" role="group" aria-label="Run from">
+            {places.map((place) => {
+              const on = picked.includes(place.id);
+              const full = !on && picked.length >= maxLocations;
+              return (
+                <label
+                  key={place.id}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors",
+                    on ? "bg-white/[0.06] text-[var(--lp-text)]" : "text-[var(--lp-muted)]",
+                    full ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:text-[var(--lp-text)]",
+                  )}
+                >
+                  <input type="checkbox" className="h-3.5 w-3.5 accent-[var(--lp-accent)]" checked={on} disabled={full} onChange={() => togglePlace(place.id)} />
+                  <span className="min-w-0 flex-1 truncate">{place.name}</span>
+                  {place.online ? null : <span className="text-[11px] text-[var(--lp-subtle)]">offline</span>}
+                </label>
+              );
+            })}
+          </div>
+          {fieldError(errors.locations) ? (
+            <p className="mt-1.5 text-[12px] text-[#ff8fb3]">{fieldError(errors.locations)}</p>
+          ) : (
+            <p className="mt-1.5 text-[12px] text-[var(--lp-subtle)]">
+              {picked.length > 1
+                ? "It goes down, and alerts, only when every place sees it down."
+                : onlyAgents
+                  ? "Checks start inside that agent's network, so private addresses work."
+                  : `Add an agent to check from more places. Your plan allows ${maxLocations} per monitor.`}
+            </p>
+          )}
+        </div>
       ) : null}
 
       <div>
@@ -321,9 +375,9 @@ function MonitorForm({
         {where ? (
           <>
             Every <span className="text-[var(--lp-text)]">{intervalLabel(Number(interval) || 300)}</span>
-            {agent ? (
+            {agents.length && pickedNames.length ? (
               <>
-                , from <span className="text-[var(--lp-text)]">{agent.name}</span>
+                , from <span className="text-[var(--lp-text)]">{pickedNames.join(", ")}</span>
               </>
             ) : null}
             ,{" "}
@@ -347,7 +401,7 @@ function MonitorForm({
             )}{" "}
             {protocol === "http"
               ? `HTTPS certificates get a warning ${TLS_WARN_DAYS} days before they expire.`
-              : agent
+              : onlyAgents
                 ? null
                 : "Samples also land in History and your alert rules."}
           </>
@@ -393,7 +447,9 @@ function MonitorRow({
   const checked = relativeTime(monitor.last_checked_at);
   const since = relativeTime(monitor.last_status_change_at);
   const certDays = monitor.protocol === "http" ? daysUntil(monitor.tls_expires_at) : null;
-  const stale = agentSilent(monitor);
+  const live = monitor.locations.filter((l) => l.online);
+  // Up overall, but not from everywhere.
+  const failing = state === "up" ? live.filter((l) => l.status === "down") : [];
 
   return (
     <li className={cn("px-4 py-4 transition-colors", editing ? "bg-[rgba(255,61,127,0.05)]" : "hover:bg-white/[0.015]")}>
@@ -417,8 +473,10 @@ function MonitorRow({
               </>
             ) : null}
             <span className="text-[var(--lp-subtle)]"> · every {intervalLabel(monitor.interval_seconds)}</span>
-            {monitor.agent_name ? <span className="text-[var(--lp-subtle)]"> · from {monitor.agent_name}</span> : null}
           </p>
+          {monitor.locations.length > 1 || monitor.locations.some((l) => l.agent_id !== 0) ? (
+            <LocationChips locations={monitor.locations} http={monitor.protocol === "http"} />
+          ) : null}
           <div className="mt-3 grid grid-cols-1 items-center gap-x-4 gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_auto]">
             <CheckStrip checks={monitor.recent_checks} />
             <p className="lp-mono text-[12px] text-[var(--lp-muted)] sm:text-right">
@@ -439,7 +497,14 @@ function MonitorRow({
                 {certDays < 0 ? "Certificate expired" : certDays === 0 ? "Certificate expires today" : `Certificate expires in ${certDays}d`}
               </span>
             ) : null}
-            {stale ? <span className="text-[#fbbf24]">{monitor.agent_name} hasn&apos;t reported since {checked ?? "it was added"}</span> : null}
+            {failing.length ? (
+              <span className="text-[#fbbf24]">
+                Down from {failing.map(locationName).join(", ")}; still up from {live.length - failing.length} of {live.length}
+              </span>
+            ) : null}
+            {monitor.enabled && monitor.locations.length > 0 && live.length === 0 ? (
+              <span className="text-[#fbbf24]">No agent is reporting, so this status is from {checked ?? "before"}</span>
+            ) : null}
             {state === "down" && monitor.last_error ? <span className="max-w-full truncate text-[#ff8fb3]" title={monitor.last_error}>{monitor.last_error}</span> : null}
             {monitor.enabled ? <span title={formatDateTime(monitor.next_run_at)}>Next {relativeTime(monitor.next_run_at, true) ?? "soon"}</span> : null}
             <span>{monitor.notify_email ? `Emails ${monitor.notify_email}` : "No emails"}</span>
@@ -493,6 +558,13 @@ export function MonitorsWorkspace() {
   // Only enrolled agents can run checks.
   const agentsQuery = useQuery({ queryKey: ["agents"], queryFn: () => apiRequest<ProbeAgentListResponse>("/api/agents") });
   const agents = useMemo(() => (agentsQuery.data?.agents ?? []).filter((a) => a.enrolled), [agentsQuery.data]);
+
+  // The plan says how many places one monitor may run from.
+  const usageQuery = useQuery({
+    queryKey: ["workspace-usage"],
+    queryFn: () => apiRequest<WorkspaceUsageResponse>("/api/workspace/usage"),
+    enabled: agents.length > 0,
+  });
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["monitors"] });
 
@@ -691,6 +763,7 @@ export function MonitorsWorkspace() {
             editing={editing}
             defaultEmail={sessionQuery.data?.user?.email ?? ""}
             agents={agents}
+            maxLocations={usageQuery.data?.plan.limits.monitor_locations ?? 2}
             busy={save.isPending}
             atLimit={monitors.length >= MAX_MONITORS}
             onCancel={() => setEditing(null)}

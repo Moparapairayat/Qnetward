@@ -36,3 +36,4 @@ patterns don't.
 | [0020](0020-live-updates-over-server-sent-events.md) | Live updates over Server-Sent Events | Accepted |
 | [0021](0021-probe-agents-enroll-with-one-time-tokens.md) | Probe agents enroll with one-time tokens and connect outbound | Accepted |
 | [0022](0022-agents-run-monitors-they-are-assigned.md) | Agents run the monitors they are assigned | Accepted |
+| [0023](0023-monitors-run-from-several-locations.md) | Monitors run from several locations | Accepted |

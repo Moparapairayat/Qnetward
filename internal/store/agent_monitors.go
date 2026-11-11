@@ -18,7 +18,9 @@ func (s *Store) AgentMonitors(ctx context.Context, workspaceID, agentID int64) (
 	defer func() { _ = tx.Rollback() }()
 
 	rows, err := tx.QueryContext(ctx, `SELECT `+monitorColumns+` FROM monitors
-		WHERE workspace_id = $1 AND agent_id = $2 AND enabled ORDER BY id`, workspaceID, agentID)
+		WHERE workspace_id = $1 AND enabled
+			AND EXISTS (SELECT 1 FROM monitor_locations l WHERE l.monitor_id = monitors.id AND l.agent_id = $2)
+		ORDER BY id`, workspaceID, agentID)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +50,8 @@ func (s *Store) AgentMonitor(ctx context.Context, workspaceID, agentID, monitorI
 
 	var m Monitor
 	err = scanMonitor(tx.QueryRowContext(ctx, `SELECT `+monitorColumns+` FROM monitors
-		WHERE id = $1 AND workspace_id = $2 AND agent_id = $3 AND enabled`, monitorID, workspaceID, agentID), &m)
+		WHERE id = $1 AND workspace_id = $2 AND enabled
+			AND EXISTS (SELECT 1 FROM monitor_locations l WHERE l.monitor_id = monitors.id AND l.agent_id = $3)`, monitorID, workspaceID, agentID), &m)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return Monitor{}, ErrMonitorNotFound
