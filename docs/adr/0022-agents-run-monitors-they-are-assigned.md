@@ -31,9 +31,10 @@ network, or from another part of the world.
 
 ## Consequences
 
-- An offline agent's monitors keep their last status. The console flags a
-  monitor whose agent hasn't reported for three intervals; alerting on it is
-  a follow-up.
+- An offline agent's monitors keep their last status, and the console flags
+  them. When an agent that runs monitors misses check-ins for three minutes,
+  the workspace is told once, by email to whoever added the agent and on
+  channels subscribed to `agents` (migration 0022), and again when it's back.
 - Agent checks don't feed History or alert rules yet; those still come from
   server-run ping and TCP monitors.
 - Running one monitor from several places at once, with a result per
