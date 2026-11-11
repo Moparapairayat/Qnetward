@@ -117,6 +117,53 @@ paths:
             application/json:
               schema: { type: object }
         "400": { $ref: "#/components/responses/Error" }
+  /api/security/passive:
+    post:
+      tags: [Security]
+      summary: Run a passive check of a domain
+      description: "Needs the `probe` scope. Grades the domain from public signals only: its TLS certificate and versions, its website's security headers, and its SPF, DMARC, CAA, and DNSSEC records. Counts towards the hourly scan quota, and the same domain can be checked 12 times an hour per workspace. Recorded in the audit log."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [domain]
+              properties:
+                domain: { type: string, example: example.com, description: A domain, or a URL whose host is used. IP addresses are refused. }
+      responses:
+        "201":
+          description: The saved scan, with its full report.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SecurityScan" }
+        "400": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+    get:
+      tags: [Security]
+      summary: List passive checks, or get one
+      description: "Needs the `read` scope. With id, returns that scan with its report; otherwise the newest scans without reports, optionally for one domain."
+      parameters:
+        - { name: id, in: query, schema: { type: integer } }
+        - { name: domain, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, maximum: 200, default: 50 } }
+      responses:
+        "200":
+          description: A scan, or { scans }.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SecurityScan" }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      tags: [Security]
+      summary: Delete a passive check
+      description: "Needs the `write` scope."
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Deleted. }
+        "404": { $ref: "#/components/responses/Error" }
   /api/monitors:
     get:
       tags: [Monitors]
@@ -413,6 +460,21 @@ components:
         seq: { type: integer }
         rtt_ms: { type: number }
         error: { type: string }
+    SecurityScan:
+      type: object
+      properties:
+        id: { type: integer }
+        kind: { type: string, enum: [passive] }
+        domain: { type: string }
+        grade: { type: string, enum: [A+, A, B, C, D, F] }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        high: { type: integer }
+        medium: { type: integer }
+        low: { type: integer }
+        created_at: { type: string, format: date-time }
+        report:
+          type: object
+          description: "The full report: findings (id, category tls/http/email/dns, severity high/medium/low/info/pass, title, detail, fix), and what was seen of TLS, HTTP headers, and DNS."
     MonitorInput:
       type: object
       required: [protocol, target, interval_seconds]

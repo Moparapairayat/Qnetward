@@ -42,7 +42,7 @@ func (srv *Server) enforceWorkspaceQuota(w http.ResponseWriter, user actor, buck
 	}
 	what := "probes"
 	if bucket == quotaScan {
-		what = "port scans"
+		what = "scans"
 	}
 	w.Header().Set("Retry-After", strconv.Itoa(int(retry.Seconds())))
 	writeJSON(w, http.StatusTooManyRequests, apiError{Error: fmt.Sprintf("this workspace has used its %d %s for the hour on the %s plan; try again in %s",

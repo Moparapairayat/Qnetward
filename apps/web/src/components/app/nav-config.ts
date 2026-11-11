@@ -29,6 +29,7 @@ import {
   Settings,
   Shield,
   ShieldAlert,
+  ShieldCheck,
   Siren,
   Sparkles,
   User,
@@ -97,6 +98,7 @@ export const navSections: NavSection[] = [
   {
     label: "Security",
     items: [
+      { href: "/passive-checks", label: "Passive checks", icon: ShieldCheck, keywords: "tls ssl certificate headers hsts csp spf dmarc dns grade security" },
       { href: "/assets", label: "Assets", icon: Boxes, keywords: "ownership verification domains", soon: true },
       { href: "/attack-surface", label: "Attack surface", icon: ScanSearch, keywords: "subdomains exposure certificates", soon: true },
       { href: "/vulnerabilities", label: "Vulnerabilities", icon: ShieldAlert, keywords: "cve cvss epss kev", soon: true },

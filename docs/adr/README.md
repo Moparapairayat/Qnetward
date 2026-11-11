@@ -37,3 +37,4 @@ patterns don't.
 | [0021](0021-probe-agents-enroll-with-one-time-tokens.md) | Probe agents enroll with one-time tokens and connect outbound | Accepted |
 | [0022](0022-agents-run-monitors-they-are-assigned.md) | Agents run the monitors they are assigned | Accepted |
 | [0023](0023-monitors-run-from-several-locations.md) | Monitors run from several locations | Accepted |
+| [0024](0024-passive-security-checks.md) | Passive security checks grade a domain from public signals | Accepted |

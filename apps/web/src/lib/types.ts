@@ -675,3 +675,71 @@ export type ProbeAgent = {
 export type ProbeAgentListResponse = { agents: ProbeAgent[]; limit: number };
 
 export type ProbeAgentCreateResponse = { agent: ProbeAgent; enroll_token: string; expires_at: string };
+
+export type Severity = "high" | "medium" | "low" | "info" | "pass";
+export type FindingCategory = "tls" | "http" | "email" | "dns";
+
+export type SecurityFinding = {
+  id: string;
+  category: FindingCategory;
+  severity: Severity;
+  title: string;
+  detail?: string;
+  fix?: string;
+};
+
+export type PassiveReport = {
+  domain: string;
+  grade: string;
+  score: number;
+  counts: Record<Severity, number>;
+  findings: SecurityFinding[];
+  tls: {
+    available: boolean;
+    version?: string;
+    cipher?: string;
+    trusted: boolean;
+    trust_error?: string;
+    legacy_accepted: boolean;
+    error?: string;
+    cert?: {
+      subject: string;
+      issuer: string;
+      names: string[];
+      not_before: string;
+      not_after: string;
+      days_left: number;
+      key_type: string;
+      key_bits?: number;
+      signature_algorithm: string;
+    };
+  };
+  http: { final_url?: string; status_code?: number; redirects_to_https?: boolean; headers?: Record<string, string>; error?: string };
+  dns: {
+    addresses: string[];
+    mx: string[];
+    spf: string[];
+    dmarc?: string;
+    dmarc_from?: string;
+    caa: string[];
+    caa_from?: string;
+    dnssec: boolean;
+    org_domain: string;
+    lookup_errors?: string[];
+  };
+  checked_at: string;
+  duration_ms: number;
+};
+
+export type SecurityScan = {
+  id: number;
+  kind: "passive";
+  domain: string;
+  grade: string;
+  score: number;
+  high: number;
+  medium: number;
+  low: number;
+  created_at: string;
+  report?: PassiveReport;
+};
