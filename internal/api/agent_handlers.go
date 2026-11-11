@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"qnetward/internal/engine/report"
 	"qnetward/internal/store"
 )
 
@@ -245,6 +246,55 @@ type agentResult struct {
 	StatusCode   *int       `json:"status_code,omitempty"`
 	Error        string     `json:"error,omitempty"`
 	TLSExpiresAt *time.Time `json:"tls_expires_at,omitempty"`
+	// Samples are the individual pings or connects of a ping or TCP check.
+	Samples []agentSample `json:"samples,omitempty"`
+}
+
+// agentSample is one ping or TCP connect within a check.
+type agentSample struct {
+	Seq   int      `json:"seq"`
+	RttMs *float64 `json:"rtt_ms,omitempty"`
+	Error string   `json:"error,omitempty"`
+	Addr  string   `json:"addr,omitempty"`
+}
+
+// agentSamplesMax caps the samples taken from one check.
+const agentSamplesMax = 10
+
+// recordAgentSamples writes a ping or TCP check's samples to History, as the
+// server does for its own, and returns their summary for the alert rules.
+// The summary is worked out here, not taken from the agent.
+func (srv *Server) recordAgentSamples(m store.Monitor, res agentResult) *report.Summary {
+	if m.Protocol == "http" || len(res.Samples) == 0 {
+		return nil
+	}
+	samples := res.Samples[:min(len(res.Samples), agentSamplesMax)]
+	port := monitorPort(m)
+	var summary report.Summary
+	var total time.Duration
+	for _, s := range samples {
+		r := report.Result{Seq: s.Seq, Error: strings.TrimSpace(s.Error), Addr: s.Addr}
+		if len(r.Error) > 200 {
+			r.Error = r.Error[:200]
+		}
+		if len(r.Addr) > 64 {
+			r.Addr = r.Addr[:64]
+		}
+		summary.Sent++
+		if s.RttMs != nil && *s.RttMs >= 0 && *s.RttMs <= 600000 && r.Error == "" {
+			r.RTT = time.Duration(*s.RttMs * float64(time.Millisecond))
+			summary.Recv++
+			total += r.RTT
+		} else if r.Error == "" {
+			r.Error = "no reply"
+		}
+		srv.storeResult(m.WorkspaceID, m.UserID, m.Protocol, m.Target, r.Addr, port, r, res.CheckedAt)
+	}
+	summary.Loss = float64(summary.Sent-summary.Recv) / float64(summary.Sent) * 100
+	if summary.Recv > 0 {
+		summary.Avg = total / time.Duration(summary.Recv)
+	}
+	return &summary
 }
 
 const (
@@ -308,7 +358,7 @@ func (srv *Server) handleAgentResults(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			continue
 		}
-		if err := srv.recordMonitorCheck(m, res.check(agent.ID), nil); err != nil {
+		if err := srv.recordMonitorCheck(m, res.check(agent.ID), srv.recordAgentSamples(m, res)); err != nil {
 			if !errors.Is(err, store.ErrMonitorNotFound) {
 				log.Printf("recording agent %d check for monitor %d failed: %v", agent.ID, m.ID, err)
 			}

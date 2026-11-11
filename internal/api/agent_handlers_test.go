@@ -101,7 +101,7 @@ func TestAgentEnrollHeartbeatAndRemove(t *testing.T) {
 // it doesn't run.
 func TestAgentRunsAssignedMonitors(t *testing.T) {
 	st := installTestStore(t)
-	_, cookie := issueTestSession(t, st)
+	user, cookie := issueTestSession(t, st)
 
 	call := func(handler http.HandlerFunc, method, path, secret, body string) *httptest.ResponseRecorder {
 		req := httptest.NewRequest(method, path, strings.NewReader(body))
@@ -172,7 +172,8 @@ func TestAgentRunsAssignedMonitors(t *testing.T) {
 
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	body := fmt.Sprintf(`{"results":[
-		{"monitor_id":%d,"checked_at":%q,"ok":true,"rtt_ms":4.2,"loss_percent":0},
+		{"monitor_id":%d,"checked_at":%q,"ok":true,"rtt_ms":4.2,"loss_percent":0,
+			"samples":[{"seq":1,"rtt_ms":4.0,"addr":"10.0.0.5"},{"seq":2,"rtt_ms":4.4,"addr":"10.0.0.5"},{"seq":3,"error":"timeout"}]},
 		{"monitor_id":%d,"checked_at":%q,"ok":false,"error":"forged"}
 	]}`, onAgent.ID, now, onServer.ID, now)
 	if rr := call(testSrv.handleAgentResults, http.MethodPost, "/api/agent/results", "qna_wrong", body); rr.Code != http.StatusUnauthorized {
@@ -183,6 +184,12 @@ func TestAgentRunsAssignedMonitors(t *testing.T) {
 		t.Fatalf("results: got %d: %s", rr.Code, rr.Body.String())
 	}
 	testSrv.background.Wait()
+
+	// The check's samples land in History like the server's own.
+	waitFor(t, 10*time.Second, func() bool {
+		points, err := st.QueryHistory(testWorkspaceID(t, st, user.ID), "tcpping", "10.0.0.5", 22, 10)
+		return err == nil && len(points) == 3
+	})
 
 	rr = call(testSrv.handleMonitors, http.MethodGet, "/api/monitors", "", "")
 	var list []struct {

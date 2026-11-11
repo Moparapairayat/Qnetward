@@ -56,6 +56,16 @@ type agentResult struct {
 	StatusCode   *int       `json:"status_code,omitempty"`
 	Error        string     `json:"error,omitempty"`
 	TLSExpiresAt *time.Time `json:"tls_expires_at,omitempty"`
+	// Samples are the individual pings or connects, for History and alert rules.
+	Samples []agentSample `json:"samples,omitempty"`
+}
+
+// agentSample is one ping or TCP connect within a check.
+type agentSample struct {
+	Seq   int      `json:"seq"`
+	RttMs *float64 `json:"rtt_ms,omitempty"`
+	Error string   `json:"error,omitempty"`
+	Addr  string   `json:"addr,omitempty"`
 }
 
 type scheduledJob struct {
@@ -208,6 +218,14 @@ func runAgentJob(ctx context.Context, job agentJob) agentResult {
 		err = fmt.Errorf("this agent can't run %q checks; update it", job.Protocol)
 	}
 	res.CheckedAt = time.Now().UTC()
+	for _, r := range rep.Results {
+		s := agentSample{Seq: r.Seq, Error: r.Error, Addr: r.Addr}
+		if r.Error == "" {
+			ms := float64(r.RTT) / float64(time.Millisecond)
+			s.RttMs = &ms
+		}
+		res.Samples = append(res.Samples, s)
+	}
 	switch {
 	case err != nil:
 		res.Error = err.Error()
