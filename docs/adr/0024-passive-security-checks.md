@@ -45,5 +45,10 @@ headers, and DNS that lets anyone send mail as the domain.
 
 - Grades are guidance, not a pentest. They say nothing about the
   application behind the headers.
-- Scheduled re-checks with an alert when a grade drops, and Tier 1 checks on
-  verified domains, build on this table and engine.
+- Watched domains (migration 0025) re-run the check every 6 hours, daily,
+  or weekly, claimed like monitors so instances share the work. They don't
+  spend the hourly scan quota; plans cap how many there are (Free 3, Pro 25,
+  Enterprise 250). A watch alerts, by email and on channels subscribed to
+  `security`, when the grade drops or a high-severity finding appears that
+  the previous scan didn't have. Getting better doesn't alert.
+- Tier 1 checks on verified domains build on this table and engine.

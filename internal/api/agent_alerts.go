@@ -32,7 +32,7 @@ func (srv *Server) watchAgents(ctx context.Context) {
 		in := agentOfflineAlert(a, srv.buildConfiguredDashboardURL("agents"))
 		srv.events.publish(a.WorkspaceID, liveEvent{Type: "agent.changed"})
 		srv.notifyChannels(a.WorkspaceID, store.ChannelEventAgents, toNotice(in, "agent.offline"))
-		srv.emailAgentAlert(in)
+		srv.emailAlert(in)
 	}
 }
 
@@ -55,13 +55,13 @@ func (srv *Server) agentBackOnline(agent store.Agent) {
 			return
 		}
 		in.To, in.Name = email, name
-		srv.emailAgentAlert(in)
+		srv.emailAlert(in)
 	}()
 }
 
-// emailAgentAlert emails whoever added the agent, when there's a mailer and
-// an address.
-func (srv *Server) emailAgentAlert(in mailer.AlertEmailInput) {
+// emailAlert sends an alert email in the background, when there is a
+// mailer and an address.
+func (srv *Server) emailAlert(in mailer.AlertEmailInput) {
 	if srv.mailer == nil || in.To == "" {
 		return
 	}

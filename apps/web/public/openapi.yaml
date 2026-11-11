@@ -164,6 +164,42 @@ paths:
       responses:
         "200": { description: Deleted. }
         "404": { $ref: "#/components/responses/Error" }
+  /api/security/watches:
+    get:
+      tags: [Security]
+      summary: List watched domains
+      description: "Needs the `read` scope. Returns { watches, limit, intervals }."
+      responses:
+        "200": { description: The workspace's watched domains. }
+    post:
+      tags: [Security]
+      summary: Watch a domain, or change a watch
+      description: "Needs the `write` scope. A watched domain's passive check re-runs every interval_hours (6, 24, or 168). It alerts by email and on channels subscribed to `security` when the grade drops or a new high-severity issue appears."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: { type: integer, description: Set to change an existing watch. }
+                domain: { type: string, example: example.com }
+                interval_hours: { type: integer, enum: [6, 24, 168], default: 24 }
+                notify_email: { type: string }
+                enabled: { type: boolean, default: true }
+      responses:
+        "201": { description: Watching. }
+        "200": { description: Updated. }
+        "409": { $ref: "#/components/responses/Error" }
+    delete:
+      tags: [Security]
+      summary: Stop watching a domain
+      description: "Needs the `write` scope. Past scans stay."
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Stopped. }
+        "404": { $ref: "#/components/responses/Error" }
   /api/monitors:
     get:
       tags: [Monitors]

@@ -103,33 +103,16 @@ func (srv *Server) handlePassiveScans(w http.ResponseWriter, r *http.Request) {
 		}
 		defer release()
 
-		ctx, cancel := context.WithTimeout(r.Context(), passiveScanTimeout)
-		defer cancel()
-		rep, err := passive.Run(ctx, domain, passive.Config{
-			CheckHost:   srv.targetPolicy.CheckHost,
-			DialControl: srv.targetPolicy.DialControl(),
-			RootCAs:     srv.monitorRootCAs,
-		})
+		scan, rep, err := srv.runPassiveScan(r.Context(), user.WorkspaceID, user.ID, domain)
 		if err != nil {
-			writeJSON(w, http.StatusUnprocessableEntity, apiError{Error: err.Error()})
+			status := http.StatusInternalServerError
+			if errors.Is(err, errScanFailed) {
+				status = http.StatusUnprocessableEntity
+			}
+			writeJSON(w, status, apiError{Error: strings.TrimPrefix(err.Error(), errScanFailed.Error()+": ")})
 			return
 		}
-		raw, err := json.Marshal(rep)
-		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, apiError{Error: "could not save the report"})
-			return
-		}
-		saveCtx, saveCancel := context.WithTimeout(context.WithoutCancel(r.Context()), 10*time.Second)
-		defer saveCancel()
-		scan, err := srv.store.SaveSecurityScan(saveCtx, store.SecurityScan{
-			WorkspaceID: user.WorkspaceID, UserID: user.ID, Kind: "passive", Domain: rep.Domain,
-			Grade: rep.Grade, Score: rep.Score, High: rep.Counts[passive.High], Medium: rep.Counts[passive.Medium], Low: rep.Counts[passive.Low],
-			Report: raw,
-		})
-		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
-			return
-		}
+		srv.events.publish(user.WorkspaceID, liveEvent{Type: "security.scan"})
 		srv.recordAudit(r, user.WorkspaceID, user.User, "scan.passive", auditTarget{Type: "domain", ID: rep.Domain, Label: rep.Domain},
 			map[string]any{"grade": rep.Grade, "score": rep.Score})
 		writeJSON(w, http.StatusCreated, scan)
@@ -159,6 +142,36 @@ func (srv *Server) handlePassiveScans(w http.ResponseWriter, r *http.Request) {
 	default:
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
 	}
+}
+
+// errScanFailed wraps a scan that couldn't run, as opposed to one that ran
+// but couldn't be saved.
+var errScanFailed = errors.New("scan failed")
+
+// runPassiveScan checks a domain and saves the result.
+func (srv *Server) runPassiveScan(ctx context.Context, workspaceID, userID int64, domain string) (store.SecurityScan, passive.Report, error) {
+	runCtx, cancel := context.WithTimeout(ctx, passiveScanTimeout)
+	defer cancel()
+	rep, err := passive.Run(runCtx, domain, passive.Config{
+		CheckHost:   srv.targetPolicy.CheckHost,
+		DialControl: srv.targetPolicy.DialControl(),
+		RootCAs:     srv.monitorRootCAs,
+	})
+	if err != nil {
+		return store.SecurityScan{}, passive.Report{}, fmt.Errorf("%w: %w", errScanFailed, err)
+	}
+	raw, err := json.Marshal(rep)
+	if err != nil {
+		return store.SecurityScan{}, rep, errors.New("could not save the report")
+	}
+	saveCtx, saveCancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
+	defer saveCancel()
+	scan, err := srv.store.SaveSecurityScan(saveCtx, store.SecurityScan{
+		WorkspaceID: workspaceID, UserID: userID, Kind: "passive", Domain: rep.Domain,
+		Grade: rep.Grade, Score: rep.Score, High: rep.Counts[passive.High], Medium: rep.Counts[passive.Medium], Low: rep.Counts[passive.Low],
+		Report: raw,
+	})
+	return scan, rep, err
 }
 
 func writeScanError(w http.ResponseWriter, err error) {

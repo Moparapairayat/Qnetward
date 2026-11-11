@@ -28,11 +28,12 @@ const (
 	ChannelEventCertificates = "certificates"
 	ChannelEventAlertRules   = "alert_rules"
 	ChannelEventAgents       = "agents"
+	ChannelEventSecurity     = "security"
 )
 
 var (
 	ChannelKinds  = []string{ChannelSlack, ChannelDiscord, ChannelTelegram, ChannelWebhook}
-	ChannelEvents = []string{ChannelEventMonitors, ChannelEventCertificates, ChannelEventAlertRules, ChannelEventAgents}
+	ChannelEvents = []string{ChannelEventMonitors, ChannelEventCertificates, ChannelEventAlertRules, ChannelEventAgents, ChannelEventSecurity}
 )
 
 // MaxChannels caps the channels in one workspace.

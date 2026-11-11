@@ -405,6 +405,7 @@ export type PlanLimits = {
   agents: number;
   /** How many places one monitor may run from. */
   monitor_locations: number;
+  watched_domains: number;
 };
 
 export type Plan = { id: "free" | "pro" | "enterprise"; name: string; limits: PlanLimits };
@@ -562,7 +563,7 @@ export type RuntimeHealthResponse = {
 };
 
 export type ChannelKind = "slack" | "discord" | "telegram" | "webhook";
-export type ChannelEvent = "monitors" | "certificates" | "alert_rules" | "agents";
+export type ChannelEvent = "monitors" | "certificates" | "alert_rules" | "agents" | "security";
 
 export type NotificationChannel = {
   id: number;
@@ -743,3 +744,20 @@ export type SecurityScan = {
   created_at: string;
   report?: PassiveReport;
 };
+
+export type SecurityWatch = {
+  id: number;
+  domain: string;
+  interval_hours: 6 | 24 | 168;
+  notify_email: string;
+  enabled: boolean;
+  last_scan_id?: number | null;
+  last_grade?: string;
+  last_score?: number | null;
+  last_checked_at?: string | null;
+  last_error?: string;
+  next_run_at: string;
+  created_at: string;
+};
+
+export type SecurityWatchListResponse = { watches: SecurityWatch[]; limit: number; intervals: number[] };

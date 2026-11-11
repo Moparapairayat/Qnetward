@@ -201,7 +201,8 @@ func runServe(args []string) {
 	defer stopMonitors()
 	if *runMonitors {
 		go apiServer.RunMonitors(monitorsCtx)
-		fmt.Println("Uptime monitors: running")
+		go apiServer.RunSecurityWatches(monitorsCtx)
+		fmt.Println("Uptime monitors and watched domains: running")
 	}
 	if *demoEnabled && *demoFullAccess {
 		fmt.Println("Warning: QNETWARD_DEMO_FULL_ACCESS is on; anyone who opens the demo can change its workspace. Never enable it on a public server.")
