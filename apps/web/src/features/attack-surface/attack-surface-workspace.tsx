@@ -68,6 +68,15 @@ function HostRow({ host, isNew, newPorts }: { host: SurfaceHost; isNew: boolean;
           {host.source}
           {host.cname ? ` · CNAME ${host.cname}` : ""}
         </p>
+        {host.services?.length ? (
+          <p className="mt-0.5 flex flex-wrap gap-1">
+            {host.services.map((s) => (
+              <span key={s.port} className="rounded border border-[var(--lp-border)] px-1 text-[10px] text-[var(--lp-muted)]" title={s.banner}>
+                {s.product ? `${s.product} ${s.version}` : (s.banner ?? "").slice(0, 32)}
+              </span>
+            ))}
+          </p>
+        ) : null}
       </td>
       <td className="lp-mono hidden px-3 py-2.5 text-[11px] text-[var(--lp-muted)] md:table-cell">
         {host.addresses.length ? host.addresses.slice(0, 2).join(", ") + (host.addresses.length > 2 ? ` +${host.addresses.length - 2}` : "") : "—"}

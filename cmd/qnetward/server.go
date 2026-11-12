@@ -37,6 +37,7 @@ func runServe(args []string) {
 	redisPassword := fs.String("redis-password", envString("QNETWARD_REDIS_PASSWORD", ""), "Redis password")
 	redisDB := fs.Int("redis-db", envInt("QNETWARD_REDIS_DB", 0), "Redis logical DB")
 	redisPrefix := fs.String("redis-prefix", envString("QNETWARD_REDIS_PREFIX", "qnetward"), "Redis key prefix")
+	nvdAPIKey := fs.String("nvd-api-key", envString("QNETWARD_NVD_API_KEY", ""), "NVD API key for faster vulnerability lookups (optional)")
 	redisTTL := fs.Duration("redis-cache-ttl", envDuration("QNETWARD_REDIS_CACHE_TTL", 3*time.Second), "Redis history cache TTL")
 	s3Endpoint := fs.String("s3-endpoint", envString("QNETWARD_S3_ENDPOINT", ""), "S3-compatible endpoint")
 	s3AccessKey := fs.String("s3-access-key", envString("QNETWARD_S3_ACCESS_KEY", ""), "S3 access key")
@@ -172,6 +173,7 @@ func runServe(args []string) {
 			Billing:        api.Billing{UddoktaPayURL: *uddoktaURL, UddoktaPayKey: *uddoktaKey, ProMonthlyBDT: *proMonthly, ProYearlyBDT: *proYearly},
 			TargetPolicy:   netguard.Policy{AllowPrivate: *allowPrivateTargets},
 			Google:         api.GoogleOAuth(*googleClientID, *googleClientSecret),
+			NVDAPIKey:      *nvdAPIKey,
 		},
 	)
 

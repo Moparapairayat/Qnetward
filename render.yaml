@@ -38,6 +38,9 @@ services:
         sync: false
       - key: QNETWARD_ADMIN_EMAILS
         sync: false
+      # Optional: a free NVD key makes vulnerability lookups ten times faster.
+      - key: QNETWARD_NVD_API_KEY
+        sync: false
       # The free database allows few connections; keep the pool small.
       - key: QNETWARD_DB_MAX_OPEN
         value: "5"

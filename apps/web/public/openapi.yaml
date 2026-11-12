@@ -236,6 +236,39 @@ paths:
         - { name: id, in: query, required: true, schema: { type: integer } }
       responses:
         "200": { description: Deleted. }
+  /api/security/vulnerabilities:
+    get:
+      tags: [Security]
+      summary: List known vulnerabilities across verified domains
+      description: "Needs the `read` scope. From each domain's latest attack surface scan: CVE, severity (critical/high/medium/low), CVSS, kev (exploited in the wild), epss, host, port, product, version, and the workspace's decision if any. Matched from announced versions, so distributions' backported fixes show as false positives."
+      responses:
+        "200": { description: "{ vulns, domains }" }
+  /api/security/vulnerabilities/decisions:
+    post:
+      tags: [Security]
+      summary: Accept a risk or mark a false positive
+      description: "Needs the `write` scope and an owner or admin."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [host, cve, status]
+              properties:
+                host: { type: string }
+                cve: { type: string, example: CVE-2021-23017 }
+                status: { type: string, enum: [accepted, false_positive] }
+                reason: { type: string, maxLength: 500 }
+      responses:
+        "200": { description: The decision. }
+    delete:
+      tags: [Security]
+      summary: Reopen a vulnerability
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Reopened. }
   /api/assets/domains:
     get:
       tags: [Security]

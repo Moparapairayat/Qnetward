@@ -16,6 +16,7 @@ import (
 	"qnetward/internal/platform/objectstore"
 	"qnetward/internal/platform/secretbox"
 	"qnetward/internal/platform/uddoktapay"
+	"qnetward/internal/platform/vulndb"
 	"qnetward/internal/store"
 )
 
@@ -50,6 +51,8 @@ type Options struct {
 	// TargetPolicy decides which addresses API-initiated probes may reach.
 	// The CLI does not use it: it runs on the operator's own machine.
 	TargetPolicy netguard.Policy
+	// NVDAPIKey raises the vulnerability database's rate limit; optional.
+	NVDAPIKey string
 }
 
 // Server holds everything the HTTP handlers need. It replaces the package-level
@@ -60,6 +63,9 @@ type Server struct {
 	objects *objectstore.Client
 	mailer  *mailer.Client
 	secrets *secretbox.Box
+
+	// vulns looks up known vulnerabilities for software found by scans.
+	vulns *vulndb.Client
 
 	publicBaseURL  string
 	allowedOrigins map[string]struct{}
@@ -115,6 +121,7 @@ func New(deps Deps, opts Options) *Server {
 		payments:       &uddoktapay.Client{BaseURL: strings.TrimSpace(opts.Billing.UddoktaPayURL), APIKey: strings.TrimSpace(opts.Billing.UddoktaPayKey)},
 		demoCreatedAt:  time.Now().UTC(),
 		targetPolicy:   opts.TargetPolicy,
+		vulns:          vulndb.New(opts.NVDAPIKey),
 		google:         opts.Google,
 		webauthn:       newWebAuthn(opts.PublicBaseURL),
 		probeLimiter:   make(chan struct{}, maxConcurrentProbes),
@@ -207,6 +214,8 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/security/passive", srv.handlePassiveScans)
 	mux.HandleFunc("/api/security/watches", srv.handleSecurityWatches)
 	mux.HandleFunc("/api/security/surface", srv.handleSurfaceScans)
+	mux.HandleFunc("/api/security/vulnerabilities", srv.handleVulnerabilities)
+	mux.HandleFunc("/api/security/vulnerabilities/decisions", srv.handleVulnDispositions)
 	mux.HandleFunc("/api/assets/domains", srv.handleDomains)
 	mux.HandleFunc("/api/assets/domains/verify", srv.handleDomainVerify)
 	mux.HandleFunc("/api/status-pages", srv.handleStatusPages)

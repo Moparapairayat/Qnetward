@@ -24,6 +24,7 @@ import (
 	"github.com/miekg/dns"
 
 	"qnetward/internal/engine/passive"
+	"qnetward/internal/platform/vulndb"
 )
 
 // MaxHosts caps the names one scan looks at.
@@ -97,20 +98,39 @@ type Host struct {
 	TLSVersion string     `json:"tls_version,omitempty"`
 	CertExpiry *time.Time `json:"cert_expiry,omitempty"`
 	CertIssuer string     `json:"cert_issuer,omitempty"`
+	// Services are the open ports whose software said what it is.
+	Services []Service `json:"services,omitempty"`
+}
+
+// Vuln is a known vulnerability in software found on a host.
+type Vuln struct {
+	vulndb.Vuln
+	Host    string `json:"host"`
+	Port    int    `json:"port"`
+	Product string `json:"product"`
+	Version string `json:"version"`
+}
+
+// VulnLookup finds known vulnerabilities for a CPE.
+type VulnLookup interface {
+	Lookup(ctx context.Context, cpe string) ([]vulndb.Vuln, error)
 }
 
 // Report is the result of one scan.
 type Report struct {
-	Domain     string                   `json:"domain"`
-	Grade      string                   `json:"grade"`
-	Score      int                      `json:"score"`
-	Counts     map[passive.Severity]int `json:"counts"`
-	Findings   []Finding                `json:"findings"`
-	Hosts      []Host                   `json:"hosts"`
-	Truncated  bool                     `json:"truncated,omitempty"`
-	CTError    string                   `json:"ct_error,omitempty"`
-	CheckedAt  time.Time                `json:"checked_at"`
-	DurationMs float64                  `json:"duration_ms"`
+	Domain    string                   `json:"domain"`
+	Grade     string                   `json:"grade"`
+	Score     int                      `json:"score"`
+	Counts    map[passive.Severity]int `json:"counts"`
+	Findings  []Finding                `json:"findings"`
+	Hosts     []Host                   `json:"hosts"`
+	Truncated bool                     `json:"truncated,omitempty"`
+	// Vulns are known vulnerabilities in the software versions found.
+	Vulns      []Vuln    `json:"vulns"`
+	VulnError  string    `json:"vuln_error,omitempty"`
+	CTError    string    `json:"ct_error,omitempty"`
+	CheckedAt  time.Time `json:"checked_at"`
+	DurationMs float64   `json:"duration_ms"`
 }
 
 // Config tunes a scan.
@@ -124,6 +144,8 @@ type Config struct {
 	PortTimeout time.Duration
 	// CTURL is the certificate-log search; crt.sh when empty.
 	CTURL string
+	// Vulns looks up known vulnerabilities; none are looked up when nil.
+	Vulns VulnLookup
 
 	// Tests replace the network.
 	lookup  func(ctx context.Context, name string, qtype uint16) ([]string, bool, error)
@@ -247,6 +269,7 @@ func Run(ctx context.Context, domain string, cfg Config) (Report, error) {
 	if rep.Hosts == nil {
 		rep.Hosts = []Host{}
 	}
+	findings = append(findings, lookupVulns(ctx, cfg, &rep)...)
 	rep.Findings = sortFindings(findings)
 	plain := make([]passive.Finding, len(rep.Findings))
 	for i, f := range rep.Findings {
@@ -369,6 +392,14 @@ func probeHost(ctx context.Context, cfg Config, h *Host) []Finding {
 	}
 	wg.Wait()
 	slices.Sort(h.OpenPorts)
+	for _, p := range h.OpenPorts {
+		switch p {
+		case 21, 22, 25, 80, 443, 3306, 8080, 8443:
+			if svc := grabBanner(ctx, cfg, h.Name, addr, p); svc.Banner != "" {
+				h.Services = append(h.Services, svc)
+			}
+		}
+	}
 
 	var out []Finding
 	open := func(n int) bool { return slices.Contains(h.OpenPorts, n) }
@@ -506,4 +537,59 @@ func query(ctx context.Context, servers []string, name string, qtype uint16) ([]
 		return out, false, nil
 	}
 	return nil, false, lastErr
+}
+
+// lookupVulns finds known vulnerabilities for every product version seen,
+// once per version, and sums each up as one finding per host and product.
+func lookupVulns(ctx context.Context, cfg Config, rep *Report) []Finding {
+	rep.Vulns = []Vuln{}
+	if cfg.Vulns == nil {
+		return nil
+	}
+	known := map[string][]vulndb.Vuln{}
+	var failed []string
+	var out []Finding
+	for _, h := range rep.Hosts {
+		for _, svc := range h.Services {
+			if svc.CPE == "" {
+				continue
+			}
+			vulns, done := known[svc.CPE]
+			if !done {
+				var err error
+				vulns, err = cfg.Vulns.Lookup(ctx, svc.CPE)
+				if err != nil {
+					failed = append(failed, svc.Product+" "+svc.Version)
+				}
+				known[svc.CPE] = vulns
+			}
+			if len(vulns) == 0 {
+				continue
+			}
+			worst, exploited := passive.Medium, 0
+			for _, v := range vulns {
+				rep.Vulns = append(rep.Vulns, Vuln{Vuln: v, Host: h.Name, Port: svc.Port, Product: svc.Product, Version: svc.Version})
+				if v.KEV {
+					exploited++
+				}
+				if v.Severity == "critical" || v.Severity == "high" {
+					worst = passive.High
+				}
+			}
+			title := fmt.Sprintf("%s %s has %d known vulnerabilit%s", svc.Product, svc.Version, len(vulns), map[bool]string{true: "y", false: "ies"}[len(vulns) == 1])
+			if exploited > 0 {
+				title += fmt.Sprintf(", %d exploited in the wild", exploited)
+			}
+			out = append(out, Finding{Host: h.Name, Finding: passive.Finding{
+				ID:       "vuln." + strings.ToLower(strings.ReplaceAll(svc.Product, " ", "_")) + "." + svc.Version,
+				Category: "vulnerability", Severity: worst, Title: title,
+				Detail: fmt.Sprintf("Port %d announces %q. The most serious: %s (CVSS %.1f). This is matched from the version alone; distributions often patch without changing it.", svc.Port, svc.Banner, vulns[0].CVE, vulns[0].CVSS),
+				Fix:    "Update " + svc.Product + " to a supported release, and hide the version from its banner.",
+			}})
+		}
+	}
+	if len(failed) > 0 {
+		rep.VulnError = "couldn't look up " + strings.Join(failed, ", ")
+	}
+	return out
 }

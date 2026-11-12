@@ -798,6 +798,7 @@ export type SurfaceHost = {
   tls_version?: string;
   cert_expiry?: string | null;
   cert_issuer?: string;
+  services?: { port: number; banner?: string; product?: string; version?: string; cpe?: string }[];
 };
 
 export type SurfaceFinding = SecurityFinding & { host: string };
@@ -811,6 +812,34 @@ export type SurfaceReport = {
   hosts: SurfaceHost[];
   truncated?: boolean;
   ct_error?: string;
+  vulns?: VulnView[];
+  vuln_error?: string;
   checked_at: string;
   duration_ms: number;
+};
+
+export type VulnSeverity = "critical" | "high" | "medium" | "low";
+
+export type VulnView = {
+  cve: string;
+  severity: VulnSeverity;
+  cvss: number;
+  kev: boolean;
+  epss: number;
+  summary: string;
+  published?: string;
+  url: string;
+  host: string;
+  port: number;
+  product: string;
+  version: string;
+  domain: string;
+  scan_id: number;
+  scanned_at: string;
+  disposition?: { id: number; host: string; cve: string; status: "accepted" | "false_positive"; reason?: string; created_at: string } | null;
+};
+
+export type VulnListResponse = {
+  vulns: VulnView[];
+  domains: { domain: string; scan_id: number; scanned_at: string; vuln_error?: string }[];
 };

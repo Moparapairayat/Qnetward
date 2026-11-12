@@ -93,10 +93,14 @@ func (srv *Server) runSurfaceScan(scan store.SecurityScan) { srv.finishSurfaceSc
 func (srv *Server) finishSurfaceScan(scan store.SecurityScan) (surface.Report, bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), surfaceScanTimeout)
 	defer cancel()
-	rep, err := surfaceRun(ctx, scan.Domain, surface.Config{
+	cfg := surface.Config{
 		CheckAddr:   srv.targetPolicy.CheckAddr,
 		DialControl: srv.targetPolicy.DialControl(),
-	})
+	}
+	if srv.vulns != nil {
+		cfg.Vulns = srv.vulns
+	}
+	rep, err := surfaceRun(ctx, scan.Domain, cfg)
 	saveCtx, saveCancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer saveCancel()
 	failure := ""
