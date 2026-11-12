@@ -230,6 +230,8 @@ func dashboardRoutePath(panel string) string {
 		return "/agents"
 	case "passive-checks":
 		return "/passive-checks"
+	case "assets":
+		return "/assets"
 	case "settings":
 		return "/settings"
 	case "profile":

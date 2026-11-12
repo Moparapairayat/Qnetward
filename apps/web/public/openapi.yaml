@@ -200,6 +200,54 @@ paths:
       responses:
         "200": { description: Stopped. }
         "404": { $ref: "#/components/responses/Error" }
+  /api/assets/domains:
+    get:
+      tags: [Security]
+      summary: List the workspace's domains and their verification
+      description: "Needs the `read` scope. Each domain carries its token, the TXT record name, and the proof file URL."
+      responses:
+        "200": { description: "{ domains, limit }" }
+    post:
+      tags: [Security]
+      summary: Add a domain to verify
+      description: "Needs the `write` scope and an owner or admin. Returns the token to publish as a TXT record at record_name or in the file at file_url."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [domain]
+              properties:
+                domain: { type: string, example: example.com }
+      responses:
+        "201": { description: The domain, pending verification. }
+        "409": { $ref: "#/components/responses/Error" }
+    delete:
+      tags: [Security]
+      summary: Remove a domain
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Removed. }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/assets/domains/verify:
+    post:
+      tags: [Security]
+      summary: Look for a domain's proof now
+      description: "Needs the `write` scope and an owner or admin. 60 attempts a workspace per hour."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id: { type: integer }
+      responses:
+        "200": { description: "The domain; status is verified when the proof was found, with last_error saying what was seen when not." }
+        "429": { $ref: "#/components/responses/Error" }
   /api/monitors:
     get:
       tags: [Monitors]

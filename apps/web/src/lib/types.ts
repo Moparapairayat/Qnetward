@@ -406,6 +406,7 @@ export type PlanLimits = {
   /** How many places one monitor may run from. */
   monitor_locations: number;
   watched_domains: number;
+  verified_domains: number;
 };
 
 export type Plan = { id: "free" | "pro" | "enterprise"; name: string; limits: PlanLimits };
@@ -761,3 +762,23 @@ export type SecurityWatch = {
 };
 
 export type SecurityWatchListResponse = { watches: SecurityWatch[]; limit: number; intervals: number[] };
+
+export type VerifiedDomain = {
+  id: number;
+  domain: string;
+  token: string;
+  status: "pending" | "verified" | "lapsed";
+  method?: "dns" | "http" | "";
+  verified_at?: string | null;
+  last_seen_at?: string | null;
+  last_checked_at?: string | null;
+  last_error?: string;
+  next_check_at: string;
+  created_at: string;
+  /** Where the TXT record goes, like _qnetward-verify.example.com. */
+  record_name: string;
+  /** Where the proof file goes. */
+  file_url: string;
+};
+
+export type VerifiedDomainListResponse = { domains: VerifiedDomain[]; limit: number };

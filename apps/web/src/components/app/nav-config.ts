@@ -99,7 +99,7 @@ export const navSections: NavSection[] = [
     label: "Security",
     items: [
       { href: "/passive-checks", label: "Passive checks", icon: ShieldCheck, keywords: "tls ssl certificate headers hsts csp spf dmarc dns grade security" },
-      { href: "/assets", label: "Assets", icon: Boxes, keywords: "ownership verification domains", soon: true },
+      { href: "/assets", label: "Assets", icon: Boxes, keywords: "ownership verification domains verify txt prove" },
       { href: "/attack-surface", label: "Attack surface", icon: ScanSearch, keywords: "subdomains exposure certificates", soon: true },
       { href: "/vulnerabilities", label: "Vulnerabilities", icon: ShieldAlert, keywords: "cve cvss epss kev", soon: true },
       { href: "/scans", label: "Scans", icon: ListTree, keywords: "tier scope schedule", soon: true },
