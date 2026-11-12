@@ -234,6 +234,10 @@ func dashboardRoutePath(panel string) string {
 		return "/assets"
 	case "attack-surface":
 		return "/attack-surface"
+	case "scans":
+		return "/scans"
+	case "admin-deep-scans":
+		return "/admin/deep-scans"
 	case "settings":
 		return "/settings"
 	case "profile":

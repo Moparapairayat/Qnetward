@@ -269,6 +269,45 @@ paths:
         - { name: id, in: query, required: true, schema: { type: integer } }
       responses:
         "200": { description: Reopened. }
+  /api/security/deep:
+    get:
+      tags: [Security]
+      summary: List deep scan requests
+      description: "Needs the `read` scope. Returns { requests, per_month, windows, checks }."
+      responses:
+        "200": { description: The workspace's requests. }
+    post:
+      tags: [Security]
+      summary: Preview or submit a signed deep scan request
+      description: "Needs the `write` scope, an owner or admin, and a Pro or Enterprise plan. With ?preview=1, returns the authorization text and its SHA-256 for the given scope and name. Without it, submits: send the same fields plus consent_hash and accept=true; the server rebuilds the text and refuses a different hash. The request waits for a Qnetward admin's approval and runs only inside its window."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [domain, window_hours, name]
+              properties:
+                domain: { type: string }
+                hosts: { type: array, items: { type: string }, maxItems: 20 }
+                checks: { type: array, items: { type: string, enum: [exposed_files] } }
+                window_start: { type: string, format: date-time }
+                window_hours: { type: integer, enum: [24, 72, 168] }
+                name: { type: string, description: The signer's full name. }
+                consent_hash: { type: string }
+                accept: { type: boolean }
+      responses:
+        "200": { description: "Preview: { text, hash, version, input }." }
+        "201": { description: The request, pending review. }
+        "402": { $ref: "#/components/responses/Error" }
+    delete:
+      tags: [Security]
+      summary: Withdraw a request that hasn't started
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Withdrawn. }
+        "409": { $ref: "#/components/responses/Error" }
   /api/assets/domains:
     get:
       tags: [Security]

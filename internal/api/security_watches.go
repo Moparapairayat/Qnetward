@@ -169,8 +169,9 @@ func (srv *Server) RunSecurityWatches(ctx context.Context) {
 			return
 		case <-tick.C:
 		}
-		// Domain proofs are re-checked on the same clock.
+		// Domain proofs are re-checked, and approved deep scans started, on the same clock.
 		srv.recheckDomains(ctx)
+		srv.runDueDeepScans(ctx)
 		free := watchConcurrency - len(slots)
 		if free <= 0 {
 			continue

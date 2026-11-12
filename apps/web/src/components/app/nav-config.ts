@@ -102,7 +102,7 @@ export const navSections: NavSection[] = [
       { href: "/assets", label: "Assets", icon: Boxes, keywords: "ownership verification domains verify txt prove" },
       { href: "/attack-surface", label: "Attack surface", icon: ScanSearch, keywords: "subdomains exposure certificates ports takeover recon" },
       { href: "/vulnerabilities", label: "Vulnerabilities", icon: ShieldAlert, keywords: "cve cvss epss kev nvd exploited patch" },
-      { href: "/scans", label: "Scans", icon: ListTree, keywords: "tier scope schedule", soon: true },
+      { href: "/scans", label: "Deep scans", icon: ListTree, keywords: "tier 2 consent approval exposed files git env backup" },
       { href: "/compliance", label: "Compliance", icon: ClipboardCheck, keywords: "cis pci iso soc2 evidence", soon: true },
     ],
   },
@@ -144,6 +144,7 @@ export const navSections: NavSection[] = [
       { href: "/admin/users", label: "Users", icon: User },
       { href: "/admin/workspaces", label: "Workspaces", icon: Building2 },
       { href: "/admin/system", label: "System", icon: Server },
+      { href: "/admin/deep-scans", label: "Deep scan reviews", icon: ListTree, keywords: "approve consent tier 2" },
     ],
   },
 ];

@@ -736,7 +736,7 @@ export type PassiveReport = {
 
 export type SecurityScan = {
   id: number;
-  kind: "passive" | "surface";
+  kind: "passive" | "surface" | "deep";
   status: "running" | "done" | "failed";
   error?: string;
   domain: string;
@@ -842,4 +842,49 @@ export type VulnView = {
 export type VulnListResponse = {
   vulns: VulnView[];
   domains: { domain: string; scan_id: number; scanned_at: string; vuln_error?: string }[];
+};
+
+export type DeepScanRequest = {
+  id: number;
+  workspace_id: number;
+  workspace_name?: string;
+  domain: string;
+  hosts: string[];
+  checks: string[];
+  window_start: string;
+  window_end: string;
+  consent_version: string;
+  consent_text: string;
+  consent_hash: string;
+  consent_name: string;
+  consent_ip?: string;
+  status: "pending" | "approved" | "rejected" | "cancelled" | "running" | "completed" | "failed" | "expired";
+  reviewer_email?: string;
+  reviewed_at?: string | null;
+  review_note?: string;
+  scan_id?: number | null;
+  created_at: string;
+};
+
+export type DeepScanListResponse = { requests: DeepScanRequest[]; per_month: number; windows: number[]; checks: Record<string, string> };
+
+export type DeepScanPreview = {
+  text: string;
+  hash: string;
+  version: string;
+  input: { domain: string; hosts: string[]; checks: string[]; window_start: string; window_hours: number; name: string };
+};
+
+export type DeepReport = {
+  domain: string;
+  hosts: string[];
+  checks: string[];
+  grade: string;
+  score: number;
+  counts: Record<Severity, number>;
+  findings: (SecurityFinding & { host: string; url: string })[];
+  requests: number;
+  skipped?: string[];
+  checked_at: string;
+  duration_ms: number;
 };
