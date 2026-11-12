@@ -888,3 +888,38 @@ export type DeepReport = {
   checked_at: string;
   duration_ms: number;
 };
+
+export type ComplianceStatus = "pass" | "warn" | "fail" | "not_assessed";
+
+export type ComplianceEvidence = {
+  kind?: string;
+  domain?: string;
+  host?: string;
+  id: string;
+  title: string;
+  severity: string;
+  scan_id?: number;
+  at: string;
+};
+
+export type ComplianceControl = {
+  id: string;
+  title: string;
+  description: string;
+  area: string;
+  refs: Record<string, string[]>;
+  fix: string;
+  status: ComplianceStatus;
+  summary: string;
+  evidence: ComplianceEvidence[];
+  domains: string[];
+};
+
+export type ComplianceReport = {
+  frameworks: { id: string; name: string; short: string; mapped: number; assessed: number; passing: number; warning: number; failing: number; not_assessed: number; percent: number }[];
+  controls: ComplianceControl[];
+  counts: Record<ComplianceStatus, number>;
+  sources: { kind: string; domain: string; scan_id: number; at: string }[];
+  window_days: number;
+  checked_at: string;
+};

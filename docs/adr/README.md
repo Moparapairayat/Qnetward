@@ -42,3 +42,4 @@ patterns don't.
 | [0026](0026-attack-surface-scans.md) | Attack surface scans map a verified domain's exposure | Accepted |
 | [0027](0027-vulnerabilities-from-service-versions.md) | Vulnerabilities are matched from the versions services announce | Accepted |
 | [0028](0028-deep-scans-need-consent-and-approval.md) | Deep scans need signed consent and an admin's approval | Accepted |
+| [0029](0029-compliance-maps-external-evidence.md) | Compliance maps external scan evidence to framework controls | Accepted |

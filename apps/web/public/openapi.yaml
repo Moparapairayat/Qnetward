@@ -236,6 +236,15 @@ paths:
         - { name: id, in: query, required: true, schema: { type: integer } }
       responses:
         "200": { description: Deleted. }
+  /api/security/compliance:
+    get:
+      tags: [Security]
+      summary: Map scan results to compliance controls
+      description: "Needs the `read` scope. Evaluates externally observable controls from each domain's newest passive, attack surface, and deep scan of the last 30 days, plus verified domains, schedules, and monitors. Each control has a status (pass, warn, fail, not_assessed), evidence, and references to CIS Controls v8, PCI DSS 4.0, ISO/IEC 27001:2022 Annex A, and SOC 2. Evidence for an audit, not a certification."
+      parameters:
+        - { name: format, in: query, required: false, schema: { type: string, enum: [csv] }, description: "csv returns the same as a spreadsheet." }
+      responses:
+        "200": { description: "{ frameworks, controls, counts, sources, window_days, checked_at }, or text/csv" }
   /api/security/vulnerabilities:
     get:
       tags: [Security]

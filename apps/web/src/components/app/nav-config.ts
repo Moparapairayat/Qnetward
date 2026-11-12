@@ -103,7 +103,7 @@ export const navSections: NavSection[] = [
       { href: "/attack-surface", label: "Attack surface", icon: ScanSearch, keywords: "subdomains exposure certificates ports takeover recon" },
       { href: "/vulnerabilities", label: "Vulnerabilities", icon: ShieldAlert, keywords: "cve cvss epss kev nvd exploited patch" },
       { href: "/scans", label: "Deep scans", icon: ListTree, keywords: "tier 2 consent approval exposed files git env backup" },
-      { href: "/compliance", label: "Compliance", icon: ClipboardCheck, keywords: "cis pci iso soc2 evidence", soon: true },
+      { href: "/compliance", label: "Compliance", icon: ClipboardCheck, keywords: "cis pci iso soc2 evidence audit controls" },
     ],
   },
   {

@@ -121,6 +121,12 @@ func (s *Store) DeleteVulnDisposition(ctx context.Context, workspaceID, id int64
 // LatestSurfaceScans returns the newest finished attack surface scan of each
 // domain, with its report.
 func (s *Store) LatestSurfaceScans(ctx context.Context, workspaceID int64) ([]SecurityScan, error) {
+	return s.LatestScans(ctx, workspaceID, "surface")
+}
+
+// LatestScans returns the newest finished scan of a kind for each domain,
+// with its report.
+func (s *Store) LatestScans(ctx context.Context, workspaceID int64, kind string) ([]SecurityScan, error) {
 	if s == nil {
 		return nil, errors.New("store is not available")
 	}
@@ -130,8 +136,8 @@ func (s *Store) LatestSurfaceScans(ctx context.Context, workspaceID int64) ([]Se
 	}
 	defer func() { _ = tx.Rollback() }()
 	rows, err := tx.QueryContext(ctx, `SELECT DISTINCT ON (domain) `+securityScanColumns+`, report FROM security_scans
-		WHERE workspace_id = $1 AND kind = 'surface' AND status = 'done'
-		ORDER BY domain, created_at DESC`, workspaceID)
+		WHERE workspace_id = $1 AND kind = $2 AND status = 'done'
+		ORDER BY domain, created_at DESC`, workspaceID, kind)
 	if err != nil {
 		return nil, err
 	}

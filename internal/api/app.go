@@ -216,6 +216,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/security/surface", srv.handleSurfaceScans)
 	mux.HandleFunc("/api/security/deep", srv.handleDeepScans)
 	mux.HandleFunc("/api/admin/deep-scans", srv.handleAdminDeepScans)
+	mux.HandleFunc("/api/security/compliance", srv.handleCompliance)
 	mux.HandleFunc("/api/security/vulnerabilities", srv.handleVulnerabilities)
 	mux.HandleFunc("/api/security/vulnerabilities/decisions", srv.handleVulnDispositions)
 	mux.HandleFunc("/api/assets/domains", srv.handleDomains)
