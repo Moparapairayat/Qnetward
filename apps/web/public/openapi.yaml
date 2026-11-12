@@ -12,16 +12,14 @@ info:
     with every request:
 
     ```bash
-    curl https://your-console/api/monitors       -H "Authorization: Bearer qnw_…"
+    curl -H "Authorization: Bearer qnw_…" https://your-console/api/monitors
     ```
 
     A key acts in the workspace it belongs to, with the scopes you gave it:
 
-    | Scope | Allows |
-    | --- | --- |
-    | `read` | Every `GET`, and history export |
-    | `write` | Creating, changing, and deleting monitors, rules, watches, and devices |
-    | `probe` | Running ping, TCP ping, port scans, DNS lookups, and scans |
+    - **`read`**: every `GET`, and history export.
+    - **`write`**: creating, changing, and deleting monitors, rules, watches, and devices.
+    - **`probe`**: running ping, TCP ping, port scans, DNS lookups, and scans.
 
     ## Conventions
 

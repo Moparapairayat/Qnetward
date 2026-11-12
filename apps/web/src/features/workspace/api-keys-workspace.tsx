@@ -339,8 +339,12 @@ export function APIKeysWorkspace() {
         description={
           <>
             Keys let scripts, CI, and Terraform use the API as this workspace. Send one as{" "}
-            <code className="lp-mono text-[12.5px] text-[var(--lp-text)]">Authorization: Bearer qnw_…</code>. See the{" "}
-            <a href="/openapi.yaml" className="text-[var(--lp-text)] underline underline-offset-4 hover:text-[var(--lp-accent)]">
+            <code className="lp-mono text-[12.5px] text-[var(--lp-text)]">Authorization: Bearer qnw_…</code>. Browse every endpoint, with examples, in the{" "}
+            <a href="/docs/api" target="_blank" rel="noreferrer" className="text-[var(--lp-text)] underline underline-offset-4 hover:text-[var(--lp-accent)]">
+              API reference
+            </a>
+            , or download the{" "}
+            <a href="/openapi.yaml" download className="text-[var(--lp-text)] underline underline-offset-4 hover:text-[var(--lp-accent)]">
               OpenAPI spec
             </a>
             .
