@@ -168,6 +168,7 @@ func (srv *Server) handleAgentEnroll(w http.ResponseWriter, r *http.Request) {
 		"name":              agent.Name,
 		"secret":            secret,
 		"heartbeat_seconds": int(agentHeartbeatEvery / time.Second),
+		"metrics_seconds":   int(hostMetricsEvery / time.Second),
 	})
 }
 
@@ -222,6 +223,7 @@ func (srv *Server) handleAgentHeartbeat(w http.ResponseWriter, r *http.Request) 
 		"agent_id":          agent.ID,
 		"name":              agent.Name,
 		"heartbeat_seconds": int(agentHeartbeatEvery / time.Second),
+		"metrics_seconds":   int(hostMetricsEvery / time.Second),
 		"jobs":              jobs,
 	})
 }

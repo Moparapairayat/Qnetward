@@ -236,6 +236,16 @@ paths:
         - { name: id, in: query, required: true, schema: { type: integer } }
       responses:
         "200": { description: Deleted. }
+  /api/hosts:
+    get:
+      tags: [Infrastructure]
+      summary: List hosts, or one host's history
+      description: "Needs the `read` scope. Without `id`, lists enrolled agents with their machine description and newest sample (CPU, load, memory, swap, disks, network, processes, uptime). With `id` and `range` (1h, 6h, 24h, 7d, 14d), returns averaged points: cpu, cpu_max, load1, mem_pct, swap_pct, disk_pct (fullest disk), net_rx_bps, net_tx_bps, procs."
+      parameters:
+        - { name: id, in: query, required: false, schema: { type: integer } }
+        - { name: range, in: query, required: false, schema: { type: string, enum: ["1h", "6h", "24h", "7d", "14d"] } }
+      responses:
+        "200": { description: "{ hosts, metrics_seconds } or { points, range, bucket_seconds }" }
   /api/security/compliance:
     get:
       tags: [Security]

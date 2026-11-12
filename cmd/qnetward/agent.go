@@ -20,7 +20,7 @@ import (
 )
 
 // agentVersion is reported to the console with every heartbeat.
-const agentVersion = "0.1.0"
+const agentVersion = "0.2.0"
 
 // agentState is what an enrolled agent keeps between runs. The secret is as
 // good as a password for this agent, so the file is readable by its owner only.
@@ -46,6 +46,7 @@ func runAgent(args []string) {
 	token := fs.String("token", envString("QNETWARD_AGENT_TOKEN", ""), "enrollment token from the console (first run only)")
 	stateDir := fs.String("state-dir", envString("QNETWARD_AGENT_STATE_DIR", defaultAgentStateDir()), "where the agent keeps its credentials")
 	once := fs.Bool("once", false, "enroll if needed, check in once, and exit")
+	fs.BoolVar(&agentHostMetrics, "host-metrics", envBool("QNETWARD_AGENT_HOST_METRICS", true), "report this machine's CPU, memory, disk, and network to the console")
 	_ = fs.Parse(args)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -112,6 +113,11 @@ func agentMain(ctx context.Context, server, token, stateDir string, once bool, o
 	flush := time.NewTicker(agentFlushEvery)
 	defer flush.Stop()
 	jobs := -1
+	var hosts *hostCollector
+	hostEvery := time.Duration(0)
+	sample := time.NewTimer(time.Hour)
+	sample.Stop()
+	defer sample.Stop()
 	for {
 		select {
 		case <-ctx.Done():
@@ -133,8 +139,31 @@ func agentMain(ctx context.Context, server, token, stateDir string, once bool, o
 				if hb.HeartbeatSeconds > 0 {
 					interval = time.Duration(hb.HeartbeatSeconds) * time.Second
 				}
+				// The console says how often to sample the host; 0 turns it off.
+				every := time.Duration(hb.MetricsSeconds) * time.Second
+				if !agentHostMetrics || every < 10*time.Second {
+					every = 0
+				}
+				if every != hostEvery {
+					hostEvery = every
+					sample.Stop()
+					if every > 0 {
+						if hosts == nil {
+							hosts = newHostCollector()
+						}
+						sample.Reset(5 * time.Second)
+					}
+				}
 			}
 			beat.Reset(interval)
+		case <-sample.C:
+			hosts.collect(ctx, time.Now())
+			if err := hosts.send(ctx, c, state.Secret); errors.Is(err, errAgentRemoved) {
+				return err
+			} else if err != nil {
+				fmt.Fprintln(out, "sending host metrics failed, will retry:", err)
+			}
+			sample.Reset(hostEvery)
 		case <-tick.C:
 			runner.startDue(ctx, &wg)
 		case <-flush.C:
@@ -146,6 +175,9 @@ func agentMain(ctx context.Context, server, token, stateDir string, once bool, o
 		}
 	}
 }
+
+// agentHostMetrics turns host metrics on; the --host-metrics flag sets it.
+var agentHostMetrics = true
 
 // agentFlushEvery is how often finished checks are sent to the console.
 var agentFlushEvery = 5 * time.Second
@@ -186,6 +218,7 @@ func (c *agentClient) enroll(ctx context.Context, token string) (*agentState, er
 // heartbeatReply is the console's answer to a check-in.
 type heartbeatReply struct {
 	HeartbeatSeconds int        `json:"heartbeat_seconds"`
+	MetricsSeconds   int        `json:"metrics_seconds"`
 	Jobs             []agentJob `json:"jobs"`
 }
 

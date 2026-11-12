@@ -211,6 +211,8 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/agent/enroll", srv.handleAgentEnroll)
 	mux.HandleFunc("/api/agent/heartbeat", srv.handleAgentHeartbeat)
 	mux.HandleFunc("/api/agent/results", srv.handleAgentResults)
+	mux.HandleFunc("/api/agent/metrics", srv.handleAgentMetrics)
+	mux.HandleFunc("/api/hosts", srv.handleHosts)
 	mux.HandleFunc("/api/security/passive", srv.handlePassiveScans)
 	mux.HandleFunc("/api/security/watches", srv.handleSecurityWatches)
 	mux.HandleFunc("/api/security/surface", srv.handleSurfaceScans)

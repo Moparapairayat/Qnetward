@@ -923,3 +923,41 @@ export type ComplianceReport = {
   window_days: number;
   checked_at: string;
 };
+
+export type HostDisk = { mount: string; fstype: string; used: number; total: number };
+
+export type HostSample = {
+  at: string;
+  cpu: number;
+  load1: number;
+  load5: number;
+  load15: number;
+  mem_used: number;
+  mem_total: number;
+  swap_used: number;
+  swap_total: number;
+  disks: HostDisk[];
+  net_rx_bps: number;
+  net_tx_bps: number;
+  procs: number;
+  uptime: number;
+};
+
+export type Host = ProbeAgent & { info?: Record<string, unknown> | null; latest?: HostSample | null; latest_at?: string | null };
+
+export type HostListResponse = { hosts: Host[]; metrics_seconds: number };
+
+export type HostPoint = {
+  at: string;
+  cpu: number;
+  cpu_max: number;
+  load1: number;
+  mem_pct: number;
+  swap_pct: number;
+  disk_pct: number;
+  net_rx_bps: number;
+  net_tx_bps: number;
+  procs: number;
+};
+
+export type HostSeriesResponse = { points: HostPoint[]; range: string; bucket_seconds: number };
