@@ -3,34 +3,74 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { CaretDown, EnvelopeSimple, Info, MapTrifold, UsersThree } from "@phosphor-icons/react/dist/ssr";
+import {
+  BookOpenText,
+  CaretDown,
+  EnvelopeSimple,
+  FileCode,
+  GithubLogo,
+  Info,
+  Lightning,
+  MapTrifold,
+  TerminalWindow,
+  UsersThree,
+} from "@phosphor-icons/react/dist/ssr";
+import type { Icon as PhIcon } from "@phosphor-icons/react/dist/lib/types";
 import { QnetwardMark } from "./qnetward-mark";
 
-const links = [
-  { href: "/#products", label: "Product" },
-  { href: "/#developers", label: "Developers" },
-  { href: "/#security", label: "Security" },
-  { href: "/#pricing", label: "Pricing" },
-  { href: "/docs/api", label: "Docs" },
-  { href: "/#faq", label: "FAQ" },
+type MenuItem = { href: string; label: string; hint: string; icon: PhIcon; external?: boolean; download?: boolean };
+
+const developers: MenuItem[] = [
+  { href: "/docs/api", label: "API reference", hint: "Every endpoint, with examples to try", icon: BookOpenText },
+  { href: "/openapi.yaml", label: "OpenAPI spec", hint: "For Postman, SDKs, and code generators", icon: FileCode, download: true },
+  { href: "/#developers", label: "CLI", hint: "One binary, --json on every command", icon: TerminalWindow },
+  { href: "/#developers", label: "Live stream", hint: "Results over a WebSocket as they happen", icon: Lightning },
+  { href: "https://github.com/Quantum-Axis/Qnetward", label: "GitHub", hint: "Source code and issues", icon: GithubLogo, external: true },
 ];
 
-const company = [
+const company: MenuItem[] = [
   { href: "/about", label: "About", hint: "Why we're building Qnetward", icon: Info },
   { href: "/team", label: "Team", hint: "The people behind it", icon: UsersThree },
   { href: "/roadmap", label: "Roadmap", hint: "What's live and what's next", icon: MapTrifold },
   { href: "/about#contact", label: "Contact", hint: "Questions, sales, and support", icon: EnvelopeSimple },
 ];
 
-// Company menu: opens on hover or click, closes on Escape, a click outside, or
-// leaving it, and works from the keyboard.
-function CompanyMenu() {
+type NavLink = { label: string; href: string };
+type NavMenuEntry = { label: string; items: MenuItem[]; footer?: NavLink };
+type NavEntry = NavLink | NavMenuEntry;
+
+const nav: NavEntry[] = [
+  { label: "Product", href: "/#products" },
+  { label: "Developers", items: developers, footer: { label: "Building something? Get an API key", href: "/signup" } },
+  { label: "Security", href: "/#security" },
+  { label: "Pricing", href: "/#pricing" },
+  { label: "FAQ", href: "/#faq" },
+  { label: "Company", items: company },
+];
+
+function MenuLink({ item, onPick, className, children }: { item: MenuItem; onPick: () => void; className: string; children: React.ReactNode }) {
+  if (item.external || item.download) {
+    return (
+      <a href={item.href} onClick={onPick} className={className} {...(item.external ? { target: "_blank", rel: "noreferrer" } : { download: "" })}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={item.href} onClick={onPick} className={className}>
+      {children}
+    </Link>
+  );
+}
+
+// A dropdown in the top bar: opens on hover or click, closes on Escape, a
+// click outside, leaving it, or a new page, and works from the keyboard.
+function NavMenu({ label, items, footer }: NavMenuEntry) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pathname = usePathname();
   const [shownOn, setShownOn] = useState(pathname);
-  // A new page closes the menu.
   if (shownOn !== pathname) {
     setShownOn(pathname);
     setOpen(false);
@@ -59,6 +99,7 @@ function CompanyMenu() {
   const release = () => {
     timer.current = setTimeout(() => setOpen(false), 120);
   };
+  const close = () => setOpen(false);
 
   return (
     <div ref={ref} className="relative" onMouseEnter={hold} onMouseLeave={release}>
@@ -69,30 +110,45 @@ function CompanyMenu() {
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1 text-sm text-[color:var(--lp-muted)] transition-colors hover:text-[color:var(--lp-text)] aria-expanded:text-[color:var(--lp-text)]"
       >
-        Company
+        {label}
         <CaretDown size={12} weight="bold" className={`transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
       </button>
       {open ? (
-        <div className="absolute left-1/2 top-full z-50 w-[320px] -translate-x-1/2 pt-3">
-          <ul className="rounded-xl border border-[var(--lp-border)] bg-[#17171b] p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
-            {company.map(({ href, label, hint, icon: Icon }) => (
-              <li key={href}>
-                <Link
-                  href={href}
-                  onClick={() => setOpen(false)}
-                  className="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-white/[0.05] focus-visible:bg-white/[0.05]"
-                >
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--lp-border)] text-[var(--lp-muted)] group-hover:text-[var(--lp-accent)]">
-                    <Icon size={16} weight="bold" aria-hidden />
-                  </span>
-                  <span>
-                    <span className="block text-[14px] text-[var(--lp-text)]">{label}</span>
-                    <span className="block text-[12.5px] text-[var(--lp-subtle)]">{hint}</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+        <div className="absolute left-1/2 top-full z-50 w-[340px] -translate-x-1/2 pt-3">
+          <div className="overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#17171b] shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
+            <ul className="p-1.5">
+              {items.map((item) => (
+                <li key={item.label}>
+                  <MenuLink
+                    item={item}
+                    onPick={close}
+                    className="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-white/[0.05] focus-visible:bg-white/[0.05]"
+                  >
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--lp-border)] text-[var(--lp-muted)] group-hover:text-[var(--lp-accent)]">
+                      <item.icon size={16} weight="bold" aria-hidden />
+                    </span>
+                    <span>
+                      <span className="block text-[14px] text-[var(--lp-text)]">
+                        {item.label}
+                        {item.external ? <span className="ml-1 text-[var(--lp-subtle)]">↗</span> : null}
+                      </span>
+                      <span className="block text-[12.5px] text-[var(--lp-subtle)]">{item.hint}</span>
+                    </span>
+                  </MenuLink>
+                </li>
+              ))}
+            </ul>
+            {footer ? (
+              <Link
+                href={footer.href}
+                onClick={close}
+                className="flex items-center justify-between border-t border-[var(--lp-border)] bg-white/[0.02] px-4 py-3 text-[13px] text-[var(--lp-muted)] transition-colors hover:text-[var(--lp-text)]"
+              >
+                {footer.label}
+                <span aria-hidden>→</span>
+              </Link>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>
@@ -132,16 +188,17 @@ export function LandingNav() {
         </Link>
 
         <ul className="hidden items-center gap-6 lg:flex">
-          {links.map((link) => (
-            <li key={link.href}>
-              <a href={link.href} className="text-sm text-[color:var(--lp-muted)] transition-colors hover:text-[color:var(--lp-text)]">
-                {link.label}
-              </a>
+          {nav.map((entry) => (
+            <li key={entry.label}>
+              {"items" in entry ? (
+                <NavMenu label={entry.label} items={entry.items} footer={entry.footer} />
+              ) : (
+                <a href={entry.href} className="text-sm text-[color:var(--lp-muted)] transition-colors hover:text-[color:var(--lp-text)]">
+                  {entry.label}
+                </a>
+              )}
             </li>
           ))}
-          <li>
-            <CompanyMenu />
-          </li>
         </ul>
 
         <div className="ml-auto hidden items-center gap-3 lg:flex">
@@ -186,8 +243,8 @@ export function LandingNav() {
       {open ? (
         <div className="lp-container pb-6 lg:hidden">
           <ul className="flex flex-col gap-1 border-t border-[var(--lp-border)] pt-4">
-            {links.map((link) => (
-              <li key={link.href}>
+            {nav.flatMap((entry) => ("href" in entry ? [entry] : [])).map((link) => (
+              <li key={link.label}>
                 <a
                   href={link.href}
                   onClick={() => setOpen(false)}
@@ -198,20 +255,24 @@ export function LandingNav() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 px-2 text-[12px] uppercase tracking-wide text-[var(--lp-subtle)]">Company</p>
-          <ul className="mt-1 grid grid-cols-2 gap-1">
-            {company.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className="block rounded-lg px-2 py-2.5 text-[15px] text-[var(--lp-muted)] hover:bg-white/5 hover:text-[var(--lp-text)]"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {nav.flatMap((entry) => ("items" in entry ? [entry] : [])).map((menu) => (
+            <div key={menu.label}>
+              <p className="mt-4 px-2 text-[12px] uppercase tracking-wide text-[var(--lp-subtle)]">{menu.label}</p>
+              <ul className="mt-1 grid grid-cols-2 gap-1">
+                {menu.items.map((item) => (
+                  <li key={item.label}>
+                    <MenuLink
+                      item={item}
+                      onPick={() => setOpen(false)}
+                      className="block rounded-lg px-2 py-2.5 text-[15px] text-[var(--lp-muted)] hover:bg-white/5 hover:text-[var(--lp-text)]"
+                    >
+                      {item.label}
+                    </MenuLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
           <div className="mt-4 grid grid-cols-2 gap-3">
             <Link href="/login" className="lp-btn lp-btn-secondary">
               Sign in
