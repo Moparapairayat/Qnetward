@@ -437,11 +437,11 @@ export function LandingPage() {
                     Free to start, no card required. Your first probe runs in under a minute, and your monitors keep
                     checking after you close the tab.
                   </p>
-                  <div className="mt-8 flex flex-wrap gap-3">
-                    <Link href="/signup" className="lp-btn lp-btn-primary h-11 px-6 text-[15px]">
+                  <div className="mt-8 flex gap-3">
+                    <Link href="/signup" className="lp-btn lp-btn-primary h-11 flex-[1.6] whitespace-nowrap px-4 text-[15px] sm:flex-none sm:px-6">
                       Create free account
                     </Link>
-                    <Link href="/login" className="lp-btn lp-btn-secondary h-11 px-6 text-[15px]">
+                    <Link href="/login" className="lp-btn lp-btn-secondary h-11 flex-1 whitespace-nowrap px-4 text-[15px] sm:flex-none sm:px-6">
                       Sign in
                     </Link>
                   </div>
