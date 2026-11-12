@@ -9,6 +9,7 @@ import { apiRequest, ApiError } from "@/lib/api";
 import type { Host, HostListResponse, HostSeriesResponse } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
 import { DefinitionList, PageHeader, Panel, RunStatus, StatStrip } from "@/components/tools/probe-ui";
+import { HostAlertsPanel } from "@/features/hosts/host-alerts-panel";
 
 const WARN = 85;
 const CRIT = 95;
@@ -258,6 +259,8 @@ function HostDetail({ host }: { host: Host }) {
 export function HostsWorkspace() {
   const [open, setOpen] = useState<number | null>(null);
   const list = useQuery({ queryKey: ["hosts"], queryFn: () => apiRequest<HostListResponse>("/api/hosts"), refetchInterval: 30_000 });
+  const workspace = useQuery({ queryKey: ["workspace-general"], queryFn: () => apiRequest<{ workspace: { role: string } }>("/api/workspace") });
+  const canEdit = ["owner", "admin"].includes(workspace.data?.workspace.role ?? "");
   const hosts = list.data?.hosts ?? [];
   const reporting = hosts.filter((h) => h.online && h.latest);
   const avgCPU = reporting.length ? reporting.reduce((s, h) => s + h.latest!.cpu, 0) / reporting.length : null;
@@ -356,6 +359,7 @@ export function HostsWorkspace() {
               </div>
             )}
           </Panel>
+          <HostAlertsPanel hosts={hosts} canEdit={canEdit} />
         </>
       )}
     </div>

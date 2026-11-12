@@ -261,6 +261,7 @@ func (srv *Server) RunMonitors(ctx context.Context) {
 			return
 		case <-agents.C:
 			srv.watchAgents(ctx)
+			srv.watchHosts(ctx)
 		case <-prune.C:
 			pruneCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 			if err := srv.store.PruneMonitorChecks(pruneCtx, time.Now().Add(-monitorCheckRetention)); err != nil {

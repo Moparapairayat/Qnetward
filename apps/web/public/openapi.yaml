@@ -246,6 +246,41 @@ paths:
         - { name: range, in: query, required: false, schema: { type: string, enum: ["1h", "6h", "24h", "7d", "14d"] } }
       responses:
         "200": { description: "{ hosts, metrics_seconds } or { points, range, bucket_seconds }" }
+  /api/hosts/alerts:
+    get:
+      tags: [Infrastructure]
+      summary: List host alert rules and where they fire
+      responses:
+        "200": { description: "{ rules, limit }" }
+    post:
+      tags: [Infrastructure]
+      summary: Create or update a host alert rule
+      description: "Needs the `write` scope. Fires when every sample in the last `minutes` is at or above `threshold` percent; clears when every sample is below."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [metric, threshold, minutes]
+              properties:
+                id: { type: integer, description: "Omit to create." }
+                agent_id: { type: integer, nullable: true, description: "Null for every host." }
+                metric: { type: string, enum: [cpu, memory, disk, swap] }
+                threshold: { type: number, minimum: 1, maximum: 100 }
+                minutes: { type: integer, minimum: 1, maximum: 60 }
+                notify_email: { type: string }
+                enabled: { type: boolean }
+      responses:
+        "201": { description: The new rule. }
+        "200": { description: The updated rule. }
+    delete:
+      tags: [Infrastructure]
+      summary: Delete a host alert rule
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Deleted. }
   /api/security/compliance:
     get:
       tags: [Security]

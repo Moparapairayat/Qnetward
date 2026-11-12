@@ -20,5 +20,5 @@ Customers want to see the load of the machines they run: CPU, memory, disk, and 
 ## Consequences
 
 - One agent, one credential, for both checks and host metrics.
-- Threshold alerts on host metrics come next and can reuse the agent alert channels.
+- Threshold alerts (migration 0032): a rule watches CPU, memory, the fullest disk, or swap on one host or every host, and fires when every sample in its window (1 to 60 minutes, at least three quarters covered) is at or above the threshold. It clears only when every sample in the window is below, so a value hovering at the line doesn't flap. A row in `host_alert_states` is claimed with `INSERT ... ON CONFLICT DO NOTHING` and released with `DELETE ... RETURNING`, so each transition alerts once even with several server instances. Alerts go to the rule's email and to channels subscribed to the new `hosts` event; channels that already heard about agents are subscribed by the migration. Plans allow 5, 50, or 500 rules.
 - Process and container lists are not collected yet.

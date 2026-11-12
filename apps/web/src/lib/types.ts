@@ -565,7 +565,7 @@ export type RuntimeHealthResponse = {
 };
 
 export type ChannelKind = "slack" | "discord" | "telegram" | "webhook";
-export type ChannelEvent = "monitors" | "certificates" | "alert_rules" | "agents" | "security";
+export type ChannelEvent = "monitors" | "certificates" | "alert_rules" | "agents" | "security" | "hosts";
 
 export type NotificationChannel = {
   id: number;
@@ -961,3 +961,19 @@ export type HostPoint = {
 };
 
 export type HostSeriesResponse = { points: HostPoint[]; range: string; bucket_seconds: number };
+
+export type HostMetric = "cpu" | "memory" | "disk" | "swap";
+
+export type HostAlertRule = {
+  id: number;
+  agent_id: number | null;
+  metric: HostMetric;
+  threshold: number;
+  minutes: number;
+  notify_email: string;
+  enabled: boolean;
+  created_at: string;
+  firing: { agent_id: number; firing_since: string; value: number }[];
+};
+
+export type HostAlertRuleList = { rules: HostAlertRule[]; limit: number };
