@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   BookOpenText,
   CaretDown,
@@ -155,9 +156,136 @@ function NavMenu({ label, items, footer }: NavMenuEntry) {
   );
 }
 
+// The phone menu: a full-height sheet under the bar, in the same order as the
+// desktop nav, with Developers and Company folded until tapped. The page
+// behind it doesn't scroll, and Escape or a new page closes it. It renders
+// into the page wrapper, outside the bar: the bar's backdrop blur would
+// otherwise trap a fixed child, and the wrapper carries the site's fonts.
+function MobileMenu({ top, container, onClose }: { top: number; container: HTMLElement; onClose: () => void }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  const row = "flex w-full items-center justify-between rounded-xl px-3 py-3.5 text-[16px] text-[var(--lp-text)] transition-colors active:bg-white/[0.06] hover:bg-white/[0.04]";
+
+  return createPortal(
+    <div
+      id="mobile-menu"
+      className="fixed inset-x-0 bottom-0 z-40 flex flex-col border-t border-[var(--lp-border)] bg-[rgb(20,20,23)] lg:hidden"
+      style={{ top }}
+    >
+      <nav aria-label="Main" className="flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+        <ul className="flex flex-col">
+          {nav.map((entry) => {
+            if ("href" in entry) {
+              return (
+                <li key={entry.label}>
+                  <a href={entry.href} onClick={onClose} className={row}>
+                    {entry.label}
+                  </a>
+                </li>
+              );
+            }
+            const isOpen = expanded === entry.label;
+            return (
+              <li key={entry.label}>
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  aria-controls={`mobile-${entry.label}`}
+                  onClick={() => setExpanded(isOpen ? null : entry.label)}
+                  className={row}
+                >
+                  {entry.label}
+                  <CaretDown size={16} weight="bold" aria-hidden className={`text-[var(--lp-subtle)] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isOpen ? (
+                  <ul id={`mobile-${entry.label}`} className="mb-2 ml-3 mt-0.5 border-l border-[var(--lp-border)] pl-2">
+                    {entry.items.map((item) => (
+                      <li key={item.label}>
+                        <MenuLink item={item} onPick={onClose} className="flex items-center gap-3 rounded-xl px-3 py-2.5 active:bg-white/[0.06] hover:bg-white/[0.04]">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--lp-border)] text-[var(--lp-muted)]">
+                            <item.icon size={17} weight="bold" aria-hidden />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-[15px] text-[var(--lp-text)]">
+                              {item.label}
+                              {item.external ? <span className="ml-1 text-[var(--lp-subtle)]">↗</span> : null}
+                            </span>
+                            <span className="block truncate text-[13px] text-[var(--lp-subtle)]">{item.hint}</span>
+                          </span>
+                        </MenuLink>
+                      </li>
+                    ))}
+                    {entry.footer ? (
+                      <li>
+                        <Link href={entry.footer.href} onClick={onClose} className="flex items-center justify-between rounded-xl px-3 py-2.5 text-[14px] text-[var(--lp-muted)]">
+                          {entry.footer.label}
+                          <span aria-hidden>→</span>
+                        </Link>
+                      </li>
+                    ) : null}
+                  </ul>
+                ) : null}
+              </li>
+            );
+          })}
+          <li>
+            <a href="https://github.com/Quantum-Axis/Qnetward" target="_blank" rel="noreferrer" onClick={onClose} className={row}>
+              <span className="flex items-center gap-2.5">
+                <GitHubIcon size={17} /> GitHub
+              </span>
+              <span className="text-[var(--lp-subtle)]" aria-hidden>
+                ↗
+              </span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <div className="grid grid-cols-2 gap-3 border-t border-[var(--lp-border)] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">
+        <Link href="/login" onClick={onClose} className="lp-btn lp-btn-secondary h-11">
+          Sign in
+        </Link>
+        <Link href="/signup" onClick={onClose} className="lp-btn lp-btn-primary h-11">
+          Start free
+        </Link>
+      </div>
+    </div>,
+    container,
+  );
+}
+
 export function LandingNav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [menuTop, setMenuTop] = useState(64);
+  const [menuHost, setMenuHost] = useState<HTMLElement | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const pathname = usePathname();
+  const [menuPath, setMenuPath] = useState(pathname);
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
+    setOpen(false);
+  }
+  const toggleMenu = () => {
+    // The sheet starts where the bar ends, wherever the page is scrolled to.
+    if (!open && headerRef.current) {
+      setMenuTop(headerRef.current.getBoundingClientRect().bottom);
+      setMenuHost(headerRef.current.closest<HTMLElement>(".lp-root") ?? document.body);
+    }
+    setOpen((value) => !value);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -168,6 +296,7 @@ export function LandingNav() {
 
   return (
     <header
+      ref={headerRef}
       className="sticky top-0 z-50 transition-colors"
       style={{
         background: scrolled || open ? "rgba(20, 20, 23, 0.85)" : "transparent",
@@ -224,7 +353,8 @@ export function LandingNav() {
           className="ml-auto flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--lp-border)] lg:hidden"
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
-          onClick={() => setOpen((value) => !value)}
+          aria-controls="mobile-menu"
+          onClick={toggleMenu}
         >
           <span className="relative block h-3 w-4">
             <span
@@ -240,49 +370,7 @@ export function LandingNav() {
         </button>
       </nav>
 
-      {open ? (
-        <div className="lp-container pb-6 lg:hidden">
-          <ul className="flex flex-col gap-1 border-t border-[var(--lp-border)] pt-4">
-            {nav.flatMap((entry) => ("href" in entry ? [entry] : [])).map((link) => (
-              <li key={link.label}>
-                <a
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="block rounded-lg px-2 py-2.5 text-[15px] text-[var(--lp-muted)] hover:bg-white/5 hover:text-[var(--lp-text)]"
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-          {nav.flatMap((entry) => ("items" in entry ? [entry] : [])).map((menu) => (
-            <div key={menu.label}>
-              <p className="mt-4 px-2 text-[12px] uppercase tracking-wide text-[var(--lp-subtle)]">{menu.label}</p>
-              <ul className="mt-1 grid grid-cols-2 gap-1">
-                {menu.items.map((item) => (
-                  <li key={item.label}>
-                    <MenuLink
-                      item={item}
-                      onPick={() => setOpen(false)}
-                      className="block rounded-lg px-2 py-2.5 text-[15px] text-[var(--lp-muted)] hover:bg-white/5 hover:text-[var(--lp-text)]"
-                    >
-                      {item.label}
-                    </MenuLink>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Link href="/login" className="lp-btn lp-btn-secondary">
-              Sign in
-            </Link>
-            <Link href="/signup" className="lp-btn lp-btn-primary">
-              Start free
-            </Link>
-          </div>
-        </div>
-      ) : null}
+      {open && menuHost ? <MobileMenu top={menuTop} container={menuHost} onClose={() => setOpen(false)} /> : null}
     </header>
   );
 }
