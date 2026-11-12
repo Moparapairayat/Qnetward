@@ -87,7 +87,10 @@ func (srv *Server) handleSurfaceScans(w http.ResponseWriter, r *http.Request) {
 }
 
 // runSurfaceScan does the scan and stores what it found.
-func (srv *Server) runSurfaceScan(scan store.SecurityScan) {
+func (srv *Server) runSurfaceScan(scan store.SecurityScan) { srv.finishSurfaceScan(scan) }
+
+// finishSurfaceScan runs a started scan, saves the result, and returns it.
+func (srv *Server) finishSurfaceScan(scan store.SecurityScan) (surface.Report, bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), surfaceScanTimeout)
 	defer cancel()
 	rep, err := surfaceRun(ctx, scan.Domain, surface.Config{
@@ -107,6 +110,8 @@ func (srv *Server) runSurfaceScan(scan store.SecurityScan) {
 	}
 	if err := srv.store.FinishSecurityScan(saveCtx, scan, failure); err != nil {
 		log.Printf("saving attack surface scan %d failed: %v", scan.ID, err)
+		failure = "could not save the report"
 	}
 	srv.events.publish(scan.WorkspaceID, liveEvent{Type: "security.scan"})
+	return rep, failure == ""
 }

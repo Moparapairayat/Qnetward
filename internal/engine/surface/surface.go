@@ -440,6 +440,10 @@ func fetchCertLogs(ctx context.Context, domain string, cfg Config) ([]string, er
 		return nil, fmt.Errorf("certificate logs didn't answer: %w", errors.Unwrap(err))
 	}
 	defer resp.Body.Close()
+	// crt.sh answers 404 when no certificate names the domain.
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("certificate logs answered %d", resp.StatusCode)
 	}

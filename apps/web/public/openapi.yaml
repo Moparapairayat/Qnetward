@@ -183,6 +183,7 @@ paths:
               type: object
               properties:
                 id: { type: integer, description: Set to change an existing watch. }
+                kind: { type: string, enum: [passive, surface], default: passive, description: "surface schedules attack surface scans; the domain must be verified, and the interval is 24 or 168 hours (168 by default)." }
                 domain: { type: string, example: example.com }
                 interval_hours: { type: integer, enum: [6, 24, 168], default: 24 }
                 notify_email: { type: string }

@@ -26,6 +26,7 @@ const (
 
 type watchRequest struct {
 	ID            int64  `json:"id,omitempty"`
+	Kind          string `json:"kind,omitempty"`
 	Domain        string `json:"domain"`
 	IntervalHours int    `json:"interval_hours"`
 	NotifyEmail   string `json:"notify_email"`
@@ -64,7 +65,13 @@ func (srv *Server) handleSecurityWatches(w http.ResponseWriter, r *http.Request)
 			writeJSON(w, http.StatusBadRequest, apiError{Error: err.Error()})
 			return
 		}
-		watch := store.SecurityWatch{ID: req.ID, WorkspaceID: user.WorkspaceID, UserID: user.ID, IntervalHours: req.IntervalHours, NotifyEmail: req.NotifyEmail, Enabled: true}
+		watch := store.SecurityWatch{ID: req.ID, WorkspaceID: user.WorkspaceID, UserID: user.ID, Kind: req.Kind, IntervalHours: req.IntervalHours, NotifyEmail: req.NotifyEmail, Enabled: true}
+		if watch.Kind == "" {
+			watch.Kind = "passive"
+		}
+		if watch.IntervalHours == 0 && watch.Kind == "surface" {
+			watch.IntervalHours = 168
+		}
 		if watch.IntervalHours == 0 {
 			watch.IntervalHours = 24
 		}
@@ -81,6 +88,13 @@ func (srv *Server) handleSecurityWatches(w http.ResponseWriter, r *http.Request)
 		}
 		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		defer cancel()
+		// Scheduled attack surface scans need the same proof as manual ones.
+		if req.ID == 0 && watch.Kind == "surface" {
+			if _, err := srv.store.VerifiedDomainFor(ctx, user.WorkspaceID, watch.Domain); err != nil {
+				writeJSON(w, http.StatusForbidden, apiError{Error: fmt.Sprintf("verify that you control %s in Assets first", watch.Domain)})
+				return
+			}
+		}
 		saved, err := srv.store.SaveSecurityWatch(ctx, watch, user.Plan.Limits.WatchedDomains)
 		if err != nil {
 			switch {
@@ -182,6 +196,10 @@ func (srv *Server) RunSecurityWatches(ctx context.Context) {
 
 // checkWatch runs one scheduled check and alerts on what got worse.
 func (srv *Server) checkWatch(ctx context.Context, watch store.SecurityWatch) {
+	if watch.Kind == "surface" {
+		srv.checkSurfaceWatch(ctx, watch)
+		return
+	}
 	var previous *passive.Report
 	if watch.LastScanID != nil {
 		getCtx, cancel := context.WithTimeout(ctx, 10*time.Second)

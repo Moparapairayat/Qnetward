@@ -6,10 +6,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Radar, Trash2 } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
-import type { SecurityScan, SurfaceFinding, SurfaceHost, SurfaceReport, VerifiedDomainListResponse } from "@/lib/types";
+import type {
+  SecurityScan,
+  SecurityWatch,
+  SecurityWatchListResponse,
+  SessionResponse,
+  SurfaceFinding,
+  SurfaceHost,
+  SurfaceReport,
+  VerifiedDomainListResponse,
+} from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
 import { Field, PageHeader, Panel, RunStatus } from "@/components/tools/probe-ui";
-import { GradeBadge, ago, severityMeta } from "@/features/passive-checks/passive-checks-workspace";
+import { GradeBadge, WatchList, ago, severityMeta } from "@/features/passive-checks/passive-checks-workspace";
 
 // Ports whose exposure is a problem, so their chips stand out.
 const riskyPorts = new Set([21, 23, 445, 1433, 1521, 2375, 3306, 3389, 5432, 5900, 6379, 9200, 11211, 27017]);
@@ -248,6 +257,42 @@ export function AttackSurfaceWorkspace() {
 
   const failed = watching === null ? undefined : scans.find((s) => s.id === watching && s.status === "failed");
 
+  // Scheduled scans share the workspace's watch limit with passive watches.
+  const session = useQuery({ queryKey: ["session"], queryFn: () => apiRequest<SessionResponse>("/api/auth/session") });
+  const watchesQuery = useQuery({ queryKey: ["security-watches"], queryFn: () => apiRequest<SecurityWatchListResponse>("/api/security/watches") });
+  const allWatches = watchesQuery.data?.watches ?? [];
+  const surfaceWatches = allWatches.filter((w) => w.kind === "surface");
+  const watchLimit = watchesQuery.data?.limit ?? 0;
+  const [watchError, setWatchError] = useState<string | null>(null);
+  const refreshWatches = () => queryClient.invalidateQueries({ queryKey: ["security-watches"] });
+  const schedule = useMutation({
+    mutationFn: (d: string) =>
+      apiRequest<SecurityWatch>("/api/security/watches", {
+        method: "POST",
+        body: JSON.stringify({ kind: "surface", domain: d, interval_hours: 168, notify_email: session.data?.user?.email ?? "" }),
+      }),
+    onSuccess: () => {
+      setWatchError(null);
+      return refreshWatches();
+    },
+    onError: (e: ApiError) => setWatchError(e.message),
+  });
+  const updateWatch = useMutation({
+    mutationFn: (w: SecurityWatch) =>
+      apiRequest<SecurityWatch>("/api/security/watches", {
+        method: "POST",
+        body: JSON.stringify({ id: w.id, kind: "surface", interval_hours: w.interval_hours, notify_email: w.notify_email, enabled: w.enabled }),
+      }),
+    onSuccess: refreshWatches,
+    onError: (e: ApiError) => setWatchError(e.message),
+  });
+  const unwatch = useMutation({
+    mutationFn: (id: number) => apiRequest(`/api/security/watches?id=${id}`, { method: "DELETE" }),
+    onSuccess: refreshWatches,
+    onError: (e: ApiError) => setWatchError(e.message),
+  });
+  const scheduled = surfaceWatches.some((w) => w.domain === target);
+
   return (
     <div className="grid grid-cols-1 gap-5 [&>*]:min-w-0">
       <PageHeader
@@ -285,9 +330,20 @@ export function AttackSurfaceWorkspace() {
                 ))}
               </select>
             </Field>
-            <button type="submit" className="console-btn console-btn-primary h-10 px-5" disabled={!target || start.isPending || Boolean(running)}>
-              {running ? "Scan running…" : start.isPending ? "Starting…" : "Scan"}
-            </button>
+            <div className="flex gap-2">
+              <button type="submit" className="console-btn console-btn-primary h-10 px-5" disabled={!target || start.isPending || Boolean(running)}>
+                {running ? "Scan running…" : start.isPending ? "Starting…" : "Scan"}
+              </button>
+              <button
+                type="button"
+                className="console-btn console-btn-secondary h-10 px-4"
+                disabled={!target || scheduled || schedule.isPending || (watchLimit > 0 && allWatches.length >= watchLimit)}
+                title={scheduled ? "Already scanned on a schedule" : "Scan it every week and alert when something new is exposed"}
+                onClick={() => target && schedule.mutate(target)}
+              >
+                {scheduled ? "Scheduled" : schedule.isPending ? "Adding…" : "Scan weekly"}
+              </button>
+            </div>
           </div>
           {start.isError ? (
             <p className="mt-3 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-[13px] text-[#ff8fb3]" role="alert">
@@ -322,6 +378,19 @@ export function AttackSurfaceWorkspace() {
           ) : null}
         </div>
 
+        <div className="grid gap-5 [&>*]:min-w-0">
+        <WatchList
+          title="Scheduled scans"
+          intervals={[24, 168]}
+          watches={surfaceWatches}
+          limit={watchLimit}
+          error={watchError}
+          busy={updateWatch.isPending || unwatch.isPending}
+          onOpen={(id) => router.replace(`/attack-surface?scan=${id}`, { scroll: false })}
+          onUpdate={(w) => updateWatch.mutate(w)}
+          onRemove={(id) => unwatch.mutate(id)}
+          emptyText="Scan a verified domain every day or week. You'll get an email, and an alert on channels that subscribe to security checks, when a risky port opens or a new high-severity issue appears."
+        />
         <Panel title="Scans" bodyClassName="p-0">
           {scans.length ? (
             <ul className="border-t border-[var(--lp-border)]">
@@ -366,6 +435,7 @@ export function AttackSurfaceWorkspace() {
             <p className="border-t border-[var(--lp-border)] px-4 py-4 text-[13px] text-[var(--lp-subtle)]">{history.isLoading ? "Loading…" : "No scans yet."}</p>
           )}
         </Panel>
+        </div>
       </div>
     </div>
   );

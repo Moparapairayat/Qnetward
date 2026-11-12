@@ -44,5 +44,9 @@ which is why it needs the ownership proof of ADR 0025.
   "vulnerable".
 - crt.sh is a free, best-effort service. When it fails the scan still runs
   on common names and says so.
-- Scheduled surface scans with alerts on new exposure can reuse the watch
-  machinery of ADR 0024.
+- Scheduled surface scans reuse the watches of ADR 0024 (migration 0028
+  adds `kind`; a domain may have one passive and one surface watch). They
+  run daily or weekly, check the domain is still verified each time, and
+  alert when a risky port opens that wasn't open before or a new
+  high-severity finding appears. New hosts alone don't alert, since deploys
+  add names all the time; they're mentioned in the alert when it fires.

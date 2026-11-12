@@ -22,9 +22,11 @@ var WatchIntervals = []int{6, 24, 168}
 
 // SecurityWatch is a domain whose passive check re-runs on a schedule.
 type SecurityWatch struct {
-	ID            int64      `json:"id"`
-	WorkspaceID   int64      `json:"-"`
-	UserID        int64      `json:"-"`
+	ID          int64 `json:"id"`
+	WorkspaceID int64 `json:"-"`
+	UserID      int64 `json:"-"`
+	// Kind is passive (a passive check) or surface (an attack surface scan).
+	Kind          string     `json:"kind"`
 	Domain        string     `json:"domain"`
 	IntervalHours int        `json:"interval_hours"`
 	NotifyEmail   string     `json:"notify_email"`
@@ -38,13 +40,13 @@ type SecurityWatch struct {
 	CreatedAt     time.Time  `json:"created_at"`
 }
 
-const watchColumns = `id, workspace_id, COALESCE(user_id, 0), domain, interval_hours, notify_email, enabled,
+const watchColumns = `id, workspace_id, COALESCE(user_id, 0), kind, domain, interval_hours, notify_email, enabled,
 	last_scan_id, last_grade, last_score, last_checked_at, last_error, next_run_at, created_at`
 
 func scanWatch(row interface{ Scan(...any) error }, w *SecurityWatch) error {
 	var lastScan, lastScore sql.NullInt64
 	var checked sql.NullTime
-	if err := row.Scan(&w.ID, &w.WorkspaceID, &w.UserID, &w.Domain, &w.IntervalHours, &w.NotifyEmail, &w.Enabled,
+	if err := row.Scan(&w.ID, &w.WorkspaceID, &w.UserID, &w.Kind, &w.Domain, &w.IntervalHours, &w.NotifyEmail, &w.Enabled,
 		&lastScan, &w.LastGrade, &lastScore, &checked, &w.LastError, &w.NextRunAt, &w.CreatedAt); err != nil {
 		return err
 	}
@@ -71,7 +73,16 @@ func (s *Store) SaveSecurityWatch(ctx context.Context, w SecurityWatch, limit in
 	if s == nil {
 		return SecurityWatch{}, errors.New("store is not available")
 	}
-	if !slices.Contains(WatchIntervals, w.IntervalHours) {
+	if w.Kind == "" {
+		w.Kind = "passive"
+	}
+	if w.Kind != "passive" && w.Kind != "surface" {
+		return SecurityWatch{}, errors.New("kind must be passive or surface")
+	}
+	if !slices.Contains(WatchIntervals, w.IntervalHours) || (w.Kind == "surface" && w.IntervalHours < 24) {
+		if w.Kind == "surface" {
+			return SecurityWatch{}, errors.New("scan every 24 hours or 7 days")
+		}
 		return SecurityWatch{}, errors.New("check every 6 hours, 24 hours, or 7 days")
 	}
 	w.NotifyEmail = strings.TrimSpace(w.NotifyEmail)
@@ -100,15 +111,15 @@ func (s *Store) SaveSecurityWatch(ctx context.Context, w SecurityWatch, limit in
 			}
 		}
 		err = scanWatch(tx.QueryRowContext(ctx, `
-			INSERT INTO security_watches (workspace_id, user_id, domain, interval_hours, notify_email, enabled, last_scan_id, last_grade, last_score, last_checked_at)
-			SELECT $1, $2, $3, $4, $5, $6, s.id, COALESCE(s.grade, ''), s.score, s.created_at
+			INSERT INTO security_watches (workspace_id, user_id, kind, domain, interval_hours, notify_email, enabled, last_scan_id, last_grade, last_score, last_checked_at)
+			SELECT $1, $2, $7, $3, $4, $5, $6, s.id, COALESCE(s.grade, ''), s.score, s.created_at
 			FROM (SELECT 1) one
 			LEFT JOIN LATERAL (
 				SELECT id, grade, score, created_at FROM security_scans
-				WHERE workspace_id = $1 AND domain = $3 ORDER BY created_at DESC LIMIT 1
+				WHERE workspace_id = $1 AND domain = $3 AND kind = $7 AND status = 'done' ORDER BY created_at DESC LIMIT 1
 			) s ON TRUE
 			RETURNING `+watchColumns,
-			w.WorkspaceID, nullableID(w.UserID), w.Domain, w.IntervalHours, w.NotifyEmail, w.Enabled), &saved)
+			w.WorkspaceID, nullableID(w.UserID), w.Domain, w.IntervalHours, w.NotifyEmail, w.Enabled, w.Kind), &saved)
 	} else {
 		err = scanWatch(tx.QueryRowContext(ctx, `
 			UPDATE security_watches SET
@@ -142,7 +153,7 @@ func (s *Store) ListSecurityWatches(ctx context.Context, workspaceID int64) ([]S
 		return nil, err
 	}
 	defer func() { _ = tx.Rollback() }()
-	rows, err := tx.QueryContext(ctx, `SELECT `+watchColumns+` FROM security_watches WHERE workspace_id = $1 ORDER BY domain`, workspaceID)
+	rows, err := tx.QueryContext(ctx, `SELECT `+watchColumns+` FROM security_watches WHERE workspace_id = $1 ORDER BY domain, kind`, workspaceID)
 	if err != nil {
 		return nil, err
 	}
@@ -230,6 +241,22 @@ func (s *Store) RecordWatchResult(ctx context.Context, w SecurityWatch, scan *Se
 		_, err = tx.ExecContext(ctx, `UPDATE security_watches SET last_checked_at = NOW(), last_error = $2 WHERE id = $1`, w.ID, scanErr)
 	}
 	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// DelayWatch moves a watch's next run, for a scan that couldn't start yet.
+func (s *Store) DelayWatch(ctx context.Context, w SecurityWatch, by time.Duration) error {
+	if s == nil {
+		return errors.New("store is not available")
+	}
+	tx, err := s.beginWorkspaceTx(ctx, w.WorkspaceID)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	if _, err := tx.ExecContext(ctx, `UPDATE security_watches SET next_run_at = NOW() + make_interval(secs => $2) WHERE id = $1`, w.ID, by.Seconds()); err != nil {
 		return err
 	}
 	return tx.Commit()

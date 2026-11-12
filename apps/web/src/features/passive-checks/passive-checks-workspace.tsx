@@ -545,9 +545,11 @@ export function PassiveChecksWorkspace() {
       apiRequest<SecurityWatchListResponse>("/api/security/watches"),
     refetchInterval: 60_000,
   });
-  const watches = watchesQuery.data?.watches ?? [];
+  // The plan's limit counts every watch; this page shows the passive ones.
+  const allWatches = watchesQuery.data?.watches ?? [];
+  const watches = allWatches.filter((w) => w.kind !== "surface");
   const watchLimit = watchesQuery.data?.limit ?? 0;
-  const atWatchLimit = watchLimit > 0 && watches.length >= watchLimit;
+  const atWatchLimit = watchLimit > 0 && allWatches.length >= watchLimit;
   const watchFor = (d: string) => watches.find((w) => w.domain === d);
   const [watchError, setWatchError] = useState<string | null>(null);
 
@@ -791,7 +793,7 @@ export function PassiveChecksWorkspace() {
 }
 
 /** The workspace's watched domains, each with its last grade and schedule. */
-function WatchList({
+export function WatchList({
   watches,
   limit,
   error,
@@ -799,6 +801,9 @@ function WatchList({
   onOpen,
   onUpdate,
   onRemove,
+  title = "Watched domains",
+  intervals = [6, 24, 168],
+  emptyText,
 }: {
   watches: SecurityWatch[];
   limit: number;
@@ -807,10 +812,13 @@ function WatchList({
   onOpen: (scanId: number) => void;
   onUpdate: (w: SecurityWatch) => void;
   onRemove: (id: number) => void;
+  title?: string;
+  intervals?: number[];
+  emptyText?: string;
 }) {
   return (
     <Panel
-      title="Watched domains"
+      title={title}
       bodyClassName="p-0"
       aside={
         limit ? (
@@ -893,7 +901,7 @@ function WatchList({
                     })
                   }
                 >
-                  {[6, 24, 168].map((h) => (
+                  {intervals.map((h) => (
                     <option key={h} value={h}>
                       {intervalLabel[h]}
                     </option>
@@ -915,9 +923,8 @@ function WatchList({
         </ul>
       ) : (
         <p className="border-t border-[var(--lp-border)] px-4 py-4 text-[12px] leading-relaxed text-[var(--lp-subtle)]">
-          Watch a domain to check it again on a schedule. You&apos;ll get an
-          email, and an alert on channels that subscribe to security checks,
-          when its grade drops or a new high-severity issue appears.
+          {emptyText ??
+            "Watch a domain to check it again on a schedule. You'll get an email, and an alert on channels that subscribe to security checks, when its grade drops or a new high-severity issue appears."}
         </p>
       )}
     </Panel>

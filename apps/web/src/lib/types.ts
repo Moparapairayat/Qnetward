@@ -751,6 +751,8 @@ export type SecurityScan = {
 
 export type SecurityWatch = {
   id: number;
+  /** passive re-runs a passive check; surface an attack surface scan. */
+  kind: "passive" | "surface";
   domain: string;
   interval_hours: 6 | 24 | 168;
   notify_email: string;
