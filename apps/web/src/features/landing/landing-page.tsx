@@ -3,7 +3,8 @@ import { CodeTabs } from "./code-tabs";
 import { Faq } from "./faq";
 import { HeroConsole } from "./hero-console";
 import { LandingEffects } from "./landing-effects";
-import { GitHubIcon, LandingNav } from "./landing-nav";
+import { LandingNav } from "./landing-nav";
+import { SocialLinks } from "./social-links";
 import { NetworkCanvas } from "./network-canvas";
 import { Pricing } from "./pricing";
 import { ProductShowcase } from "./product-showcase";
@@ -507,14 +508,7 @@ export function LandingPage() {
               <p className="mt-4 max-w-xs text-sm leading-relaxed text-[var(--lp-muted)]">
                 Unified network, infrastructure, and security observability.
               </p>
-              <a
-                href="https://github.com/Quantum-Axis/Qnetward"
-                target="_blank"
-                rel="noreferrer"
-                className="mt-5 inline-flex items-center gap-2 text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
-              >
-                <GitHubIcon /> GitHub
-              </a>
+              <SocialLinks className="mt-6" />
             </div>
             {footer.map((col) => (
               <div key={col.title}>
