@@ -37,7 +37,8 @@ const footer: { title: string; links: [string, string][] }[] = [
     title: "Developers",
     links: [
       ["CLI", "#developers"],
-      ["REST API", "#developers"],
+      ["API reference", "/docs/api"],
+      ["OpenAPI spec", "/openapi.yaml"],
       ["Live WebSocket", "#developers"],
       ["GitHub", "https://github.com/Quantum-Axis/Qnetward"],
     ],
@@ -308,6 +309,14 @@ export function LandingPage() {
                   </div>
                 ))}
               </dl>
+              <div className="lp-reveal mt-8 flex flex-wrap gap-3">
+                <Link href="/docs/api" className="lp-btn lp-btn-primary h-10">
+                  Read the API reference
+                </Link>
+                <a href="/openapi.yaml" download className="lp-btn lp-btn-secondary h-10">
+                  Download OpenAPI
+                </a>
+              </div>
             </div>
             <div className="lp-reveal flex lg:col-span-7">
               <CodeTabs />
