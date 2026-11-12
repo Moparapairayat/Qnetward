@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LandingNav } from "./landing-nav";
+import { SiteFooter } from "./site-footer";
 import { horizonMeta, roadmap, type Horizon } from "./roadmap-data";
 
 const pill: Record<Horizon, string> = {
@@ -73,6 +74,7 @@ export function RoadmapPage() {
           </div>
         </div>
       </main>
+      <SiteFooter />
     </>
   );
 }

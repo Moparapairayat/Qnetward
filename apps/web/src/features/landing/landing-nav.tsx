@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { CaretDown, EnvelopeSimple, Info, MapTrifold, UsersThree } from "@phosphor-icons/react/dist/ssr";
 import { QnetwardMark } from "./qnetward-mark";
 
 const links = [
@@ -10,9 +12,92 @@ const links = [
   { href: "/#security", label: "Security" },
   { href: "/#pricing", label: "Pricing" },
   { href: "/docs/api", label: "Docs" },
-  { href: "/roadmap", label: "Roadmap" },
   { href: "/#faq", label: "FAQ" },
 ];
+
+const company = [
+  { href: "/about", label: "About", hint: "Why we're building Qnetward", icon: Info },
+  { href: "/team", label: "Team", hint: "The people behind it", icon: UsersThree },
+  { href: "/roadmap", label: "Roadmap", hint: "What's live and what's next", icon: MapTrifold },
+  { href: "/about#contact", label: "Contact", hint: "Questions, sales, and support", icon: EnvelopeSimple },
+];
+
+// Company menu: opens on hover or click, closes on Escape, a click outside, or
+// leaving it, and works from the keyboard.
+function CompanyMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pathname = usePathname();
+  const [shownOn, setShownOn] = useState(pathname);
+  // A new page closes the menu.
+  if (shownOn !== pathname) {
+    setShownOn(pathname);
+    setOpen(false);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const hold = () => {
+    if (timer.current) clearTimeout(timer.current);
+    setOpen(true);
+  };
+  const release = () => {
+    timer.current = setTimeout(() => setOpen(false), 120);
+  };
+
+  return (
+    <div ref={ref} className="relative" onMouseEnter={hold} onMouseLeave={release}>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1 text-sm text-[color:var(--lp-muted)] transition-colors hover:text-[color:var(--lp-text)] aria-expanded:text-[color:var(--lp-text)]"
+      >
+        Company
+        <CaretDown size={12} weight="bold" className={`transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+      </button>
+      {open ? (
+        <div className="absolute left-1/2 top-full z-50 w-[320px] -translate-x-1/2 pt-3">
+          <ul className="rounded-xl border border-[var(--lp-border)] bg-[#17171b] p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
+            {company.map(({ href, label, hint, icon: Icon }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  onClick={() => setOpen(false)}
+                  className="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-white/[0.05] focus-visible:bg-white/[0.05]"
+                >
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--lp-border)] text-[var(--lp-muted)] group-hover:text-[var(--lp-accent)]">
+                    <Icon size={16} weight="bold" aria-hidden />
+                  </span>
+                  <span>
+                    <span className="block text-[14px] text-[var(--lp-text)]">{label}</span>
+                    <span className="block text-[12.5px] text-[var(--lp-subtle)]">{hint}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export function LandingNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -54,6 +139,9 @@ export function LandingNav() {
               </a>
             </li>
           ))}
+          <li>
+            <CompanyMenu />
+          </li>
         </ul>
 
         <div className="ml-auto hidden items-center gap-3 lg:flex">
@@ -107,6 +195,20 @@ export function LandingNav() {
                 >
                   {link.label}
                 </a>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 px-2 text-[12px] uppercase tracking-wide text-[var(--lp-subtle)]">Company</p>
+          <ul className="mt-1 grid grid-cols-2 gap-1">
+            {company.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className="block rounded-lg px-2 py-2.5 text-[15px] text-[var(--lp-muted)] hover:bg-white/5 hover:text-[var(--lp-text)]"
+                >
+                  {item.label}
+                </Link>
               </li>
             ))}
           </ul>
