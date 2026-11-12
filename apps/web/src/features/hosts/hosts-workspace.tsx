@@ -38,7 +38,7 @@ function formatRateShort(bps: number) {
   return `${bps.toFixed(0)}B`;
 }
 
-function formatUptime(secs?: number) {
+export function formatUptime(secs?: number) {
   if (!secs) return "–";
   const d = Math.floor(secs / 86400);
   const h = Math.floor((secs % 86400) / 3600);
@@ -101,7 +101,7 @@ type Range = (typeof ranges)[number];
 
 const tooltipStyle = { background: "#16161a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#e8e8ec", fontSize: 12 };
 
-function Chart({
+export function Chart({
   title,
   data,
   series,

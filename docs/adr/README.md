@@ -44,3 +44,4 @@ patterns don't.
 | [0028](0028-deep-scans-need-consent-and-approval.md) | Deep scans need signed consent and an admin's approval | Accepted |
 | [0029](0029-compliance-maps-external-evidence.md) | Compliance maps external scan evidence to framework controls | Accepted |
 | [0030](0030-host-metrics-from-agents.md) | Host metrics come from the probe agent | Accepted |
+| [0031](0031-network-devices-over-snmp.md) | Network devices are polled over SNMP by agents | Accepted |

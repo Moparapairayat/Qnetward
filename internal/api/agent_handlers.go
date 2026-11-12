@@ -225,6 +225,7 @@ func (srv *Server) handleAgentHeartbeat(w http.ResponseWriter, r *http.Request) 
 		"heartbeat_seconds": int(agentHeartbeatEvery / time.Second),
 		"metrics_seconds":   int(hostMetricsEvery / time.Second),
 		"jobs":              jobs,
+		"devices":           srv.agentDeviceJobs(ctx, agent),
 	})
 }
 

@@ -88,7 +88,7 @@ export const navSections: NavSection[] = [
     label: "Infrastructure",
     items: [
       { href: "/hosts", label: "Hosts", icon: Server, keywords: "cpu memory disk network agent server metrics" },
-      { href: "/devices", label: "Devices", icon: HardDrive, keywords: "snmp gnmi redfish switch router", soon: true },
+      { href: "/devices", label: "Devices", icon: HardDrive, keywords: "snmp switch router firewall interface network" },
       { href: "/topology", label: "Topology", icon: Network, keywords: "map lldp cdp", soon: true },
       { href: "/flows", label: "Traffic flows", icon: Cable, keywords: "netflow sflow ipfix top talkers", soon: true },
       { href: "/logs", label: "Logs", icon: ScrollText, keywords: "syslog traps events", soon: true },

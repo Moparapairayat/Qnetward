@@ -2,19 +2,35 @@ openapi: 3.1.0
 info:
   title: Qnetward API
   version: "1.0"
-  summary: Diagnostics, monitors, alert rules, and history for one workspace.
+  summary: Monitoring, diagnostics, infrastructure, and security scanning for one workspace.
   description: |
-    Authenticate with a workspace API key, created by an owner or admin under
-    Workspace settings → API keys, and sent as `Authorization: Bearer qnw_…`.
-    A key acts in the workspace it belongs to.
+    Everything you can do in the Qnetward console, from scripts, CI, and Terraform.
 
-    Scopes:
-    - `read`: GET requests, and history export.
-    - `write`: create, change, and delete monitors and alert rules.
-    - `probe`: run ping, TCP ping, port scans, and DNS lookups.
+    ## Authentication
 
-    Targets in private and cloud-metadata ranges are refused on the hosted
-    service. Errors are JSON objects with an `error` message.
+    Create a key under **Workspace settings → API keys** (owners and admins) and send it
+    with every request:
+
+    ```bash
+    curl https://your-console/api/monitors       -H "Authorization: Bearer qnw_…"
+    ```
+
+    A key acts in the workspace it belongs to, with the scopes you gave it:
+
+    | Scope | Allows |
+    | --- | --- |
+    | `read` | Every `GET`, and history export |
+    | `write` | Creating, changing, and deleting monitors, rules, watches, and devices |
+    | `probe` | Running ping, TCP ping, port scans, DNS lookups, and scans |
+
+    ## Conventions
+
+    - Requests and responses are JSON. Times are RFC 3339 in UTC.
+    - Errors are JSON objects with an `error` message and a fitting HTTP status:
+      `400` bad input, `401` no or bad key, `403` missing scope or role,
+      `404` not found, `409` a plan limit or a conflict, `429` too many requests.
+    - Targets in private and cloud-metadata ranges are refused on the hosted service.
+      Probe agents reach private networks instead.
 servers:
   - url: https://console.qnetward.com
     description: Hosted service
@@ -22,9 +38,19 @@ security:
   - apiKey: []
 tags:
   - name: Diagnostics
+    description: One-off ping, TCP ping, port scans, DNS lookups, and traceroute.
   - name: Monitors
+    description: Uptime checks that run on a schedule from the cloud or your agents.
   - name: Alert rules
+    description: Latency and packet loss rules on diagnostics targets.
   - name: History
+    description: Stored samples and exports.
+  - name: Status pages
+    description: Public pages that show your monitors' health.
+  - name: Infrastructure
+    description: Hosts and network devices reported by your agents, and their alert rules.
+  - name: Security
+    description: Passive checks, verified domains, attack surface scans, vulnerabilities, deep scans, and compliance.
 paths:
   /api/ping:
     post:
@@ -281,6 +307,47 @@ paths:
         - { name: id, in: query, required: true, schema: { type: integer } }
       responses:
         "200": { description: Deleted. }
+  /api/devices:
+    get:
+      tags: [Infrastructure]
+      summary: List network devices, or one device's history
+      description: "Needs the `read` scope. Without `id`, lists devices with status, system info, and interfaces (credentials are never returned). With `id` and `range` (1h, 6h, 24h, 7d), returns traffic points; add `if` for one interface."
+      parameters:
+        - { name: id, in: query, required: false, schema: { type: integer } }
+        - { name: range, in: query, required: false, schema: { type: string, enum: ["1h", "6h", "24h", "7d"] } }
+        - { name: if, in: query, required: false, schema: { type: integer }, description: "Interface index." }
+      responses:
+        "200": { description: "{ devices, limit } or { points, range, bucket_seconds }" }
+    post:
+      tags: [Infrastructure]
+      summary: Add or update a network device
+      description: "Needs the `write` scope and an owner or admin. Give `community` for v2c, or `username`, `auth_protocol` (none, md5, sha, sha256, sha512), `auth_password`, `priv_protocol` (none, des, aes, aes256), `priv_password` for v3. On update, leave credentials out to keep them."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, address, version]
+              properties:
+                id: { type: integer }
+                agent_id: { type: integer, nullable: true }
+                name: { type: string }
+                address: { type: string, example: 10.0.0.2 }
+                port: { type: integer, default: 161 }
+                version: { type: string, enum: ["2c", "3"] }
+                interval_seconds: { type: integer, minimum: 30, maximum: 3600 }
+                enabled: { type: boolean }
+      responses:
+        "201": { description: The new device. }
+        "200": { description: The updated device. }
+    delete:
+      tags: [Infrastructure]
+      summary: Remove a network device and its history
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Removed. }
   /api/security/compliance:
     get:
       tags: [Security]

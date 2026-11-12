@@ -977,3 +977,47 @@ export type HostAlertRule = {
 };
 
 export type HostAlertRuleList = { rules: HostAlertRule[]; limit: number };
+
+export type DeviceInterface = {
+  index: number;
+  name: string;
+  descr: string;
+  alias: string;
+  type: number;
+  admin: string;
+  oper: string;
+  speed_bps: number;
+  in_bps: number;
+  out_bps: number;
+  in_errors_ps: number;
+  out_errors_ps: number;
+  in_discards_ps: number;
+  out_discards_ps: number;
+  has_rates: boolean;
+};
+
+export type NetworkDevice = {
+  id: number;
+  agent_id: number | null;
+  agent_name?: string;
+  agent_online: boolean;
+  name: string;
+  address: string;
+  port: number;
+  version: "2c" | "3";
+  interval_seconds: number;
+  enabled: boolean;
+  status: "unknown" | "up" | "down";
+  last_polled_at?: string | null;
+  last_error?: string;
+  sys?: { descr: string; object_id: string; uptime_s: number; name: string; location: string; contact: string } | null;
+  interfaces?: DeviceInterface[] | null;
+  created_at: string;
+  credentials: { community_set?: boolean; username?: string; auth_protocol?: string; priv_protocol?: string };
+};
+
+export type DeviceListResponse = { devices: NetworkDevice[]; limit: number };
+
+export type DevicePoint = { at: string; in_bps: number; out_bps: number; errors_ps: number; rtt_ms?: number; up: number };
+
+export type DeviceSeriesResponse = { points: DevicePoint[]; range: string; bucket_seconds: number };

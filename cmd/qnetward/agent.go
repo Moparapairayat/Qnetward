@@ -20,7 +20,7 @@ import (
 )
 
 // agentVersion is reported to the console with every heartbeat.
-const agentVersion = "0.2.0"
+const agentVersion = "0.3.0"
 
 // agentState is what an enrolled agent keeps between runs. The secret is as
 // good as a password for this agent, so the file is readable by its owner only.
@@ -101,6 +101,8 @@ func agentMain(ctx context.Context, server, token, stateDir string, once bool, o
 	}
 
 	runner := newJobRunner()
+	devices := newDevicePoller()
+	deviceCount := -1
 	var wg sync.WaitGroup
 	defer wg.Wait()
 	ctx, stop := context.WithCancel(ctx)
@@ -132,6 +134,13 @@ func agentMain(ctx context.Context, server, token, stateDir string, once bool, o
 				fmt.Fprintln(out, "heartbeat failed, retrying:", err)
 			default:
 				runner.sync(hb.Jobs)
+				devices.sync(hb.Devices)
+				if n := devices.count(); n != deviceCount {
+					if n > 0 || deviceCount > 0 {
+						fmt.Fprintf(out, "Polling %d network devices\n", n)
+					}
+					deviceCount = n
+				}
 				if n := runner.count(); n != jobs {
 					fmt.Fprintf(out, "Running %d monitors\n", n)
 					jobs = n
@@ -166,11 +175,17 @@ func agentMain(ctx context.Context, server, token, stateDir string, once bool, o
 			sample.Reset(hostEvery)
 		case <-tick.C:
 			runner.startDue(ctx, &wg)
+			devices.startDue(ctx, &wg)
 		case <-flush.C:
 			if err := c.sendResults(ctx, state.Secret, runner); errors.Is(err, errAgentRemoved) {
 				return err
 			} else if err != nil {
 				fmt.Fprintln(out, "sending results failed, will retry:", err)
+			}
+			if err := c.sendDeviceSamples(ctx, state.Secret, devices); errors.Is(err, errAgentRemoved) {
+				return err
+			} else if err != nil {
+				fmt.Fprintln(out, "sending device samples failed, will retry:", err)
 			}
 		}
 	}
@@ -181,6 +196,23 @@ var agentHostMetrics = true
 
 // agentFlushEvery is how often finished checks are sent to the console.
 var agentFlushEvery = 5 * time.Second
+
+// sendDeviceSamples sends device polls in batches, keeping any that fail.
+func (c *agentClient) sendDeviceSamples(ctx context.Context, secret string, p *devicePoller) error {
+	for {
+		batch := p.take(20)
+		if len(batch) == 0 {
+			return nil
+		}
+		var resp struct {
+			Accepted int `json:"accepted"`
+		}
+		if err := c.post(ctx, "/api/agent/devices", secret, map[string]any{"samples": batch}, &resp); err != nil {
+			p.putBack(batch)
+			return err
+		}
+	}
+}
 
 // sendResults sends finished checks in batches, keeping any that fail to send.
 func (c *agentClient) sendResults(ctx context.Context, secret string, runner *jobRunner) error {
@@ -217,9 +249,10 @@ func (c *agentClient) enroll(ctx context.Context, token string) (*agentState, er
 
 // heartbeatReply is the console's answer to a check-in.
 type heartbeatReply struct {
-	HeartbeatSeconds int        `json:"heartbeat_seconds"`
-	MetricsSeconds   int        `json:"metrics_seconds"`
-	Jobs             []agentJob `json:"jobs"`
+	HeartbeatSeconds int         `json:"heartbeat_seconds"`
+	MetricsSeconds   int         `json:"metrics_seconds"`
+	Jobs             []agentJob  `json:"jobs"`
+	Devices          []deviceJob `json:"devices"`
 }
 
 func (c *agentClient) heartbeat(ctx context.Context, secret string) (heartbeatReply, error) {
