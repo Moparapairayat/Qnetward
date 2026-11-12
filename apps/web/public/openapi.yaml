@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Qnetward API
-  version: "1.0"
+  version: '1.0'
   summary: Monitoring, diagnostics, infrastructure, and security scanning for one workspace.
   description: |
     Everything you can do in the Qnetward console, from scripts, CI, and Terraform.
@@ -29,176 +29,404 @@ info:
       `404` not found, `409` a plan limit or a conflict, `429` too many requests.
     - Targets in private and cloud-metadata ranges are refused on the hosted service.
       Probe agents reach private networks instead.
+
+    ## Rate limits
+
+    Each workspace can make a number of API calls per minute that depends on its plan
+    (120 on Free, 600 on Pro, 3,000 on Enterprise). Probes and scans also have hourly
+    quotas. Over a limit, you get `429 Too Many Requests` with a `Retry-After` header
+    in seconds; wait that long and try again.
+
+    ## Errors
+
+    Every error is a JSON object with one field, written to be shown to a person:
+
+    ```json
+    { "error": "this plan's network device limit is reached" }
+    ```
+
+    ## Webhooks
+
+    Alert channels of the **Webhook** kind receive a `POST` with this JSON body:
+
+    ```json
+    {
+      "event": "host.alert",
+      "severity": "critical",
+      "title": "db-1: Disk at 93%",
+      "summary": "Disk on db-1 has been at or above 90% for 5 minutes; it's at 93% now.",
+      "target": "db-1 (db-1.internal)",
+      "url": "https://your-console/hosts",
+      "triggered_at": "2026-11-12T10:07:00Z"
+    }
+    ```
+
+    Each request carries `X-Qnetward-Event`, `X-Qnetward-Timestamp` (Unix seconds), and,
+    when the channel has a secret, `X-Qnetward-Signature`: `sha256=` followed by the hex
+    HMAC-SHA256 of the timestamp, a dot, and the raw body. Check it before trusting the
+    payload, and refuse timestamps more than five minutes old:
+
+    ```js
+    import crypto from "node:crypto";
+
+    function verify(secret, timestamp, rawBody, signature) {
+      const mac = crypto.createHmac("sha256", secret).update(`${timestamp}.`).update(rawBody).digest("hex");
+      const fresh = Math.abs(Date.now() / 1000 - Number(timestamp)) < 300;
+      return fresh && crypto.timingSafeEqual(Buffer.from(`sha256=${mac}`), Buffer.from(signature));
+    }
+    ```
 servers:
-  - url: https://console.qnetward.com
-    description: Hosted service
+- url: https://console.qnetward.com
+  description: Hosted service
 security:
-  - apiKey: []
+- apiKey: []
 tags:
-  - name: Diagnostics
-    description: One-off ping, TCP ping, port scans, DNS lookups, and traceroute.
-  - name: Monitors
-    description: Uptime checks that run on a schedule from the cloud or your agents.
-  - name: Alert rules
-    description: Latency and packet loss rules on diagnostics targets.
-  - name: History
-    description: Stored samples and exports.
-  - name: Status pages
-    description: Public pages that show your monitors' health.
-  - name: Infrastructure
-    description: Hosts and network devices reported by your agents, and their alert rules.
-  - name: Security
-    description: Passive checks, verified domains, attack surface scans, vulnerabilities, deep scans, and compliance.
+- name: Diagnostics
+  description: One-off ping, TCP ping, port scans, DNS lookups, and traceroute.
+- name: Monitors
+  description: Uptime checks that run on a schedule from the cloud or your agents.
+- name: Alert rules
+  description: Latency and packet loss rules on diagnostics targets.
+- name: History
+  description: Stored samples and exports.
+- name: Status pages
+  description: Public pages that show your monitors' health.
+- name: Hosts
+  description: CPU, memory, disk, and network of machines running an agent.
+- name: Host alerts
+  description: Rules that fire when a host stays busy or full.
+- name: Network devices
+  description: Routers, switches, and firewalls your agents poll over SNMP.
+- name: Passive checks
+  description: 'Grade a domain from public signals: TLS, headers, email, and DNS.'
+- name: Watched domains
+  description: Re-check domains on a schedule and alert when they get worse.
+- name: Domains
+  description: Prove you control a domain before deeper scans.
+- name: Attack surface
+  description: Discover subdomains and exposed services on verified domains.
+- name: Vulnerabilities
+  description: Known CVEs in the software your hosts announce.
+- name: Deep scans
+  description: Tier 2 checks that need signed consent and an admin's approval.
+- name: Compliance
+  description: Scan evidence mapped to CIS, PCI DSS, ISO 27001, and SOC 2.
 paths:
   /api/ping:
     post:
-      tags: [Diagnostics]
+      tags:
+      - Diagnostics
       summary: Run an ICMP ping
-      description: "Needs the `probe` scope. Samples are stored in history."
+      description: Needs the `probe` scope. Samples are stored in history.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [host]
+              required:
+              - host
               properties:
-                host: { type: string, example: 1.1.1.1 }
-                count: { type: integer, minimum: 1, maximum: 100, default: 5 }
-                interval_ms: { type: integer, default: 1000 }
-                timeout_ms: { type: integer, default: 2000 }
-                size: { type: integer, description: Payload size in bytes }
-                ipv6: { type: boolean, default: false }
+                host:
+                  type: string
+                  example: 1.1.1.1
+                count:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 5
+                interval_ms:
+                  type: integer
+                  default: 1000
+                timeout_ms:
+                  type: integer
+                  default: 2000
+                size:
+                  type: integer
+                  description: Payload size in bytes
+                ipv6:
+                  type: boolean
+                  default: false
       responses:
-        "200": { $ref: "#/components/responses/Report" }
-        "400": { $ref: "#/components/responses/Error" }
-        "401": { $ref: "#/components/responses/Error" }
-        "403": { $ref: "#/components/responses/Error" }
-        "429": { $ref: "#/components/responses/Error" }
+        '200':
+          $ref: '#/components/responses/Report'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/Error'
+      operationId: postPing
   /api/tcpping:
     post:
-      tags: [Diagnostics]
+      tags:
+      - Diagnostics
       summary: Run a TCP ping
-      description: "Needs the `probe` scope. Measures TCP handshake time to a port."
+      description: Needs the `probe` scope. Measures TCP handshake time to a port.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [host, port]
+              required:
+              - host
+              - port
               properties:
-                host: { type: string, example: db.example.com }
-                port: { type: integer, minimum: 1, maximum: 65535, example: 5432 }
-                count: { type: integer, minimum: 1, maximum: 100, default: 5 }
-                interval_ms: { type: integer, default: 1000 }
-                timeout_ms: { type: integer, default: 2000 }
+                host:
+                  type: string
+                  example: db.example.com
+                port:
+                  type: integer
+                  minimum: 1
+                  maximum: 65535
+                  example: 5432
+                count:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 5
+                interval_ms:
+                  type: integer
+                  default: 1000
+                timeout_ms:
+                  type: integer
+                  default: 2000
       responses:
-        "200": { $ref: "#/components/responses/Report" }
-        "400": { $ref: "#/components/responses/Error" }
-        "403": { $ref: "#/components/responses/Error" }
+        '200':
+          $ref: '#/components/responses/Report'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: postTcpping
   /api/portscan:
     post:
-      tags: [Diagnostics]
+      tags:
+      - Diagnostics
       summary: Scan TCP ports
-      description: "Needs the `probe` scope. Every scan is recorded in the workspace audit log."
+      description: Needs the `probe` scope. Every scan is recorded in the workspace audit log.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [host, ports]
+              required:
+              - host
+              - ports
               properties:
-                host: { type: string, example: scanme.nmap.org }
-                ports: { type: string, description: "Comma-separated ports and ranges, up to 4,096 ports.", example: "22,80,443,8000-8010" }
-                timeout_ms: { type: integer }
-                concurrency: { type: integer, maximum: 256 }
+                host:
+                  type: string
+                  example: scanme.nmap.org
+                ports:
+                  type: string
+                  description: Comma-separated ports and ranges, up to 4,096 ports.
+                  example: 22,80,443,8000-8010
+                timeout_ms:
+                  type: integer
+                concurrency:
+                  type: integer
+                  maximum: 256
       responses:
-        "200": { $ref: "#/components/responses/Report" }
-        "400": { $ref: "#/components/responses/Error" }
+        '200':
+          $ref: '#/components/responses/Report'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: postPortscan
   /api/dnslookup:
     post:
-      tags: [Diagnostics]
+      tags:
+      - Diagnostics
       summary: Look up DNS records
-      description: "Needs the `probe` scope."
+      description: Needs the `probe` scope.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [target]
+              required:
+              - target
               properties:
-                target: { type: string, example: example.com }
-                record_type: { type: string, example: ALL, description: "A record type such as A, AAAA, MX, TXT, or ALL." }
-                resolver: { type: string, example: cloudflare, description: "system, cloudflare, google, quad9, or an IP address." }
-                timeout_ms: { type: integer }
+                target:
+                  type: string
+                  example: example.com
+                record_type:
+                  type: string
+                  example: ALL
+                  description: A record type such as A, AAAA, MX, TXT, or ALL.
+                resolver:
+                  type: string
+                  example: cloudflare
+                  description: system, cloudflare, google, quad9, or an IP address.
+                timeout_ms:
+                  type: integer
       responses:
-        "200":
+        '200':
           description: Records found, with DNSSEC and mail checks.
           content:
             application/json:
-              schema: { type: object }
-        "400": { $ref: "#/components/responses/Error" }
+              schema:
+                type: object
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: postDnslookup
   /api/security/passive:
     post:
-      tags: [Security]
+      tags:
+      - Passive checks
       summary: Run a passive check of a domain
-      description: "Needs the `probe` scope. Grades the domain from public signals only: its TLS certificate and versions, its website's security headers, and its SPF, DMARC, CAA, and DNSSEC records. Counts towards the hourly scan quota, and the same domain can be checked 12 times an hour per workspace. Recorded in the audit log."
+      description: 'Needs the `probe` scope. Grades the domain from public signals only: its TLS certificate and versions, its website''s security
+        headers, and its SPF, DMARC, CAA, and DNSSEC records. Counts towards the hourly scan quota, and the same domain can be checked 12 times
+        an hour per workspace. Recorded in the audit log.'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [domain]
+              required:
+              - domain
               properties:
-                domain: { type: string, example: example.com, description: A domain, or a URL whose host is used. IP addresses are refused. }
+                domain:
+                  type: string
+                  example: example.com
+                  description: A domain
+                  or a URL whose host is used. IP addresses are refused.: null
       responses:
-        "201":
+        '201':
           description: The saved scan, with its full report.
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SecurityScan" }
-        "400": { $ref: "#/components/responses/Error" }
-        "422": { $ref: "#/components/responses/Error" }
-        "429": { $ref: "#/components/responses/Error" }
+              schema:
+                $ref: '#/components/schemas/SecurityScan'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/Error'
+      operationId: postSecurityPassive
     get:
-      tags: [Security]
+      tags:
+      - Passive checks
       summary: List passive checks, or get one
-      description: "Needs the `read` scope. With id, returns that scan with its report; otherwise the newest scans without reports, optionally for one domain."
+      description: Needs the `read` scope. With id, returns that scan with its report; otherwise the newest scans without reports, optionally
+        for one domain.
       parameters:
-        - { name: id, in: query, schema: { type: integer } }
-        - { name: domain, in: query, schema: { type: string } }
-        - { name: limit, in: query, schema: { type: integer, maximum: 200, default: 50 } }
+      - name: id
+        in: query
+        schema:
+          type: integer
+      - name: domain
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          maximum: 200
+          default: 50
       responses:
-        "200":
+        '200':
           description: A scan, or { scans }.
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SecurityScan" }
-        "404": { $ref: "#/components/responses/Error" }
+              schema:
+                $ref: '#/components/schemas/SecurityScan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getSecurityPassive
     delete:
-      tags: [Security]
+      tags:
+      - Passive checks
       summary: Delete a passive check
-      description: "Needs the `write` scope."
+      description: Needs the `write` scope.
       parameters:
-        - { name: id, in: query, required: true, schema: { type: integer } }
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
       responses:
-        "200": { description: Deleted. }
-        "404": { $ref: "#/components/responses/Error" }
+        '200':
+          description: Deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: deleteSecurityPassive
   /api/security/watches:
     get:
-      tags: [Security]
+      tags:
+      - Watched domains
       summary: List watched domains
-      description: "Needs the `read` scope. Returns { watches, limit, intervals }."
+      description: Needs the `read` scope. Returns { watches, limit, intervals }.
       responses:
-        "200": { description: The workspace's watched domains. }
+        '200':
+          description: The workspace's watched domains.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  watches:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SecurityWatch'
+                  limit:
+                    type: integer
+                  intervals:
+                    type: array
+                    items:
+                      type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getSecurityWatches
     post:
-      tags: [Security]
+      tags:
+      - Watched domains
       summary: Watch a domain, or change a watch
-      description: "Needs the `write` scope. A watched domain's passive check re-runs every interval_hours (6, 24, or 168). It alerts by email and on channels subscribed to `security` when the grade drops or a new high-severity issue appears."
+      description: Needs the `write` scope. A watched domain's passive check re-runs every interval_hours (6, 24, or 168). It alerts by email
+        and on channels subscribed to `security` when the grade drops or a new high-severity issue appears.
       requestBody:
         required: true
         content:
@@ -206,471 +434,1403 @@ paths:
             schema:
               type: object
               properties:
-                id: { type: integer, description: Set to change an existing watch. }
-                kind: { type: string, enum: [passive, surface], default: passive, description: "surface schedules attack surface scans; the domain must be verified, and the interval is 24 or 168 hours (168 by default)." }
-                domain: { type: string, example: example.com }
-                interval_hours: { type: integer, enum: [6, 24, 168], default: 24 }
-                notify_email: { type: string }
-                enabled: { type: boolean, default: true }
+                id:
+                  type: integer
+                  description: Set to change an existing watch.
+                kind:
+                  type: string
+                  enum:
+                  - passive
+                  - surface
+                  default: passive
+                  description: surface schedules attack surface scans; the domain must be verified, and the interval is 24 or 168 hours (168 by
+                    default).
+                domain:
+                  type: string
+                  example: example.com
+                interval_hours:
+                  type: integer
+                  enum:
+                  - 6
+                  - 24
+                  - 168
+                  default: 24
+                notify_email:
+                  type: string
+                enabled:
+                  type: boolean
+                  default: true
       responses:
-        "201": { description: Watching. }
-        "200": { description: Updated. }
-        "409": { $ref: "#/components/responses/Error" }
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityWatch'
+        '201':
+          description: Watching.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityWatch'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: postSecurityWatches
     delete:
-      tags: [Security]
+      tags:
+      - Watched domains
       summary: Stop watching a domain
-      description: "Needs the `write` scope. Past scans stay."
+      description: Needs the `write` scope. Past scans stay.
       parameters:
-        - { name: id, in: query, required: true, schema: { type: integer } }
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
       responses:
-        "200": { description: Stopped. }
-        "404": { $ref: "#/components/responses/Error" }
+        '200':
+          description: Stopped.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: deleteSecurityWatches
   /api/security/surface:
     post:
-      tags: [Security]
+      tags:
+      - Attack surface
       summary: Start an attack surface scan of a verified domain
-      description: "Needs the `probe` scope. The domain, or the domain it is under, must be verified in Assets. Answers 202 with a running scan; poll GET ?id= until status is done or failed. One scan at a time per workspace; Free 2, Pro 10, Enterprise 50 an hour."
+      description: Needs the `probe` scope. The domain, or the domain it is under, must be verified in Assets. Answers 202 with a running scan;
+        poll GET ?id= until status is done or failed. One scan at a time per workspace; Free 2, Pro 10, Enterprise 50 an hour.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [domain]
+              required:
+              - domain
               properties:
-                domain: { type: string, example: example.com }
+                domain:
+                  type: string
+                  example: example.com
       responses:
-        "202": { description: The scan, running. }
-        "403": { $ref: "#/components/responses/Error" }
-        "409": { $ref: "#/components/responses/Error" }
-        "429": { $ref: "#/components/responses/Error" }
+        '202':
+          description: The scan
+          running.: null
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityScan'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/Error'
+      operationId: postSecuritySurface
     get:
-      tags: [Security]
+      tags:
+      - Attack surface
       summary: List attack surface scans, or get one
-      description: "Needs the `read` scope. With id, the scan with its report: hosts (name, source, addresses, open_ports, certificate) and findings, each naming its host."
+      description: 'Needs the `read` scope. With id, the scan with its report: hosts (name, source, addresses, open_ports, certificate) and findings,
+        each naming its host.'
       parameters:
-        - { name: id, in: query, schema: { type: integer } }
-        - { name: limit, in: query, schema: { type: integer } }
+      - name: id
+        in: query
+        schema:
+          type: integer
+      - name: limit
+        in: query
+        schema:
+          type: integer
       responses:
-        "200": { description: "A scan, or { scans }." }
+        '200':
+          description: A scan, or { scans }.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scans:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SecurityScan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getSecuritySurface
     delete:
-      tags: [Security]
+      tags:
+      - Attack surface
       summary: Delete an attack surface scan
       parameters:
-        - { name: id, in: query, required: true, schema: { type: integer } }
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
       responses:
-        "200": { description: Deleted. }
+        '200':
+          description: Deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: deleteSecuritySurface
   /api/hosts:
     get:
-      tags: [Infrastructure]
+      tags:
+      - Hosts
       summary: List hosts, or one host's history
-      description: "Needs the `read` scope. Without `id`, lists enrolled agents with their machine description and newest sample (CPU, load, memory, swap, disks, network, processes, uptime). With `id` and `range` (1h, 6h, 24h, 7d, 14d), returns averaged points: cpu, cpu_max, load1, mem_pct, swap_pct, disk_pct (fullest disk), net_rx_bps, net_tx_bps, procs."
+      description: 'Needs the `read` scope. Without `id`, lists enrolled agents with their machine description and newest sample (CPU, load, memory,
+        swap, disks, network, processes, uptime). With `id` and `range` (1h, 6h, 24h, 7d, 14d), returns averaged points: cpu, cpu_max, load1,
+        mem_pct, swap_pct, disk_pct (fullest disk), net_rx_bps, net_tx_bps, procs.'
       parameters:
-        - { name: id, in: query, required: false, schema: { type: integer } }
-        - { name: range, in: query, required: false, schema: { type: string, enum: ["1h", "6h", "24h", "7d", "14d"] } }
+      - name: id
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: range
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - 1h
+          - 6h
+          - 24h
+          - 7d
+          - 14d
       responses:
-        "200": { description: "{ hosts, metrics_seconds } or { points, range, bucket_seconds }" }
+        '200':
+          description: '{ hosts, metrics_seconds } or { points, range, bucket_seconds }'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    hosts:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Host'
+                    metrics_seconds:
+                      type: integer
+                - type: object
+                  properties:
+                    points:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/HostPoint'
+                    range:
+                      type: string
+                    bucket_seconds:
+                      type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getHosts
   /api/hosts/alerts:
     get:
-      tags: [Infrastructure]
+      tags:
+      - Host alerts
       summary: List host alert rules and where they fire
       responses:
-        "200": { description: "{ rules, limit }" }
+        '200':
+          description: '{ rules, limit }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rules:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/HostAlertRule'
+                  limit:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getHostsAlerts
     post:
-      tags: [Infrastructure]
+      tags:
+      - Host alerts
       summary: Create or update a host alert rule
-      description: "Needs the `write` scope. Fires when every sample in the last `minutes` is at or above `threshold` percent; clears when every sample is below."
+      description: Needs the `write` scope. Fires when every sample in the last `minutes` is at or above `threshold` percent; clears when every
+        sample is below.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [metric, threshold, minutes]
+              required:
+              - metric
+              - threshold
+              - minutes
               properties:
-                id: { type: integer, description: "Omit to create." }
-                agent_id: { type: integer, nullable: true, description: "Null for every host." }
-                metric: { type: string, enum: [cpu, memory, disk, swap] }
-                threshold: { type: number, minimum: 1, maximum: 100 }
-                minutes: { type: integer, minimum: 1, maximum: 60 }
-                notify_email: { type: string }
-                enabled: { type: boolean }
+                id:
+                  type: integer
+                  description: Omit to create.
+                agent_id:
+                  type: integer
+                  nullable: true
+                  description: Null for every host.
+                metric:
+                  type: string
+                  enum:
+                  - cpu
+                  - memory
+                  - disk
+                  - swap
+                threshold:
+                  type: number
+                  minimum: 1
+                  maximum: 100
+                minutes:
+                  type: integer
+                  minimum: 1
+                  maximum: 60
+                notify_email:
+                  type: string
+                enabled:
+                  type: boolean
       responses:
-        "201": { description: The new rule. }
-        "200": { description: The updated rule. }
+        '200':
+          description: The updated rule.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostAlertRule'
+        '201':
+          description: The new rule.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostAlertRule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: postHostsAlerts
     delete:
-      tags: [Infrastructure]
+      tags:
+      - Host alerts
       summary: Delete a host alert rule
       parameters:
-        - { name: id, in: query, required: true, schema: { type: integer } }
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
       responses:
-        "200": { description: Deleted. }
+        '200':
+          description: Deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: deleteHostsAlerts
   /api/devices:
     get:
-      tags: [Infrastructure]
+      tags:
+      - Network devices
       summary: List network devices, or one device's history
-      description: "Needs the `read` scope. Without `id`, lists devices with status, system info, and interfaces (credentials are never returned). With `id` and `range` (1h, 6h, 24h, 7d), returns traffic points; add `if` for one interface."
+      description: Needs the `read` scope. Without `id`, lists devices with status, system info, and interfaces (credentials are never returned).
+        With `id` and `range` (1h, 6h, 24h, 7d), returns traffic points; add `if` for one interface.
       parameters:
-        - { name: id, in: query, required: false, schema: { type: integer } }
-        - { name: range, in: query, required: false, schema: { type: string, enum: ["1h", "6h", "24h", "7d"] } }
-        - { name: if, in: query, required: false, schema: { type: integer }, description: "Interface index." }
+      - name: id
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: range
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - 1h
+          - 6h
+          - 24h
+          - 7d
+      - name: if
+        in: query
+        required: false
+        schema:
+          type: integer
+        description: Interface index.
       responses:
-        "200": { description: "{ devices, limit } or { points, range, bucket_seconds }" }
+        '200':
+          description: '{ devices, limit } or { points, range, bucket_seconds }'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    devices:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/NetworkDevice'
+                    limit:
+                      type: integer
+                - type: object
+                  properties:
+                    points:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/TrafficPoint'
+                    range:
+                      type: string
+                    bucket_seconds:
+                      type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getDevices
     post:
-      tags: [Infrastructure]
+      tags:
+      - Network devices
       summary: Add or update a network device
-      description: "Needs the `write` scope and an owner or admin. Give `community` for v2c, or `username`, `auth_protocol` (none, md5, sha, sha256, sha512), `auth_password`, `priv_protocol` (none, des, aes, aes256), `priv_password` for v3. On update, leave credentials out to keep them."
+      description: Needs the `write` scope and an owner or admin. Give `community` for v2c, or `username`, `auth_protocol` (none, md5, sha, sha256,
+        sha512), `auth_password`, `priv_protocol` (none, des, aes, aes256), `priv_password` for v3. On update, leave credentials out to keep them.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [name, address, version]
+              required:
+              - name
+              - address
+              - version
               properties:
-                id: { type: integer }
-                agent_id: { type: integer, nullable: true }
-                name: { type: string }
-                address: { type: string, example: 10.0.0.2 }
-                port: { type: integer, default: 161 }
-                version: { type: string, enum: ["2c", "3"] }
-                interval_seconds: { type: integer, minimum: 30, maximum: 3600 }
-                enabled: { type: boolean }
+                id:
+                  type: integer
+                agent_id:
+                  type: integer
+                  nullable: true
+                name:
+                  type: string
+                address:
+                  type: string
+                  example: 10.0.0.2
+                port:
+                  type: integer
+                  default: 161
+                version:
+                  type: string
+                  enum:
+                  - 2c
+                  - '3'
+                interval_seconds:
+                  type: integer
+                  minimum: 30
+                  maximum: 3600
+                enabled:
+                  type: boolean
       responses:
-        "201": { description: The new device. }
-        "200": { description: The updated device. }
+        '200':
+          description: The updated device.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkDevice'
+        '201':
+          description: The new device.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkDevice'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: postDevices
     delete:
-      tags: [Infrastructure]
+      tags:
+      - Network devices
       summary: Remove a network device and its history
       parameters:
-        - { name: id, in: query, required: true, schema: { type: integer } }
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
       responses:
-        "200": { description: Removed. }
+        '200':
+          description: Removed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: deleteDevices
   /api/security/compliance:
     get:
-      tags: [Security]
+      tags:
+      - Compliance
       summary: Map scan results to compliance controls
-      description: "Needs the `read` scope. Evaluates externally observable controls from each domain's newest passive, attack surface, and deep scan of the last 30 days, plus verified domains, schedules, and monitors. Each control has a status (pass, warn, fail, not_assessed), evidence, and references to CIS Controls v8, PCI DSS 4.0, ISO/IEC 27001:2022 Annex A, and SOC 2. Evidence for an audit, not a certification."
+      description: Needs the `read` scope. Evaluates externally observable controls from each domain's newest passive, attack surface, and deep
+        scan of the last 30 days, plus verified domains, schedules, and monitors. Each control has a status (pass, warn, fail, not_assessed),
+        evidence, and references to CIS Controls v8, PCI DSS 4.0, ISO/IEC 27001:2022 Annex A, and SOC 2. Evidence for an audit, not a certification.
       parameters:
-        - { name: format, in: query, required: false, schema: { type: string, enum: [csv] }, description: "csv returns the same as a spreadsheet." }
+      - name: format
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - csv
+        description: csv returns the same as a spreadsheet.
       responses:
-        "200": { description: "{ frameworks, controls, counts, sources, window_days, checked_at }, or text/csv" }
+        '200':
+          description: '{ frameworks, controls, counts, sources, window_days, checked_at }, or text/csv'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  frameworks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        short:
+                          type: string
+                        mapped:
+                          type: integer
+                        assessed:
+                          type: integer
+                        passing:
+                          type: integer
+                        warning:
+                          type: integer
+                        failing:
+                          type: integer
+                        not_assessed:
+                          type: integer
+                        percent:
+                          type: integer
+                  controls:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ComplianceControl'
+                  counts:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                  window_days:
+                    type: integer
+                  checked_at:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getSecurityCompliance
   /api/security/vulnerabilities:
     get:
-      tags: [Security]
+      tags:
+      - Vulnerabilities
       summary: List known vulnerabilities across verified domains
-      description: "Needs the `read` scope. From each domain's latest attack surface scan: CVE, severity (critical/high/medium/low), CVSS, kev (exploited in the wild), epss, host, port, product, version, and the workspace's decision if any. Matched from announced versions, so distributions' backported fixes show as false positives."
+      description: 'Needs the `read` scope. From each domain''s latest attack surface scan: CVE, severity (critical/high/medium/low), CVSS, kev
+        (exploited in the wild), epss, host, port, product, version, and the workspace''s decision if any. Matched from announced versions, so
+        distributions'' backported fixes show as false positives.'
       responses:
-        "200": { description: "{ vulns, domains }" }
+        '200':
+          description: '{ vulns, domains }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vulns:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Vulnerability'
+                  domains:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        domain:
+                          type: string
+                        scan_id:
+                          type: integer
+                          format: int64
+                        scanned_at:
+                          type: string
+                          format: date-time
+                        vuln_error:
+                          type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getSecurityVulnerabilities
   /api/security/vulnerabilities/decisions:
     post:
-      tags: [Security]
+      tags:
+      - Vulnerabilities
       summary: Accept a risk or mark a false positive
-      description: "Needs the `write` scope and an owner or admin."
+      description: Needs the `write` scope and an owner or admin.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [host, cve, status]
+              required:
+              - host
+              - cve
+              - status
               properties:
-                host: { type: string }
-                cve: { type: string, example: CVE-2021-23017 }
-                status: { type: string, enum: [accepted, false_positive] }
-                reason: { type: string, maxLength: 500 }
+                host:
+                  type: string
+                cve:
+                  type: string
+                  example: CVE-2021-23017
+                status:
+                  type: string
+                  enum:
+                  - accepted
+                  - false_positive
+                reason:
+                  type: string
+                  maxLength: 500
       responses:
-        "200": { description: The decision. }
+        '200':
+          description: The decision.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                  host:
+                    type: string
+                  cve:
+                    type: string
+                  status:
+                    type: string
+                  reason:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: postSecurityVulnerabilitiesDecisions
     delete:
-      tags: [Security]
+      tags:
+      - Vulnerabilities
       summary: Reopen a vulnerability
       parameters:
-        - { name: id, in: query, required: true, schema: { type: integer } }
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
       responses:
-        "200": { description: Reopened. }
+        '200':
+          description: Reopened.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: deleteSecurityVulnerabilitiesDecisions
   /api/security/deep:
     get:
-      tags: [Security]
+      tags:
+      - Deep scans
       summary: List deep scan requests
-      description: "Needs the `read` scope. Returns { requests, per_month, windows, checks }."
+      description: Needs the `read` scope. Returns { requests, per_month, windows, checks }.
       responses:
-        "200": { description: The workspace's requests. }
+        '200':
+          description: The workspace's requests.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requests:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DeepScanRequest'
+                  per_month:
+                    type: integer
+                  windows:
+                    type: array
+                    items:
+                      type: integer
+                  checks:
+                    type: object
+                    additionalProperties:
+                      type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getSecurityDeep
     post:
-      tags: [Security]
+      tags:
+      - Deep scans
       summary: Preview or submit a signed deep scan request
-      description: "Needs the `write` scope, an owner or admin, and a Pro or Enterprise plan. With ?preview=1, returns the authorization text and its SHA-256 for the given scope and name. Without it, submits: send the same fields plus consent_hash and accept=true; the server rebuilds the text and refuses a different hash. The request waits for a Qnetward admin's approval and runs only inside its window."
+      description: 'Needs the `write` scope, an owner or admin, and a Pro or Enterprise plan. With ?preview=1, returns the authorization text
+        and its SHA-256 for the given scope and name. Without it, submits: send the same fields plus consent_hash and accept=true; the server
+        rebuilds the text and refuses a different hash. The request waits for a Qnetward admin''s approval and runs only inside its window.'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [domain, window_hours, name]
+              required:
+              - domain
+              - window_hours
+              - name
               properties:
-                domain: { type: string }
-                hosts: { type: array, items: { type: string }, maxItems: 20 }
-                checks: { type: array, items: { type: string, enum: [exposed_files] } }
-                window_start: { type: string, format: date-time }
-                window_hours: { type: integer, enum: [24, 72, 168] }
-                name: { type: string, description: The signer's full name. }
-                consent_hash: { type: string }
-                accept: { type: boolean }
+                domain:
+                  type: string
+                hosts:
+                  type: array
+                  items:
+                    type: string
+                  maxItems: 20
+                checks:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                    - exposed_files
+                window_start:
+                  type: string
+                  format: date-time
+                window_hours:
+                  type: integer
+                  enum:
+                  - 24
+                  - 72
+                  - 168
+                name:
+                  type: string
+                  description: The signer's full name.
+                consent_hash:
+                  type: string
+                accept:
+                  type: boolean
       responses:
-        "200": { description: "Preview: { text, hash, version, input }." }
-        "201": { description: The request, pending review. }
-        "402": { $ref: "#/components/responses/Error" }
+        '200':
+          description: 'Preview: { text, hash, version, input }.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeepScanRequest'
+        '201':
+          description: The request
+          pending review.: null
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeepScanRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: postSecurityDeep
     delete:
-      tags: [Security]
+      tags:
+      - Deep scans
       summary: Withdraw a request that hasn't started
       parameters:
-        - { name: id, in: query, required: true, schema: { type: integer } }
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
       responses:
-        "200": { description: Withdrawn. }
-        "409": { $ref: "#/components/responses/Error" }
+        '200':
+          description: Withdrawn.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeepScanRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: deleteSecurityDeep
   /api/assets/domains:
     get:
-      tags: [Security]
+      tags:
+      - Domains
       summary: List the workspace's domains and their verification
-      description: "Needs the `read` scope. Each domain carries its token, the TXT record name, and the proof file URL."
+      description: Needs the `read` scope. Each domain carries its token, the TXT record name, and the proof file URL.
       responses:
-        "200": { description: "{ domains, limit }" }
+        '200':
+          description: '{ domains, limit }'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  domains:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VerifiedDomain'
+                  limit:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getAssetsDomains
     post:
-      tags: [Security]
+      tags:
+      - Domains
       summary: Add a domain to verify
-      description: "Needs the `write` scope and an owner or admin. Returns the token to publish as a TXT record at record_name or in the file at file_url."
+      description: Needs the `write` scope and an owner or admin. Returns the token to publish as a TXT record at record_name or in the file at
+        file_url.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [domain]
+              required:
+              - domain
               properties:
-                domain: { type: string, example: example.com }
+                domain:
+                  type: string
+                  example: example.com
       responses:
-        "201": { description: The domain, pending verification. }
-        "409": { $ref: "#/components/responses/Error" }
+        '201':
+          description: The domain
+          pending verification.: null
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifiedDomain'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: postAssetsDomains
     delete:
-      tags: [Security]
+      tags:
+      - Domains
       summary: Remove a domain
       parameters:
-        - { name: id, in: query, required: true, schema: { type: integer } }
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
       responses:
-        "200": { description: Removed. }
-        "404": { $ref: "#/components/responses/Error" }
+        '200':
+          description: Removed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: deleteAssetsDomains
   /api/assets/domains/verify:
     post:
-      tags: [Security]
+      tags:
+      - Domains
       summary: Look for a domain's proof now
-      description: "Needs the `write` scope and an owner or admin. 60 attempts a workspace per hour."
+      description: Needs the `write` scope and an owner or admin. 60 attempts a workspace per hour.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [id]
+              required:
+              - id
               properties:
-                id: { type: integer }
+                id:
+                  type: integer
       responses:
-        "200": { description: "The domain; status is verified when the proof was found, with last_error saying what was seen when not." }
-        "429": { $ref: "#/components/responses/Error" }
+        '200':
+          description: The domain; status is verified when the proof was found, with last_error saying what was seen when not.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifiedDomain'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/Error'
+      operationId: postAssetsDomainsVerify
   /api/monitors:
     get:
-      tags: [Monitors]
+      tags:
+      - Monitors
       summary: List monitors
-      description: "Needs the `read` scope. Includes 24-hour uptime and the last 30 checks."
+      description: Needs the `read` scope. Includes 24-hour uptime and the last 30 checks.
       responses:
-        "200":
+        '200':
           description: The workspace's monitors.
           content:
             application/json:
               schema:
                 type: array
-                items: { $ref: "#/components/schemas/Monitor" }
+                items:
+                  $ref: '#/components/schemas/Monitor'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getMonitors
     post:
-      tags: [Monitors]
+      tags:
+      - Monitors
       summary: Create or update a monitor
-      description: "Needs the `write` scope. Send `id` to update an existing monitor."
+      description: Needs the `write` scope. Send `id` to update an existing monitor.
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/MonitorInput" }
+            schema:
+              $ref: '#/components/schemas/MonitorInput'
       responses:
-        "200": { description: Updated, content: { application/json: { schema: { $ref: "#/components/schemas/Monitor" } } } }
-        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Monitor" } } } }
-        "400": { $ref: "#/components/responses/Error" }
-        "409": { $ref: "#/components/responses/Error" }
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Monitor'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Monitor'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: postMonitors
     delete:
-      tags: [Monitors]
+      tags:
+      - Monitors
       summary: Delete a monitor
-      description: "Needs the `write` scope."
+      description: Needs the `write` scope.
       parameters:
-        - { name: id, in: query, required: true, schema: { type: integer } }
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
       responses:
-        "200": { description: Deleted }
-        "404": { $ref: "#/components/responses/Error" }
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: deleteMonitors
   /api/monitors/series:
     get:
-      tags: [Monitors]
+      tags:
+      - Monitors
       summary: Response time per monitor over a window
-      description: "Needs the `read` scope. Checks are returned raw for 15m and 1h, and averaged into buckets for 6h (2 minutes) and 24h (10 minutes)."
+      description: Needs the `read` scope. Checks are returned raw for 15m and 1h, and averaged into buckets for 6h (2 minutes) and 24h (10 minutes).
       parameters:
-        - { name: window, in: query, schema: { type: string, enum: [15m, 1h, 6h, 24h], default: 1h } }
+      - name: window
+        in: query
+        schema:
+          type: string
+          enum:
+          - 15m
+          - 1h
+          - 6h
+          - 24h
+          default: 1h
       responses:
-        "200":
+        '200':
           description: Each monitor with its points in the window.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  window: { type: string }
-                  now: { type: integer, description: Server time, Unix milliseconds. }
-                  span_ms: { type: integer }
-                  bucket_seconds: { type: integer, description: 1 when points are single checks. }
+                  window:
+                    type: string
+                  now:
+                    type: integer
+                    description: Server time
+                    Unix milliseconds.: null
+                  span_ms:
+                    type: integer
+                  bucket_seconds:
+                    type: integer
+                    description: 1 when points are single checks.
                   monitors:
                     type: array
                     items:
                       type: object
                       properties:
-                        id: { type: integer }
-                        name: { type: string }
-                        protocol: { type: string, enum: [ping, tcpping, http] }
-                        target: { type: string }
-                        port: { type: integer }
-                        interval_seconds: { type: integer }
-                        enabled: { type: boolean }
-                        status: { type: string, enum: [pending, up, down] }
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        protocol:
+                          type: string
+                          enum:
+                          - ping
+                          - tcpping
+                          - http
+                        target:
+                          type: string
+                        port:
+                          type: integer
+                        interval_seconds:
+                          type: integer
+                        enabled:
+                          type: boolean
+                        status:
+                          type: string
+                          enum:
+                          - pending
+                          - up
+                          - down
                         points:
                           type: array
                           items:
                             type: object
                             properties:
-                              t: { type: integer, description: Slot start, Unix milliseconds. }
-                              rtt_ms: { type: number, description: Average of the checks that succeeded. Absent when all failed. }
-                              failed: { type: integer }
-                              checks: { type: integer }
-        "400": { $ref: "#/components/responses/Error" }
+                              t:
+                                type: integer
+                                description: Slot start
+                                Unix milliseconds.: null
+                              rtt_ms:
+                                type: number
+                                description: Average of the checks that succeeded. Absent when all failed.
+                              failed:
+                                type: integer
+                              checks:
+                                type: integer
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getMonitorsSeries
   /api/status-pages:
     get:
-      tags: [Status pages]
+      tags:
+      - Status pages
       summary: List status pages
-      description: "Needs the `read` scope."
+      description: Needs the `read` scope.
       responses:
-        "200": { description: "The workspace's pages and the plan's page limit." }
+        '200':
+          description: The workspace's pages and the plan's page limit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StatusPage'
+                  limit:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getStatusPages
     post:
-      tags: [Status pages]
+      tags:
+      - Status pages
       summary: Create or update a status page
-      description: "Needs the `write` scope. Send `id` to update. Monitors from other workspaces are ignored."
+      description: Needs the `write` scope. Send `id` to update. Monitors from other workspaces are ignored.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [slug, title]
+              required:
+              - slug
+              - title
               properties:
-                id: { type: integer }
-                slug: { type: string, description: "3 to 40 lowercase letters, numbers, or single hyphens; the page lives at /status/<slug>." }
-                title: { type: string }
-                description: { type: string }
-                published: { type: boolean }
+                id:
+                  type: integer
+                slug:
+                  type: string
+                  description: 3 to 40 lowercase letters, numbers, or single hyphens; the page lives at /status/<slug>.
+                title:
+                  type: string
+                description:
+                  type: string
+                published:
+                  type: boolean
                 monitors:
                   type: array
                   items:
                     type: object
                     properties:
-                      monitor_id: { type: integer }
-                      label: { type: string, description: "The name visitors see; the monitor's own name when empty." }
+                      monitor_id:
+                        type: integer
+                      label:
+                        type: string
+                        description: The name visitors see; the monitor's own name when empty.
       responses:
-        "200": { description: Updated }
-        "201": { description: Created }
-        "400": { $ref: "#/components/responses/Error" }
-        "409": { $ref: "#/components/responses/Error" }
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusPage'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusPage'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: postStatusPages
     delete:
-      tags: [Status pages]
+      tags:
+      - Status pages
       summary: Delete a status page
-      description: "Needs the `write` scope."
+      description: Needs the `write` scope.
       parameters:
-        - { name: id, in: query, required: true, schema: { type: integer } }
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
       responses:
-        "200": { description: Deleted }
-        "404": { $ref: "#/components/responses/Error" }
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: deleteStatusPages
   /api/public/status/{slug}:
     get:
-      tags: [Status pages]
+      tags:
+      - Status pages
       summary: A published status page
-      description: "No authentication. Shows display names and outcomes only, never monitor targets. Cached for 30 seconds."
+      description: No authentication. Shows display names and outcomes only, never monitor targets. Cached for 30 seconds.
       security: []
       parameters:
-        - { name: slug, in: path, required: true, schema: { type: string } }
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
-        "200": { description: "The page, its overall status (operational, degraded, outage, or unknown), and daily checks per service for the last 30 days." }
-        "404": { $ref: "#/components/responses/Error" }
+        '200':
+          description: The page, its overall status (operational, degraded, outage, or unknown), and daily checks per service for the last 30
+            days.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: object
+                    description: Title, description, and each component with its daily uptime.
+                  status:
+                    type: string
+                    description: Overall status of the page's components.
+                  days:
+                    type: integer
+                    description: How many days of history each component has.
+                  version:
+                    type: integer
+        '404':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getPublicStatusSlug
   /api/alerts/rules:
     get:
-      tags: [Alert rules]
+      tags:
+      - Alert rules
       summary: List alert rules
-      description: "Needs the `read` scope."
+      description: Needs the `read` scope.
       responses:
-        "200":
+        '200':
           description: The workspace's alert rules.
           content:
             application/json:
               schema:
                 type: array
-                items: { $ref: "#/components/schemas/AlertRule" }
+                items:
+                  $ref: '#/components/schemas/AlertRule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getAlertsRules
     post:
-      tags: [Alert rules]
+      tags:
+      - Alert rules
       summary: Create or update an alert rule
-      description: "Needs the `write` scope. Set a latency threshold, a loss threshold, or both. Send `id` to update."
+      description: Needs the `write` scope. Set a latency threshold, a loss threshold, or both. Send `id` to update.
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/AlertRuleInput" }
+            schema:
+              $ref: '#/components/schemas/AlertRuleInput'
       responses:
-        "200": { description: Updated, content: { application/json: { schema: { $ref: "#/components/schemas/AlertRule" } } } }
-        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/AlertRule" } } } }
-        "400": { $ref: "#/components/responses/Error" }
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertRule'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertRule'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: postAlertsRules
     delete:
-      tags: [Alert rules]
+      tags:
+      - Alert rules
       summary: Delete an alert rule
-      description: "Needs the `write` scope."
+      description: Needs the `write` scope.
       parameters:
-        - { name: id, in: query, required: true, schema: { type: integer } }
+      - name: id
+        in: query
+        required: true
+        schema:
+          type: integer
       responses:
-        "200": { description: Deleted }
-        "404": { $ref: "#/components/responses/Error" }
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: deleteAlertsRules
   /api/history:
     get:
-      tags: [History]
+      tags:
+      - History
       summary: Samples for one target
-      description: "Needs the `read` scope. Oldest first."
+      description: Needs the `read` scope. Oldest first.
       parameters:
-        - { name: type, in: query, required: true, schema: { type: string, enum: [ping, tcpping] } }
-        - { name: host, in: query, required: true, schema: { type: string } }
-        - { name: port, in: query, schema: { type: integer }, description: Required for tcpping. }
-        - { name: limit, in: query, schema: { type: integer, maximum: 1000, default: 120 } }
+      - name: type
+        in: query
+        required: true
+        schema:
+          type: string
+          enum:
+          - ping
+          - tcpping
+      - name: host
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: port
+        in: query
+        schema:
+          type: integer
+        description: Required for tcpping.
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          maximum: 1000
+          default: 120
       responses:
-        "200":
+        '200':
           description: Stored samples.
           content:
             application/json:
               schema:
                 type: array
-                items: { $ref: "#/components/schemas/HistoryPoint" }
+                items:
+                  $ref: '#/components/schemas/HistoryPoint'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getHistory
   /api/history/recent-targets:
     get:
-      tags: [History]
+      tags:
+      - History
       summary: Recently probed targets
-      description: "Needs the `read` scope."
+      description: Needs the `read` scope.
       parameters:
-        - { name: limit, in: query, schema: { type: integer, maximum: 50, default: 12 } }
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          maximum: 50
+          default: 12
       responses:
-        "200":
+        '200':
           description: Targets, most recent first.
           content:
             application/json:
@@ -679,34 +1839,75 @@ paths:
                 items:
                   type: object
                   properties:
-                    protocol: { type: string }
-                    target: { type: string }
-                    port: { type: integer }
-                    last_sample_at: { type: integer, description: Unix milliseconds }
+                    protocol:
+                      type: string
+                    target:
+                      type: string
+                    port:
+                      type: integer
+                    last_sample_at:
+                      type: integer
+                      description: Unix milliseconds
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: getHistoryRecentTargets
   /api/export/history:
     post:
-      tags: [History]
+      tags:
+      - History
       summary: Export samples as CSV or JSON
-      description: "Needs the `read` scope. Recorded in the audit log."
+      description: Needs the `read` scope. Recorded in the audit log.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [type, host]
+              required:
+              - type
+              - host
               properties:
-                type: { type: string, enum: [ping, tcpping] }
-                host: { type: string }
-                port: { type: integer }
-                limit: { type: integer, maximum: 1000 }
-                format: { type: string, enum: [csv, json], default: json }
+                type:
+                  type: string
+                  enum:
+                  - ping
+                  - tcpping
+                host:
+                  type: string
+                port:
+                  type: integer
+                limit:
+                  type: integer
+                  maximum: 1000
+                format:
+                  type: string
+                  enum:
+                  - csv
+                  - json
+                  default: json
       responses:
-        "200":
+        '200':
           description: The export file.
           content:
-            application/json: { schema: { type: array, items: { $ref: "#/components/schemas/HistoryPoint" } } }
-            text/csv: { schema: { type: string } }
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HistoryPoint'
+            text/csv:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      operationId: postExportHistory
 components:
   securitySchemes:
     apiKey:
@@ -721,154 +1922,1182 @@ components:
           schema:
             type: object
             properties:
-              error: { type: string }
+              error:
+                type: string
     Report:
       description: The run's results and summary.
       content:
         application/json:
-          schema: { $ref: "#/components/schemas/Report" }
+          schema:
+            $ref: '#/components/schemas/Report'
+    BadRequest:
+      description: The request is malformed or a value is out of range.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: port must be between 1 and 65535
+    Unauthorized:
+      description: No API key, or the key is wrong or revoked.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: authentication required
+    Forbidden:
+      description: The key lacks the scope, or your role can't do this.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: this API key does not have the write scope
+    NotFound:
+      description: Nothing with that id in this workspace.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: not found
+    Conflict:
+      description: A plan limit is reached, or the change conflicts with the current state.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: this plan's network device limit is reached
+    TooManyRequests:
+      description: Slow down. `Retry-After` says how many seconds to wait.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: too many requests
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds to wait.
   schemas:
     Report:
       type: object
       properties:
-        protocol: { type: string }
-        target: { type: string }
-        addr: { type: string }
-        port: { type: integer }
+        protocol:
+          type: string
+        target:
+          type: string
+        addr:
+          type: string
+        port:
+          type: integer
         results:
           type: array
           items:
             type: object
             properties:
-              seq: { type: integer }
-              port: { type: integer }
-              state: { type: string, description: "Port scans: open, closed, or timeout." }
-              rtt: { type: string, example: 18.2ms }
-              rtt_ms: { type: number }
-              error: { type: string }
-              addr: { type: string }
+              seq:
+                type: integer
+              port:
+                type: integer
+              state:
+                type: string
+                description: 'Port scans: open, closed, or timeout.'
+              rtt:
+                type: string
+                example: 18.2ms
+              rtt_ms:
+                type: number
+              error:
+                type: string
+              addr:
+                type: string
         summary:
           type: object
           properties:
-            sent: { type: integer }
-            recv: { type: integer }
-            loss: { type: number, description: Percent }
-            min: { type: string }
-            avg: { type: string }
-            max: { type: string }
-            median: { type: string }
-            stddev: { type: string }
-            jitter: { type: string }
-            scanned: { type: integer }
-            open: { type: integer }
-            closed: { type: integer }
-            timeout: { type: integer }
-            duration: { type: string }
+            sent:
+              type: integer
+            recv:
+              type: integer
+            loss:
+              type: number
+              description: Percent
+            min:
+              type: string
+            avg:
+              type: string
+            max:
+              type: string
+            median:
+              type: string
+            stddev:
+              type: string
+            jitter:
+              type: string
+            scanned:
+              type: integer
+            open:
+              type: integer
+            closed:
+              type: integer
+            timeout:
+              type: integer
+            duration:
+              type: string
     HistoryPoint:
       type: object
       properties:
-        ts: { type: integer, description: Unix milliseconds }
-        seq: { type: integer }
-        rtt_ms: { type: number }
-        error: { type: string }
+        ts:
+          type: integer
+          description: Unix milliseconds
+        seq:
+          type: integer
+        rtt_ms:
+          type: number
+        error:
+          type: string
     SecurityScan:
       type: object
       properties:
-        id: { type: integer }
-        kind: { type: string, enum: [passive, surface] }
-        status: { type: string, enum: [running, done, failed] }
-        error: { type: string }
-        domain: { type: string }
-        grade: { type: string, enum: [A+, A, B, C, D, F] }
-        score: { type: integer, minimum: 0, maximum: 100 }
-        high: { type: integer }
-        medium: { type: integer }
-        low: { type: integer }
-        created_at: { type: string, format: date-time }
+        id:
+          type: integer
+        kind:
+          type: string
+          enum:
+          - passive
+          - surface
+        status:
+          type: string
+          enum:
+          - running
+          - done
+          - failed
+        error:
+          type: string
+        domain:
+          type: string
+        grade:
+          type: string
+          enum:
+          - A+
+          - A
+          - B
+          - C
+          - D
+          - F
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        high:
+          type: integer
+        medium:
+          type: integer
+        low:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
         report:
           type: object
-          description: "The full report: findings (id, category tls/http/email/dns, severity high/medium/low/info/pass, title, detail, fix), and what was seen of TLS, HTTP headers, and DNS."
+          description: 'The full report: findings (id, category tls/http/email/dns, severity high/medium/low/info/pass, title, detail, fix), and
+            what was seen of TLS, HTTP headers, and DNS.'
     MonitorInput:
       type: object
-      required: [protocol, target, interval_seconds]
+      required:
+      - protocol
+      - target
+      - interval_seconds
       properties:
-        id: { type: integer, description: Set to update an existing monitor. }
-        name: { type: string, maxLength: 80 }
-        protocol: { type: string, enum: [http, tcpping, ping] }
-        target: { type: string, description: "A URL for http, otherwise a host name or IP.", example: https://api.example.com/health }
-        port: { type: integer, description: Required for tcpping. }
-        interval_seconds: { type: integer, enum: [30, 60, 300, 600, 1800, 3600] }
-        expected_status: { type: integer, description: "http only. Without it, any 2xx or 3xx is up." }
-        notify_email: { type: string, description: Emailed when the monitor goes down or comes back. Empty for none. }
-        enabled: { type: boolean, default: true }
+        id:
+          type: integer
+          description: Set to update an existing monitor.
+        name:
+          type: string
+          maxLength: 80
+        protocol:
+          type: string
+          enum:
+          - http
+          - tcpping
+          - ping
+        target:
+          type: string
+          description: A URL for http, otherwise a host name or IP.
+          example: https://api.example.com/health
+        port:
+          type: integer
+          description: Required for tcpping.
+        interval_seconds:
+          type: integer
+          enum:
+          - 30
+          - 60
+          - 300
+          - 600
+          - 1800
+          - 3600
+        expected_status:
+          type: integer
+          description: http only. Without it, any 2xx or 3xx is up.
+        notify_email:
+          type: string
+          description: Emailed when the monitor goes down or comes back. Empty for none.
+        enabled:
+          type: boolean
+          default: true
         locations:
           type: array
-          items: { type: integer }
-          description: "Where to run from: 0 for Qnetward's servers, or probe agent ids. Left out, a new monitor runs from the servers and an existing one keeps its places. With several, the monitor is down only when every place still reporting sees it down."
-        agent_id: { type: integer, deprecated: true, description: "Use locations. Runs the monitor from this one probe agent, or the servers when 0." }
+          items:
+            type: integer
+          description: 'Where to run from: 0 for Qnetward''s servers, or probe agent ids. Left out, a new monitor runs from the servers and an
+            existing one keeps its places. With several, the monitor is down only when every place still reporting sees it down.'
+        agent_id:
+          type: integer
+          deprecated: true
+          description: Use locations. Runs the monitor from this one probe agent, or the servers when 0.
     Monitor:
       allOf:
-        - $ref: "#/components/schemas/MonitorInput"
-        - type: object
-          properties:
-            status: { type: string, enum: [pending, up, down] }
-            last_checked_at: { type: string, format: date-time }
-            last_status_change_at: { type: string, format: date-time }
-            last_rtt_ms: { type: number }
-            last_status_code: { type: integer }
-            last_error: { type: string }
-            tls_expires_at: { type: string, format: date-time }
-            next_run_at: { type: string, format: date-time }
-            uptime_24h: { type: number }
-            locations:
-              type: array
-              description: The places the monitor runs from, each with its latest result.
-              items:
-                type: object
-                properties:
-                  agent_id: { type: integer, description: 0 for Qnetward's servers. }
-                  name: { type: string }
-                  status: { type: string, enum: [pending, up, down] }
-                  last_checked_at: { type: string, format: date-time }
-                  last_rtt_ms: { type: number }
-                  last_error: { type: string }
-                  online: { type: boolean, description: False for an agent that stopped checking in. Its result no longer counts. }
-            recent_checks:
-              type: array
-              items:
-                type: object
-                properties:
-                  checked_at: { type: string, format: date-time }
-                  ok: { type: boolean }
-                  rtt_ms: { type: number }
-                  loss_percent: { type: number }
-                  status_code: { type: integer }
-                  error: { type: string }
-                  agent_id: { type: integer, description: The probe agent that ran the check. Absent when the server did. }
+      - $ref: '#/components/schemas/MonitorInput'
+      - type: object
+        properties:
+          status:
+            type: string
+            enum:
+            - pending
+            - up
+            - down
+          last_checked_at:
+            type: string
+            format: date-time
+          last_status_change_at:
+            type: string
+            format: date-time
+          last_rtt_ms:
+            type: number
+          last_status_code:
+            type: integer
+          last_error:
+            type: string
+          tls_expires_at:
+            type: string
+            format: date-time
+          next_run_at:
+            type: string
+            format: date-time
+          uptime_24h:
+            type: number
+          locations:
+            type: array
+            description: The places the monitor runs from, each with its latest result.
+            items:
+              type: object
+              properties:
+                agent_id:
+                  type: integer
+                  description: 0 for Qnetward's servers.
+                name:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                  - pending
+                  - up
+                  - down
+                last_checked_at:
+                  type: string
+                  format: date-time
+                last_rtt_ms:
+                  type: number
+                last_error:
+                  type: string
+                online:
+                  type: boolean
+                  description: False for an agent that stopped checking in. Its result no longer counts.
+          recent_checks:
+            type: array
+            items:
+              type: object
+              properties:
+                checked_at:
+                  type: string
+                  format: date-time
+                ok:
+                  type: boolean
+                rtt_ms:
+                  type: number
+                loss_percent:
+                  type: number
+                status_code:
+                  type: integer
+                error:
+                  type: string
+                agent_id:
+                  type: integer
+                  description: The probe agent that ran the check. Absent when the server did.
     AlertRuleInput:
       type: object
-      required: [protocol, target]
+      required:
+      - protocol
+      - target
       properties:
-        id: { type: integer, description: Set to update an existing rule. }
-        name: { type: string }
-        protocol: { type: string, enum: [ping, tcpping] }
-        target: { type: string }
-        port: { type: integer, description: Required for tcpping. }
-        recipient_email: { type: string }
-        latency_threshold_ms: { type: number }
-        loss_threshold_percent: { type: number }
-        consecutive_breaches: { type: integer, minimum: 1, maximum: 20, default: 1 }
-        cooldown_minutes: { type: integer, minimum: 1, maximum: 1440, default: 30 }
-        notify_on_recovery: { type: boolean, default: true }
-        enabled: { type: boolean, default: true }
+        id:
+          type: integer
+          description: Set to update an existing rule.
+        name:
+          type: string
+        protocol:
+          type: string
+          enum:
+          - ping
+          - tcpping
+        target:
+          type: string
+        port:
+          type: integer
+          description: Required for tcpping.
+        recipient_email:
+          type: string
+        latency_threshold_ms:
+          type: number
+        loss_threshold_percent:
+          type: number
+        consecutive_breaches:
+          type: integer
+          minimum: 1
+          maximum: 20
+          default: 1
+        cooldown_minutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+          default: 30
+        notify_on_recovery:
+          type: boolean
+          default: true
+        enabled:
+          type: boolean
+          default: true
     AlertRule:
       allOf:
-        - $ref: "#/components/schemas/AlertRuleInput"
-        - type: object
+      - $ref: '#/components/schemas/AlertRuleInput'
+      - type: object
+        properties:
+          last_state:
+            type: string
+            enum:
+            - healthy
+            - alert
+          current_breach_streak:
+            type: integer
+          last_triggered_at:
+            type: string
+            format: date-time
+          last_recovered_at:
+            type: string
+            format: date-time
+          last_evaluated_at:
+            type: string
+            format: date-time
+          created_at:
+            type: string
+            format: date-time
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: What went wrong, written for people.
+      required:
+      - error
+      example:
+        error: target must be a hostname or IP address
+    Deleted:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        id:
+          type: integer
+          format: int64
+      required:
+      - ok
+      - id
+      example:
+        ok: true
+        id: 42
+    SecurityWatch:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        kind:
+          type: string
+          enum:
+          - passive
+          - surface
+        domain:
+          type: string
+        interval_hours:
+          type: integer
+          enum:
+          - 6
+          - 24
+          - 168
+        notify_email:
+          type: string
+        enabled:
+          type: boolean
+        last_scan_id:
+          type: integer
+          format: int64
+          nullable: true
+        last_grade:
+          type: string
+        last_score:
+          type: integer
+          nullable: true
+        last_checked_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_error:
+          type: string
+        next_run_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+      example:
+        id: 7
+        kind: passive
+        domain: example.com
+        interval_hours: 24
+        notify_email: ops@example.com
+        enabled: true
+        last_scan_id: 311
+        last_grade: A
+        last_score: 92
+        last_checked_at: '2026-11-12T06:00:00Z'
+        next_run_at: '2026-11-13T06:00:00Z'
+        created_at: '2026-11-01T09:12:00Z'
+    VerifiedDomain:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        domain:
+          type: string
+        token:
+          type: string
+          description: Publish as TXT at _qnetward-verify.<domain>, or serve at /.well-known/qnetward-verify.txt.
+        status:
+          type: string
+          enum:
+          - pending
+          - verified
+          - lapsed
+        method:
+          type: string
+          enum:
+          - dns
+          - http
+        verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_checked_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_error:
+          type: string
+        next_check_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        record_name:
+          type: string
+          description: Where to publish the TXT record.
+        file_url:
+          type: string
+          description: Where to serve the token file.
+      example:
+        record_name: _qnetward-verify.example.com
+        file_url: https://example.com/.well-known/qnetward-verify.txt
+        id: 3
+        domain: example.com
+        token: qnetward-verify=4f9c1e…
+        status: verified
+        method: dns
+        verified_at: '2026-11-10T08:00:00Z'
+        next_check_at: '2026-11-12T14:00:00Z'
+        created_at: '2026-11-10T07:55:00Z'
+    ScanStarted:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        domain:
+          type: string
+        status:
+          type: string
+          enum:
+          - running
+      example:
+        id: 412
+        domain: example.com
+        status: running
+    Vulnerability:
+      type: object
+      properties:
+        cve:
+          type: string
+        severity:
+          type: string
+          enum:
+          - critical
+          - high
+          - medium
+          - low
+        cvss:
+          type: number
+        kev:
+          type: boolean
+          description: Listed by CISA as exploited in the wild.
+        epss:
+          type: number
+          description: Probability of exploitation in the next 30 days.
+        summary:
+          type: string
+        url:
+          type: string
+        host:
+          type: string
+        port:
+          type: integer
+        product:
+          type: string
+        version:
+          type: string
+        domain:
+          type: string
+        scan_id:
+          type: integer
+          format: int64
+        scanned_at:
+          type: string
+          format: date-time
+        disposition:
+          type: object
+          nullable: true
           properties:
-            last_state: { type: string, enum: [healthy, alert] }
-            current_breach_streak: { type: integer }
-            last_triggered_at: { type: string, format: date-time }
-            last_recovered_at: { type: string, format: date-time }
-            last_evaluated_at: { type: string, format: date-time }
-            created_at: { type: string, format: date-time }
+            id:
+              type: integer
+              format: int64
+            status:
+              type: string
+              enum:
+              - accepted
+              - false_positive
+            reason:
+              type: string
+      example:
+        cve: CVE-2023-38408
+        severity: critical
+        cvss: 9.8
+        kev: false
+        epss: 0.41
+        summary: PKCS#11 feature in ssh-agent allows remote code execution
+        url: https://nvd.nist.gov/vuln/detail/CVE-2023-38408
+        host: ssh.example.com
+        port: 22
+        product: OpenSSH
+        version: 8.9p1
+        domain: example.com
+        scan_id: 405
+        scanned_at: '2026-11-12T03:10:00Z'
+        disposition: null
+    DeepScanRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        domain:
+          type: string
+        hosts:
+          type: array
+          items:
+            type: string
+        checks:
+          type: array
+          items:
+            type: string
+        window_start:
+          type: string
+          format: date-time
+        window_end:
+          type: string
+          format: date-time
+        consent_version:
+          type: string
+        consent_text:
+          type: string
+        consent_hash:
+          type: string
+        consent_name:
+          type: string
+        status:
+          type: string
+          enum:
+          - pending
+          - approved
+          - rejected
+          - cancelled
+          - running
+          - completed
+          - failed
+          - expired
+        review_note:
+          type: string
+        scan_id:
+          type: integer
+          format: int64
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+      example:
+        id: 9
+        domain: example.com
+        hosts:
+        - example.com
+        - www.example.com
+        checks:
+        - exposed_files
+        window_start: '2026-11-12T10:00:00Z'
+        window_end: '2026-11-13T10:00:00Z'
+        consent_version: '2026-11-12'
+        consent_hash: ffaed254…
+        consent_name: Jane Doe
+        status: pending
+        created_at: '2026-11-12T09:58:00Z'
+    HostSample:
+      type: object
+      properties:
+        at:
+          type: string
+          format: date-time
+        cpu:
+          type: number
+          description: Percent, all cores.
+        load1:
+          type: number
+        load5:
+          type: number
+        load15:
+          type: number
+        mem_used:
+          type: integer
+        mem_total:
+          type: integer
+        swap_used:
+          type: integer
+        swap_total:
+          type: integer
+        disks:
+          type: array
+          items:
+            type: object
+            properties:
+              mount:
+                type: string
+              fstype:
+                type: string
+              used:
+                type: integer
+              total:
+                type: integer
+        net_rx_bps:
+          type: number
+          description: Bytes per second.
+        net_tx_bps:
+          type: number
+        procs:
+          type: integer
+        uptime:
+          type: integer
+          description: Seconds.
+    Host:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        hostname:
+          type: string
+        online:
+          type: boolean
+        version:
+          type: string
+        info:
+          type: object
+          properties:
+            os:
+              type: string
+            platform:
+              type: string
+            platform_version:
+              type: string
+            kernel:
+              type: string
+            arch:
+              type: string
+            cpu_model:
+              type: string
+            cores:
+              type: integer
+            mem_total:
+              type: integer
+        latest:
+          $ref: '#/components/schemas/HostSample'
+        latest_at:
+          type: string
+          format: date-time
+          nullable: true
+      example:
+        id: 12
+        name: db-1
+        hostname: db-1.internal
+        online: true
+        version: 0.3.0
+        info:
+          os: linux
+          platform: ubuntu
+          platform_version: '24.04'
+          kernel: 6.8.0-45-generic
+          arch: amd64
+          cpu_model: AMD EPYC 7763
+          cores: 8
+          mem_total: 34359738368
+        latest:
+          at: '2026-11-12T11:20:00Z'
+          cpu: 37.5
+          load1: 2.1
+          load5: 1.8
+          load15: 1.6
+          mem_used: 21474836480
+          mem_total: 34359738368
+          swap_used: 0
+          swap_total: 4294967296
+          disks:
+          - mount: /
+            fstype: ext4
+            used: 61203283968
+            total: 107374182400
+          net_rx_bps: 524288
+          net_tx_bps: 131072
+          procs: 214
+          uptime: 1209600
+        latest_at: '2026-11-12T11:20:00Z'
+    HostPoint:
+      type: object
+      properties:
+        at:
+          type: string
+          format: date-time
+        cpu:
+          type: number
+        cpu_max:
+          type: number
+        load1:
+          type: number
+        mem_pct:
+          type: number
+        swap_pct:
+          type: number
+        disk_pct:
+          type: number
+          description: The fullest disk.
+        net_rx_bps:
+          type: number
+        net_tx_bps:
+          type: number
+        procs:
+          type: number
+      example:
+        at: '2026-11-12T11:00:00Z'
+        cpu: 34.2
+        cpu_max: 61.0
+        load1: 1.9
+        mem_pct: 62.5
+        swap_pct: 0
+        disk_pct: 57.0
+        net_rx_bps: 498000
+        net_tx_bps: 120400
+        procs: 212
+    HostAlertRule:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        agent_id:
+          type: integer
+          format: int64
+          nullable: true
+          description: Null means every host.
+        metric:
+          type: string
+          enum:
+          - cpu
+          - memory
+          - disk
+          - swap
+        threshold:
+          type: number
+        minutes:
+          type: integer
+        notify_email:
+          type: string
+        enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        firing:
+          type: array
+          items:
+            type: object
+            properties:
+              agent_id:
+                type: integer
+                format: int64
+              firing_since:
+                type: string
+                format: date-time
+              value:
+                type: number
+      example:
+        id: 4
+        agent_id: null
+        metric: disk
+        threshold: 90
+        minutes: 5
+        notify_email: ops@example.com
+        enabled: true
+        created_at: '2026-11-12T08:31:00Z'
+        firing:
+        - agent_id: 12
+          firing_since: '2026-11-12T10:02:00Z'
+          value: 93.4
+    DeviceInterface:
+      type: object
+      properties:
+        index:
+          type: integer
+        name:
+          type: string
+        descr:
+          type: string
+        alias:
+          type: string
+        type:
+          type: integer
+        admin:
+          type: string
+        oper:
+          type: string
+          enum:
+          - up
+          - down
+          - testing
+          - unknown
+          - dormant
+          - notPresent
+          - lowerLayerDown
+        speed_bps:
+          type: integer
+        in_bps:
+          type: number
+          description: Bits per second.
+        out_bps:
+          type: number
+        in_errors_ps:
+          type: number
+        out_errors_ps:
+          type: number
+        in_discards_ps:
+          type: number
+        out_discards_ps:
+          type: number
+        has_rates:
+          type: boolean
+          description: False on the first poll, before there's a previous reading.
+    NetworkDevice:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        agent_id:
+          type: integer
+          format: int64
+          nullable: true
+        agent_name:
+          type: string
+        agent_online:
+          type: boolean
+        name:
+          type: string
+        address:
+          type: string
+        port:
+          type: integer
+        version:
+          type: string
+          enum:
+          - 2c
+          - '3'
+        interval_seconds:
+          type: integer
+        enabled:
+          type: boolean
+        status:
+          type: string
+          enum:
+          - unknown
+          - up
+          - down
+        last_polled_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_error:
+          type: string
+        sys:
+          type: object
+          properties:
+            descr:
+              type: string
+            object_id:
+              type: string
+            uptime_s:
+              type: integer
+            name:
+              type: string
+            location:
+              type: string
+            contact:
+              type: string
+        interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceInterface'
+        credentials:
+          type: object
+          properties:
+            community_set:
+              type: boolean
+            username:
+              type: string
+            auth_protocol:
+              type: string
+            priv_protocol:
+              type: string
+          description: What kind of credentials are set. Secrets are never returned.
+        created_at:
+          type: string
+          format: date-time
+      example:
+        id: 5
+        agent_id: 12
+        agent_name: office-pc
+        agent_online: true
+        name: core-switch
+        address: 10.0.0.2
+        port: 161
+        version: '3'
+        interval_seconds: 60
+        enabled: true
+        status: up
+        last_polled_at: '2026-11-12T11:14:37Z'
+        last_error: ''
+        sys:
+          descr: Cisco IOS Software, C9300
+          object_id: 1.3.6.1.4.1.9.1.2494
+          uptime_s: 1036800
+          name: core-sw-1
+          location: Rack 2
+          contact: noc@example.com
+        interfaces:
+        - index: 1
+          name: Gi1/0/1
+          alias: Uplink to ISP
+          admin: up
+          oper: up
+          speed_bps: 1000000000
+          in_bps: 312000000
+          out_bps: 84000000
+          in_errors_ps: 0
+          out_errors_ps: 0
+          has_rates: true
+        credentials:
+          username: monitor
+          auth_protocol: sha256
+          priv_protocol: aes
+        created_at: '2026-11-12T09:00:00Z'
+    TrafficPoint:
+      type: object
+      properties:
+        at:
+          type: string
+          format: date-time
+        in_bps:
+          type: number
+        out_bps:
+          type: number
+        errors_ps:
+          type: number
+        rtt_ms:
+          type: number
+        up:
+          type: number
+          description: Share of polls the device answered, 0 to 1.
+      example:
+        at: '2026-11-12T11:00:00Z'
+        in_bps: 2260000000.0
+        out_bps: 2800000000.0
+        errors_ps: 0.4
+        rtt_ms: 2.5
+        up: 1
+    ComplianceControl:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        area:
+          type: string
+        status:
+          type: string
+          enum:
+          - pass
+          - warn
+          - fail
+          - not_assessed
+        summary:
+          type: string
+        refs:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: 'Requirement ids per framework: cis, pci, iso, soc2.'
+        evidence:
+          type: array
+          items:
+            type: object
+            properties:
+              domain:
+                type: string
+              host:
+                type: string
+              id:
+                type: string
+              title:
+                type: string
+              severity:
+                type: string
+              scan_id:
+                type: integer
+                format: int64
+              at:
+                type: string
+                format: date-time
+        fix:
+          type: string
+    StatusPage:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        slug:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        published:
+          type: boolean
+        monitors:
+          type: array
+          items:
+            type: object
+            properties:
+              monitor_id:
+                type: integer
+                format: int64
+              label:
+                type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      example:
+        id: 2
+        slug: acme
+        title: Acme status
+        description: Live health of Acme services.
+        published: true
+        monitors:
+        - monitor_id: 31
+          label: Website
+        - monitor_id: 32
+          label: API
+        created_at: '2026-11-05T10:00:00Z'
+        updated_at: '2026-11-11T16:20:00Z'
+x-tagGroups:
+- name: Monitoring
+  tags:
+  - Monitors
+  - Alert rules
+  - Status pages
+  - History
+  - Diagnostics
+- name: Infrastructure
+  tags:
+  - Hosts
+  - Host alerts
+  - Network devices
+- name: Security
+  tags:
+  - Passive checks
+  - Watched domains
+  - Domains
+  - Attack surface
+  - Vulnerabilities
+  - Deep scans
+  - Compliance

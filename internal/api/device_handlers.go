@@ -210,7 +210,7 @@ func (srv *Server) handleDevices(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		srv.recordAudit(r, user.WorkspaceID, user.User, "device.deleted", auditTarget{Type: "device", ID: strconv.FormatInt(id, 10), Label: d.Name}, nil)
-		writeJSON(w, http.StatusOK, map[string]any{"deleted": id})
+		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "id": id})
 	default:
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
 	}

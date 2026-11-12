@@ -43,6 +43,9 @@ const customCss = `
   --scalar-custom-header-height: 56px;
 }
 .scalar-app .references-layout { min-height: calc(100dvh - 56px); }
+/* Each example has its own language picker, which applies page-wide, so the
+   separate Client Libraries card only repeats it. */
+.introduction-card-item:has(.client-libraries) { display: none; }
 `;
 
 export function ApiReference() {

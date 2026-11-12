@@ -109,7 +109,7 @@ func (srv *Server) handleHostAlerts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		srv.recordAudit(r, user.WorkspaceID, user.User, "host_alert.deleted", auditTarget{Type: "host_alert_rule", ID: strconv.FormatInt(id, 10)}, nil)
-		writeJSON(w, http.StatusOK, map[string]any{"deleted": id})
+		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "id": id})
 	default:
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
 	}
