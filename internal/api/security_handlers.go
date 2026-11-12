@@ -26,6 +26,15 @@ const (
 // scans (GET), returns one with its report (GET ?id=), or deletes one
 // (DELETE ?id=).
 func (srv *Server) handlePassiveScans(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		srv.startPassiveScan(w, r)
+		return
+	}
+	srv.handleScans(w, r, "passive")
+}
+
+// handleScans serves listing, fetching, and deleting scans of one kind.
+func (srv *Server) handleScans(w http.ResponseWriter, r *http.Request, kind string) {
 	switch r.Method {
 	case http.MethodGet:
 		user, ok := srv.requireActorFor(w, r, store.ScopeRead)
@@ -58,14 +67,23 @@ func (srv *Server) handlePassiveScans(w http.ResponseWriter, r *http.Request) {
 			domain = d
 		}
 		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
-		scans, err := srv.store.ListSecurityScans(ctx, user.WorkspaceID, domain, limit)
+		scans, err := srv.store.ListSecurityScans(ctx, user.WorkspaceID, kind, domain, limit)
 		if err != nil {
 			writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"scans": scans})
 
-	case http.MethodPost:
+	case http.MethodDelete:
+		srv.deleteScan(w, r)
+
+	default:
+		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
+	}
+}
+
+func (srv *Server) startPassiveScan(w http.ResponseWriter, r *http.Request) {
+	{
 		user, ok := srv.requireActorFor(w, r, store.ScopeProbe)
 		if !ok {
 			return
@@ -116,8 +134,11 @@ func (srv *Server) handlePassiveScans(w http.ResponseWriter, r *http.Request) {
 		srv.recordAudit(r, user.WorkspaceID, user.User, "scan.passive", auditTarget{Type: "domain", ID: rep.Domain, Label: rep.Domain},
 			map[string]any{"grade": rep.Grade, "score": rep.Score})
 		writeJSON(w, http.StatusCreated, scan)
+	}
+}
 
-	case http.MethodDelete:
+func (srv *Server) deleteScan(w http.ResponseWriter, r *http.Request) {
+	{
 		user, ok := srv.requireActorFor(w, r, store.ScopeWrite)
 		if !ok {
 			return
@@ -138,9 +159,6 @@ func (srv *Server) handlePassiveScans(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "id": id})
-
-	default:
-		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
 	}
 }
 

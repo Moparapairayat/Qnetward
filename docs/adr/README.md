@@ -39,3 +39,4 @@ patterns don't.
 | [0023](0023-monitors-run-from-several-locations.md) | Monitors run from several locations | Accepted |
 | [0024](0024-passive-security-checks.md) | Passive security checks grade a domain from public signals | Accepted |
 | [0025](0025-domain-ownership-gates-deeper-checks.md) | Proof of domain ownership gates deeper checks | Accepted |
+| [0026](0026-attack-surface-scans.md) | Attack surface scans map a verified domain's exposure | Accepted |

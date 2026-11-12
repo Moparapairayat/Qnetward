@@ -34,7 +34,7 @@ import {
   Toggle,
 } from "@/components/tools/probe-ui";
 
-const severityMeta: Record<
+export const severityMeta: Record<
   Severity,
   { label: string; color: string; pill: string }
 > = {
@@ -89,7 +89,7 @@ const intervalLabel: Record<number, string> = {
 };
 
 /** "5m ago", or with future, "in 5h". */
-function ago(value: string, future = false) {
+export function ago(value: string, future = false) {
   const diff = (new Date(value).getTime() - Date.now()) / 1000;
   const s = Math.max(0, Math.round(future ? diff : -diff));
   const text =
@@ -102,7 +102,7 @@ function ago(value: string, future = false) {
   return s < 60 ? "just now" : `${text} ago`;
 }
 
-function GradeBadge({
+export function GradeBadge({
   grade,
   size = "lg",
 }: {

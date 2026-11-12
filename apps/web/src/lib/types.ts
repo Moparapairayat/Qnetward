@@ -407,6 +407,7 @@ export type PlanLimits = {
   monitor_locations: number;
   watched_domains: number;
   verified_domains: number;
+  surface_scans_per_hour: number;
 };
 
 export type Plan = { id: "free" | "pro" | "enterprise"; name: string; limits: PlanLimits };
@@ -735,7 +736,9 @@ export type PassiveReport = {
 
 export type SecurityScan = {
   id: number;
-  kind: "passive";
+  kind: "passive" | "surface";
+  status: "running" | "done" | "failed";
+  error?: string;
   domain: string;
   grade: string;
   score: number;
@@ -782,3 +785,30 @@ export type VerifiedDomain = {
 };
 
 export type VerifiedDomainListResponse = { domains: VerifiedDomain[]; limit: number };
+
+export type SurfaceHost = {
+  name: string;
+  source: string;
+  addresses: string[];
+  cname?: string;
+  private?: boolean;
+  open_ports: number[];
+  tls_version?: string;
+  cert_expiry?: string | null;
+  cert_issuer?: string;
+};
+
+export type SurfaceFinding = SecurityFinding & { host: string };
+
+export type SurfaceReport = {
+  domain: string;
+  grade: string;
+  score: number;
+  counts: Record<Severity, number>;
+  findings: SurfaceFinding[];
+  hosts: SurfaceHost[];
+  truncated?: boolean;
+  ct_error?: string;
+  checked_at: string;
+  duration_ms: number;
+};

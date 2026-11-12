@@ -67,7 +67,7 @@ export const roadmap: RoadmapTheme[] = [
     summary: "Scan only what you're allowed to, and keep a record of it.",
     items: [
       { name: "Passive checks", body: "Grade any domain's certificates, security headers, and email spoofing protection from public signals only.", horizon: "now" },
-      { name: "Attack surface", body: "Discovery of subdomains, open services, and certificates on domains you've verified.", horizon: "later" },
+      { name: "Attack surface", body: "Discovery of subdomains, open services, and certificates on domains you've verified.", horizon: "now" },
       { name: "Deep scans", body: "Authorized, intrusive checks with signed consent and manual approval.", horizon: "later" },
     ],
   },

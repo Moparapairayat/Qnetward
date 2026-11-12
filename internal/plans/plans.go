@@ -21,6 +21,8 @@ type Limits struct {
 	WatchedDomains int `json:"watched_domains"`
 	// VerifiedDomains is how many domains a workspace may add and prove.
 	VerifiedDomains int `json:"verified_domains"`
+	// SurfaceScansPerHour caps attack surface scans.
+	SurfaceScansPerHour int `json:"surface_scans_per_hour"`
 }
 
 type Plan struct {
@@ -39,17 +41,17 @@ var catalog = map[string]Plan{
 	Free: {ID: Free, Name: "Free", Limits: Limits{
 		Monitors: 20, APIKeys: 10, Members: 25,
 		ProbesPerHour: 600, ScansPerHour: 30, APIRequestsPerMinute: 120,
-		StatusPages: 1, Agents: 2, MonitorLocations: 2, WatchedDomains: 3, VerifiedDomains: 5,
+		StatusPages: 1, Agents: 2, MonitorLocations: 2, WatchedDomains: 3, VerifiedDomains: 5, SurfaceScansPerHour: 2,
 	}},
 	Pro: {ID: Pro, Name: "Pro", Limits: Limits{
 		Monitors: 200, APIKeys: 50, Members: 100,
 		ProbesPerHour: 3000, ScansPerHour: 200, APIRequestsPerMinute: 600,
-		StatusPages: 10, Agents: 20, MonitorLocations: 5, WatchedDomains: 25, VerifiedDomains: 50,
+		StatusPages: 10, Agents: 20, MonitorLocations: 5, WatchedDomains: 25, VerifiedDomains: 50, SurfaceScansPerHour: 10,
 	}},
 	Enterprise: {ID: Enterprise, Name: "Enterprise", Limits: Limits{
 		Monitors: 2000, APIKeys: 200, Members: 1000,
 		ProbesPerHour: 20000, ScansPerHour: 1000, APIRequestsPerMinute: 3000,
-		StatusPages: 100, Agents: 200, MonitorLocations: 20, WatchedDomains: 250, VerifiedDomains: 500,
+		StatusPages: 100, Agents: 200, MonitorLocations: 20, WatchedDomains: 250, VerifiedDomains: 500, SurfaceScansPerHour: 50,
 	}},
 }
 

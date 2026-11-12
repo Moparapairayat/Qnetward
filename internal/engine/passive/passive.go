@@ -305,3 +305,20 @@ func grade(fs []Finding) (int, string, map[Severity]int) {
 	}
 	return score, letter, counts
 }
+
+// Grade scores findings the way a passive check does: a score out of 100, a
+// letter, and how many of each severity there were.
+func Grade(fs []Finding) (int, string, map[Severity]int) { return grade(fs) }
+
+// SortFindings orders findings worst first.
+func SortFindings(fs []Finding) []Finding { return sortFindings(fs) }
+
+// InspectTLS runs only the TLS part of a passive check against host:443.
+func InspectTLS(ctx context.Context, host string, cfg Config) (TLSInfo, []Finding) {
+	if cfg.Timeout <= 0 {
+		cfg.Timeout = DefaultTimeout
+	}
+	var info TLSInfo
+	findings := checkTLS(ctx, cfg, host, &info)
+	return info, findings
+}

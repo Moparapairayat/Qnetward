@@ -142,6 +142,10 @@ func (srv *Server) RunSecurityWatches(ctx context.Context) {
 	}
 	tick := time.NewTicker(watchPollEvery)
 	defer tick.Stop()
+	// Scans a restart cut short would otherwise show as running for ever.
+	if err := srv.store.FailStaleScans(ctx, surfaceScanTimeout+time.Minute); err != nil {
+		log.Printf("closing interrupted scans failed: %v", err)
+	}
 	slots := make(chan struct{}, watchConcurrency)
 	var wg sync.WaitGroup
 	defer wg.Wait()

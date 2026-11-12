@@ -200,6 +200,41 @@ paths:
       responses:
         "200": { description: Stopped. }
         "404": { $ref: "#/components/responses/Error" }
+  /api/security/surface:
+    post:
+      tags: [Security]
+      summary: Start an attack surface scan of a verified domain
+      description: "Needs the `probe` scope. The domain, or the domain it is under, must be verified in Assets. Answers 202 with a running scan; poll GET ?id= until status is done or failed. One scan at a time per workspace; Free 2, Pro 10, Enterprise 50 an hour."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [domain]
+              properties:
+                domain: { type: string, example: example.com }
+      responses:
+        "202": { description: The scan, running. }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+    get:
+      tags: [Security]
+      summary: List attack surface scans, or get one
+      description: "Needs the `read` scope. With id, the scan with its report: hosts (name, source, addresses, open_ports, certificate) and findings, each naming its host."
+      parameters:
+        - { name: id, in: query, schema: { type: integer } }
+        - { name: limit, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: "A scan, or { scans }." }
+    delete:
+      tags: [Security]
+      summary: Delete an attack surface scan
+      parameters:
+        - { name: id, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Deleted. }
   /api/assets/domains:
     get:
       tags: [Security]
@@ -548,7 +583,9 @@ components:
       type: object
       properties:
         id: { type: integer }
-        kind: { type: string, enum: [passive] }
+        kind: { type: string, enum: [passive, surface] }
+        status: { type: string, enum: [running, done, failed] }
+        error: { type: string }
         domain: { type: string }
         grade: { type: string, enum: [A+, A, B, C, D, F] }
         score: { type: integer, minimum: 0, maximum: 100 }
