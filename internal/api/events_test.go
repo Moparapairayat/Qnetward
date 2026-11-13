@@ -196,4 +196,3 @@ func TestEventsResumeFromLastEventID(t *testing.T) {
 		t.Fatalf("an unknown position resyncs, got %s", typ)
 	}
 }
-
