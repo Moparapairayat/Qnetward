@@ -53,6 +53,9 @@ type Options struct {
 	TargetPolicy netguard.Policy
 	// NVDAPIKey raises the vulnerability database's rate limit; optional.
 	NVDAPIKey string
+	// HistoryRetention is how long probe results are kept; the public plan
+	// list states it.
+	HistoryRetention time.Duration
 }
 
 // Server holds everything the HTTP handlers need. It replaces the package-level
@@ -82,7 +85,9 @@ type Server struct {
 	// monitorRootCAs overrides the system roots for HTTPS monitors; tests only.
 	monitorRootCAs *x509.CertPool
 	billing        Billing
-	payments       *uddoktapay.Client
+	// historyRetention is how long probe results are kept, for the plan list.
+	historyRetention time.Duration
+	payments         *uddoktapay.Client
 	// events fans live updates out to open consoles.
 	events *eventHub
 	// agentLinks holds agents' live connections to this instance.
@@ -105,31 +110,32 @@ type Server struct {
 // New wires a Server from its dependencies and options.
 func New(deps Deps, opts Options) *Server {
 	srv := &Server{
-		store:          deps.Store,
-		cache:          deps.Cache,
-		objects:        deps.Objects,
-		mailer:         deps.Mailer,
-		secrets:        deps.Secrets,
-		publicBaseURL:  strings.TrimRight(strings.TrimSpace(opts.PublicBaseURL), "/"),
-		allowedOrigins: opts.AllowedOrigins,
-		adminEmails:    opts.AdminEmails,
-		demoEnabled:    opts.DemoEnabled,
-		demoName:       strings.TrimSpace(opts.DemoName),
-		demoEmail:      strings.TrimSpace(opts.DemoEmail),
-		demoFullAccess: opts.DemoFullAccess,
-		demoWorkspace:  strings.TrimSpace(opts.DemoWorkspace),
-		billing:        opts.Billing,
-		events:         newEventHub(),
-		agentLinks:     newAgentLinks(),
-		payments:       &uddoktapay.Client{BaseURL: strings.TrimSpace(opts.Billing.UddoktaPayURL), APIKey: strings.TrimSpace(opts.Billing.UddoktaPayKey)},
-		demoCreatedAt:  time.Now().UTC(),
-		targetPolicy:   opts.TargetPolicy,
-		vulns:          vulndb.New(opts.NVDAPIKey),
-		google:         opts.Google,
-		webauthn:       newWebAuthn(opts.PublicBaseURL),
-		probeLimiter:   make(chan struct{}, maxConcurrentProbes),
-		authLimiter:    newRateLimiter(),
-		quotaLimiter:   newRateLimiter(),
+		store:            deps.Store,
+		cache:            deps.Cache,
+		objects:          deps.Objects,
+		mailer:           deps.Mailer,
+		secrets:          deps.Secrets,
+		publicBaseURL:    strings.TrimRight(strings.TrimSpace(opts.PublicBaseURL), "/"),
+		allowedOrigins:   opts.AllowedOrigins,
+		adminEmails:      opts.AdminEmails,
+		demoEnabled:      opts.DemoEnabled,
+		demoName:         strings.TrimSpace(opts.DemoName),
+		demoEmail:        strings.TrimSpace(opts.DemoEmail),
+		demoFullAccess:   opts.DemoFullAccess,
+		demoWorkspace:    strings.TrimSpace(opts.DemoWorkspace),
+		billing:          opts.Billing,
+		historyRetention: opts.HistoryRetention,
+		events:           newEventHub(),
+		agentLinks:       newAgentLinks(),
+		payments:         &uddoktapay.Client{BaseURL: strings.TrimSpace(opts.Billing.UddoktaPayURL), APIKey: strings.TrimSpace(opts.Billing.UddoktaPayKey)},
+		demoCreatedAt:    time.Now().UTC(),
+		targetPolicy:     opts.TargetPolicy,
+		vulns:            vulndb.New(opts.NVDAPIKey),
+		google:           opts.Google,
+		webauthn:         newWebAuthn(opts.PublicBaseURL),
+		probeLimiter:     make(chan struct{}, maxConcurrentProbes),
+		authLimiter:      newRateLimiter(),
+		quotaLimiter:     newRateLimiter(),
 	}
 	if srv.demoEnabled {
 		if srv.demoName == "" {
@@ -185,6 +191,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/avatars/{id}", srv.handleAvatarImage)
 	mux.HandleFunc("/api/workspaces", srv.handleWorkspaces)
 	mux.HandleFunc("/api/workspace", srv.handleWorkspaceGeneral)
+	mux.HandleFunc("/api/plans", srv.handlePlans)
 	mux.HandleFunc("/api/billing", srv.handleBilling)
 	mux.HandleFunc("/api/billing/checkout", srv.handleBillingCheckout)
 	mux.HandleFunc("/api/billing/uddoktapay/return", srv.handleUddoktaPayReturn)

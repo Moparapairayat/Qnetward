@@ -408,6 +408,11 @@ export type PlanLimits = {
   watched_domains: number;
   verified_domains: number;
   surface_scans_per_hour: number;
+  /** Authorized deep scans in 30 days; 0 means none. */
+  deep_scans_per_month: number;
+  host_alert_rules: number;
+  /** Network devices polled over SNMP. */
+  devices: number;
 };
 
 export type Plan = { id: "free" | "pro" | "enterprise"; name: string; limits: PlanLimits };
@@ -599,6 +604,17 @@ export type BillingPayment = {
   payment_method?: string;
   created_at: string;
   paid_at?: string | null;
+};
+
+export type PlanPrice = { plan: string; months: number; amount: number };
+
+/** GET /api/plans: the public price list, the same numbers the server enforces and charges. */
+export type PublicPlansResponse = {
+  currency: string;
+  payments_enabled: boolean;
+  /** How long probe results are kept, on every plan. */
+  history_days: number;
+  plans: (Plan & { prices: PlanPrice[] })[];
 };
 
 export type BillingResponse = {

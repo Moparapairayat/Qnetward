@@ -8,37 +8,11 @@ import { Check, Lock } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { BillingPayment, BillingResponse, PlanLimits, SessionResponse, WorkspaceTeamResponse, WorkspaceUsageResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { planCopy, proPricing, taka, type PlanId } from "@/lib/plans";
 import { formatDate, Notice, SettingsCard, SettingsPageTitle } from "@/components/settings/settings-ui";
 
-type PlanId = "free" | "pro" | "enterprise";
-
-// Mirrors the public pricing on the landing page (features/landing/pricing.tsx).
-const PLANS: { id: PlanId; name: string; blurb: string; features: string[] }[] = [
-  {
-    id: "free",
-    name: "Free",
-    blurb: "Everything you need to start monitoring.",
-    features: [
-      "All four diagnostic tools",
-      "HTTP(S), TCP, and ping monitors",
-      "Email, Slack, Discord, Telegram, and webhook alerts",
-      "API keys, audit log, roles",
-      "CSV and JSON export",
-    ],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    blurb: "For teams that rely on Qnetward every day.",
-    features: ["Everything in Free, with higher limits", "Probe agents for private networks, as they arrive", "Multi-region probing, as it arrives", "Priority email support"],
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    blurb: "For ISPs, MSPs, and regulated teams.",
-    features: ["SSO and SCIM", "Dedicated or self-hosted", "Audit log export", "Priority support and SLA"],
-  },
-];
+const PLAN_IDS: PlanId[] = ["free", "pro", "enterprise"];
+const PLAN_NAMES: Record<PlanId, string> = { free: "Free", pro: "Pro", enterprise: "Enterprise" };
 
 // The workspace record still uses the pre-launch plan names.
 function planFor(stored?: string): PlanId {
@@ -46,9 +20,6 @@ function planFor(stored?: string): PlanId {
   if (stored === "enterprise") return "enterprise";
   return "free";
 }
-
-// "BDT" rather than ৳: the console font has no taka sign, and a fallback glyph looks broken.
-const taka = (amount: number) => `BDT ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 
 const METHOD_NAMES: Record<string, string> = { bkash: "bKash", nagad: "Nagad", rocket: "Rocket", upay: "Upay" };
 const methodName = (m?: string) => (m ? (METHOD_NAMES[m.toLowerCase()] ?? m) : "");
@@ -122,19 +93,19 @@ const LIMIT_ROWS: { key: keyof PlanLimits; label: string; suffix?: string }[] = 
  * places, price, line, action, limits, features, so they compare at a glance.
  */
 function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; plans?: WorkspaceUsageResponse["plans"]; current: PlanId }) {
-  const prices = (billing?.prices ?? []).filter((p) => p.plan === "pro");
-  const monthly = prices.find((p) => p.months === 1);
-  const yearly = prices.find((p) => p.months === 12);
+  const pro = proPricing((billing?.prices ?? []).filter((p) => p.plan === "pro"));
+  const monthly = pro.monthly;
+  const yearly = pro.yearly;
   // Yearly by default; falls back to whichever price the server offers.
   const [period, setPeriod] = useState<Period>(12);
   const price = (period === 12 ? yearly : monthly) ?? monthly ?? yearly;
-  const saving = monthly && yearly ? monthly.amount * 12 - yearly.amount : 0;
+  const saving = pro.saving;
   const canBuy = Boolean(billing?.payments_enabled && price);
 
   const checkout = useMutation({
-    mutationFn: () => apiRequest<{ payment_url: string }>("/api/billing/checkout", { method: "POST", body: JSON.stringify({ plan: "pro", months: period }) }),
+    mutationFn: () => apiRequest<{ payment_url: string }>("/api/billing/checkout", { method: "POST", body: JSON.stringify({ plan: "pro", months: price?.months ?? period }) }),
     onSuccess: (resp) => {
-      window.location.href = resp.payment_url;
+      window.location.assign(resp.payment_url);
     },
   });
 
@@ -142,9 +113,9 @@ function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; pla
     if (id === "free") return { amount: "BDT 0", unit: "forever", note: "No card needed" };
     if (id === "enterprise") return { amount: "Custom", unit: "", note: "Annual agreement" };
     if (!price) return { amount: "Pro", unit: "", note: "Pricing isn't set on this server" };
-    return period === 12
-      ? { amount: taka(Math.round(price.amount / 12)), unit: "/ month", note: `${taka(price.amount)} billed yearly` }
-      : { amount: taka(price.amount), unit: "/ month", note: "Billed every month" };
+    return price.months === 12
+      ? { amount: taka(price.perMonth), unit: "/ month", note: `${taka(price.total)} paid once for 12 months` }
+      : { amount: taka(price.total), unit: "/ month", note: "Paid a month at a time" };
   };
 
   const action = (id: PlanId) => {
@@ -220,17 +191,24 @@ function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; pla
                 </button>
               ))}
             </div>
-            {saving > 0 ? <span className="rounded-md bg-[rgba(74,222,128,0.1)] px-2 py-1 text-2xs font-medium text-[#86efac]">Save {taka(saving)}</span> : null}
+            {saving > 0 ? (
+              <span className="rounded-md bg-[rgba(74,222,128,0.1)] px-2 py-1 text-2xs font-medium text-[#86efac]">
+                Yearly saves {taka(saving)}
+                {pro.freeMonths ? ` · ${pro.freeMonths} months free` : ` · ${pro.savingPercent}% off`}
+              </span>
+            ) : null}
           </div>
         ) : null}
       </div>
 
       <div className="mt-5 grid gap-3 lg:grid-cols-3">
-        {PLANS.map((p) => {
-          const isCurrent = p.id === current;
-          const featured = p.id === "pro";
-          const pr = priceFor(p.id);
-          const limits = plans?.find((plan) => plan.id === p.id)?.limits;
+        {PLAN_IDS.map((id) => {
+          const isCurrent = id === current;
+          const featured = id === "pro";
+          const pr = priceFor(id);
+          const limits = plans?.find((plan) => plan.id === id)?.limits;
+          const copy = limits ? planCopy(id, limits) : null;
+          const p = { id, name: PLAN_NAMES[id] };
           return (
             <div
               key={p.id}
@@ -253,7 +231,7 @@ function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; pla
                 {pr.unit ? <span className="text-sm text-[var(--lp-subtle)]">{pr.unit}</span> : null}
               </p>
               <p className="mt-1.5 truncate text-xs leading-4 text-[var(--lp-subtle)]">{pr.note}</p>
-              <p className="mt-3 min-h-[36px] text-sm leading-snug text-[var(--lp-muted)]">{p.blurb}</p>
+              <p className="mt-3 min-h-[36px] text-sm leading-snug text-[var(--lp-muted)]">{copy?.audience}</p>
 
               <div className="mt-4">{action(p.id)}</div>
               {/* Same height on every card, so the limits below line up. */}
@@ -275,10 +253,13 @@ function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; pla
               </dl>
 
               <ul className="mt-4 grid gap-2 border-t border-[var(--lp-border)] pt-4 text-sm text-[var(--lp-muted)]">
-                {p.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <Check className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", featured ? "text-[var(--lp-accent)]" : "text-[var(--lp-green)]")} />
-                    <span>{f}</span>
+                {(copy?.features ?? []).map((f) => (
+                  <li key={f.label} className="flex items-start gap-2">
+                    <Check className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", f.planned ? "text-[var(--lp-subtle)]" : featured ? "text-[var(--lp-accent)]" : "text-[var(--lp-green)]")} />
+                    <span>
+                      {f.label}
+                      {f.planned ? <span className="text-[var(--lp-subtle)]"> (planned)</span> : null}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -336,7 +317,8 @@ export function BillingWorkspace() {
   const usage = usageQuery.data?.usage;
   const limits = usageQuery.data?.plan.limits;
   const current = planFor(billing?.plan ?? workspace?.plan);
-  const plan = PLANS.find((p) => p.id === current) ?? PLANS[0];
+  const currentLimits = usageQuery.data?.plans?.find((p) => p.id === current)?.limits;
+  const plan = { name: PLAN_NAMES[current], blurb: currentLimits ? planCopy(current, currentLimits).audience : "" };
   const expires = billing?.plan_expires_at ?? null;
   const payments = billing?.payments ?? [];
 

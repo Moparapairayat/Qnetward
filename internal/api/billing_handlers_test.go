@@ -183,3 +183,51 @@ func TestUddoktaPayCheckoutAndSettlement(t *testing.T) {
 		t.Fatalf("unexpected billing summary %s", get.Body.String())
 	}
 }
+
+// The public price list is what the site shows: each plan's enforced limits,
+// and Pro's prices exactly as checkout charges them.
+func TestPublicPlans(t *testing.T) {
+	previousBilling, previousRetention := testSrv.billing, testSrv.historyRetention
+	testSrv.billing = Billing{ProMonthlyBDT: 1500, ProYearlyBDT: 15000}
+	testSrv.historyRetention = 7 * 24 * time.Hour
+	t.Cleanup(func() { testSrv.billing, testSrv.historyRetention = previousBilling, previousRetention })
+
+	rr := httptest.NewRecorder()
+	testSrv.handlePlans(rr, httptest.NewRequest(http.MethodGet, "/api/plans", nil))
+	if rr.Code != http.StatusOK {
+		t.Fatalf("plans: %d %s", rr.Code, rr.Body.String())
+	}
+	var resp struct {
+		Currency    string `json:"currency"`
+		HistoryDays int    `json:"history_days"`
+		Plans       []struct {
+			ID     string `json:"id"`
+			Limits struct {
+				Monitors int `json:"monitors"`
+			} `json:"limits"`
+			Prices []priceOption `json:"prices"`
+		} `json:"plans"`
+	}
+	if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
+		t.Fatal(err)
+	}
+	if resp.Currency != "BDT" || resp.HistoryDays != 7 || len(resp.Plans) != 3 {
+		t.Fatalf("unexpected list: %s", rr.Body.String())
+	}
+	free, pro, enterprise := resp.Plans[0], resp.Plans[1], resp.Plans[2]
+	if free.ID != "free" || pro.ID != "pro" || enterprise.ID != "enterprise" {
+		t.Fatalf("plans out of upgrade order: %s", rr.Body.String())
+	}
+	if free.Limits.Monitors != 20 || pro.Limits.Monitors != 200 {
+		t.Fatalf("limits don't match the catalog: %s", rr.Body.String())
+	}
+	if len(free.Prices) != 0 || len(enterprise.Prices) != 0 {
+		t.Fatalf("only Pro has a price: %s", rr.Body.String())
+	}
+	if len(pro.Prices) != 2 || pro.Prices[0] != (priceOption{Plan: "pro", Months: 1, Amount: 1500}) || pro.Prices[1] != (priceOption{Plan: "pro", Months: 12, Amount: 15000}) {
+		t.Fatalf("Pro prices: %+v", pro.Prices)
+	}
+	if rr.Header().Get("Cache-Control") == "" {
+		t.Fatal("the list should be cacheable")
+	}
+}

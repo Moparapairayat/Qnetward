@@ -7,6 +7,7 @@ import { LandingNav } from "./landing-nav";
 import { SiteFooter } from "./site-footer";
 import { NetworkCanvas } from "./network-canvas";
 import { Pricing } from "./pricing";
+import type { PublicPlansResponse } from "@/lib/types";
 import { ProductShowcase } from "./product-showcase";
 import { MonitorStackVisual, MonitorVisual, ProbeVisual, WorkspaceVisual } from "./step-visuals";
 import { TechLogos } from "./tech-logos";
@@ -107,7 +108,7 @@ function Check({ muted = false }: { muted?: boolean }) {
   );
 }
 
-export function LandingPage() {
+export function LandingPage({ plans }: { plans: PublicPlansResponse | null }) {
   return (
     <>
       <LandingEffects />
@@ -398,7 +399,7 @@ export function LandingPage() {
               aside="Everything that exists today is free, with room for a small team. Pro raises the limits when you need more, paid in taka with bKash, Nagad, Rocket, or card."
             />
             <div className="mt-14">
-              <Pricing />
+              <Pricing initial={plans} />
             </div>
           </div>
         </section>

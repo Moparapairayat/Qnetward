@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"qnetward/internal/plans"
 	"qnetward/internal/platform/uddoktapay"
 	"qnetward/internal/store"
 )
@@ -301,4 +302,38 @@ func (srv *Server) billingWorkspace(w http.ResponseWriter, r *http.Request) (sto
 		return store.User{}, store.WorkspaceContext{}, false
 	}
 	return user, workspace, true
+}
+
+// publicPlan is one plan on the public price list.
+type publicPlan struct {
+	plans.Plan
+	// Prices are what the plan costs per period; empty for Free and Enterprise.
+	Prices []priceOption `json:"prices"`
+}
+
+// handlePlans is the public price list: every plan's limits and what Pro
+// costs. The landing page and the billing page both read it, so the numbers
+// on the site are the ones the server enforces and charges.
+func (srv *Server) handlePlans(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
+		return
+	}
+	out := make([]publicPlan, 0, len(plans.IDs))
+	for _, id := range plans.IDs {
+		p := publicPlan{Plan: plans.For(id), Prices: []priceOption{}}
+		for _, o := range srv.priceOptions() {
+			if o.Plan == id {
+				p.Prices = append(p.Prices, o)
+			}
+		}
+		out = append(out, p)
+	}
+	w.Header().Set("Cache-Control", "public, max-age=300")
+	writeJSON(w, http.StatusOK, map[string]any{
+		"currency":         "BDT",
+		"payments_enabled": srv.paymentsEnabled(),
+		"history_days":     int(srv.historyRetention.Hours() / 24),
+		"plans":            out,
+	})
 }

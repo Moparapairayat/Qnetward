@@ -3,114 +3,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Check, Clock3, Minus } from "@/components/icons";
+import { apiRequest } from "@/lib/api";
+import { comparisonRows, planCopy, proPricing, taka, type Cell, type Period, type PlanId } from "@/lib/plans";
+import type { PublicPlansResponse } from "@/lib/types";
 
-type Feature = { label: string; planned?: boolean };
-type Period = "monthly" | "yearly";
-
-type Plan = {
-  id: "free" | "pro" | "enterprise";
-  name: string;
-  audience: string;
-  inherits?: string;
-  limits: [string, string][];
-  features: Feature[];
-  cta: { label: string; href: string };
+// Calls to action; everything else on the cards comes from the API.
+const CTA: Record<PlanId, { label: string; href: string }> = {
+  free: { label: "Start free", href: "/signup" },
+  pro: { label: "Start with Pro", href: "/signup" },
+  enterprise: { label: "Contact sales", href: "mailto:sales@qnetward.com?subject=Qnetward%20Enterprise" },
 };
-
-// Pro's price in taka. Keep in step with QNETWARD_PRO_MONTHLY_BDT and
-// QNETWARD_PRO_YEARLY_BDT on the server.
-const PRO_MONTHLY = 1500;
-const PRO_YEARLY = 15000;
-const bdt = (n: number) => `BDT ${n.toLocaleString("en-US")}`;
-
-const plans: Plan[] = [
-  {
-    id: "free",
-    name: "Free",
-    audience: "Everything you need to start monitoring, for you and your team.",
-    limits: [
-      ["Monitors", "20"],
-      ["Members", "25"],
-      ["Probes", "600 / hr"],
-    ],
-    features: [
-      { label: "ICMP ping, TCP ping, port scan, DNS lookup" },
-      { label: "HTTP(S), TCP, and ping monitors" },
-      { label: "Alerts by email, Slack, Discord, Telegram, or webhook" },
-      { label: "Workspaces, roles, API keys, audit log" },
-      { label: "CSV and JSON export" },
-    ],
-    cta: { label: "Start free", href: "/signup" },
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    audience: "For teams that rely on Qnetward every day and need room to grow.",
-    inherits: "Everything in Free, plus",
-    limits: [
-      ["Monitors", "200"],
-      ["Members", "100"],
-      ["Probes", "3,000 / hr"],
-    ],
-    features: [
-      { label: "Ten times the monitors" },
-      { label: "Priority email support" },
-      { label: "Probe agents for private networks", planned: true },
-      { label: "Multi-region probing", planned: true },
-      { label: "Longer history retention", planned: true },
-    ],
-    cta: { label: "Start with Pro", href: "/signup" },
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    audience: "For ISPs, MSPs, and regulated teams with their own requirements.",
-    inherits: "Everything in Pro, plus",
-    limits: [
-      ["Monitors", "2,000"],
-      ["Members", "1,000"],
-      ["Probes", "20,000 / hr"],
-    ],
-    features: [
-      { label: "SSO (SAML, OIDC) and SCIM", planned: true },
-      { label: "Dedicated or self-hosted deployment", planned: true },
-      { label: "Authorized deep security scanning", planned: true },
-      { label: "Audit log export and data residency", planned: true },
-      { label: "Priority support and an SLA", planned: true },
-    ],
-    cta: { label: "Contact sales", href: "mailto:sales@qnetward.com?subject=Qnetward%20Enterprise" },
-  },
-];
-
-type Cell = true | false | "planned" | string;
-
-const comparison: { group: string; rows: { label: string; values: [Cell, Cell, Cell] }[] }[] = [
-  {
-    group: "Diagnostics",
-    rows: [
-      { label: "Ping, TCP ping, port scan, DNS", values: [true, true, true] },
-      { label: "History retention", values: ["7 days", "planned", "planned"] },
-      { label: "Export to CSV and JSON", values: [true, true, true] },
-    ],
-  },
-  {
-    group: "Monitoring",
-    rows: [
-      { label: "Alert rules", values: [true, true, true] },
-      { label: "Chat and webhook alerts", values: [true, true, true] },
-      { label: "Uptime monitors", values: ["20", "200", "2,000"] },
-      { label: "Probe agents and regions", values: [false, "planned", "planned"] },
-    ],
-  },
-  {
-    group: "Team and security",
-    rows: [
-      { label: "Workspaces and roles", values: [true, true, true] },
-      { label: "SSO and SCIM", values: [false, false, "planned"] },
-    ],
-  },
-];
 
 function CellValue({ value }: { value: Cell }) {
   if (value === true) return <Check className="mx-auto h-4 w-4 text-[var(--lp-green)]" aria-label="Included" />;
@@ -124,42 +28,73 @@ function CellValue({ value }: { value: Cell }) {
   return <span className="text-sm text-[var(--lp-text)]">{value}</span>;
 }
 
-function priceFor(id: Plan["id"], period: Period) {
-  if (id === "free") return { amount: "BDT 0", unit: "forever", note: "No card needed" };
-  if (id === "enterprise") return { amount: "Custom", unit: "", note: "Annual agreement, invoiced" };
-  return period === "yearly"
-    ? { amount: bdt(Math.round(PRO_YEARLY / 12)), unit: "/ month", note: `${bdt(PRO_YEARLY)} billed yearly` }
-    : { amount: bdt(PRO_MONTHLY), unit: "/ month", note: "Billed every month" };
-}
-
-export function Pricing() {
+export function Pricing({ initial }: { initial: PublicPlansResponse | null }) {
   const [period, setPeriod] = useState<Period>("yearly");
-  const saving = PRO_MONTHLY * 12 - PRO_YEARLY;
+  // The server renders the page with the price list; the browser fetches it
+  // only if that failed (during a build, say).
+  const query = useQuery({
+    queryKey: ["public-plans"],
+    queryFn: () => apiRequest<PublicPlansResponse>("/api/plans"),
+    initialData: initial ?? undefined,
+    staleTime: 300_000,
+  });
+  const catalog = query.data;
+  const pro = proPricing(catalog?.plans.find((p) => p.id === "pro")?.prices ?? []);
+  const hasBoth = Boolean(pro.monthly && pro.yearly);
+  const shown = (period === "yearly" ? pro.yearly : pro.monthly) ?? pro.monthly ?? pro.yearly;
+
+  const priceFor = (id: PlanId) => {
+    if (id === "free") return { amount: taka(0), unit: "forever", note: "No card needed" };
+    if (id === "enterprise") return { amount: "Custom", unit: "", note: "Annual agreement, invoiced" };
+    if (!shown) return { amount: "Pro", unit: "", note: "Pricing coming soon" };
+    return shown.months === 12
+      ? { amount: taka(shown.perMonth), unit: "/ month", note: `${taka(shown.total)} paid once for 12 months` }
+      : { amount: taka(shown.total), unit: "/ month", note: "Paid a month at a time" };
+  };
+
+  if (!catalog) {
+    return (
+      <div className="lp-reveal grid gap-4 lg:grid-cols-3" aria-busy="true" aria-label="Loading prices">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="h-[560px] animate-pulse rounded-2xl border border-[var(--lp-border)] bg-[var(--lp-bg-raised)]" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="lp-reveal">
-      <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
-        <div className="grid grid-cols-2 rounded-full border border-[var(--lp-border)] bg-[var(--lp-bg-raised)] p-1" role="radiogroup" aria-label="Billing period">
-          {(["monthly", "yearly"] as Period[]).map((p) => (
-            <button
-              key={p}
-              type="button"
-              role="radio"
-              aria-checked={period === p}
-              onClick={() => setPeriod(p)}
-              className={`rounded-full px-5 py-1.5 text-base transition-colors ${period === p ? "bg-white/[0.1] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]"}`}
-            >
-              {p === "yearly" ? "Yearly" : "Monthly"}
-            </button>
-          ))}
+      {hasBoth ? (
+        <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
+          <div className="grid grid-cols-2 rounded-full border border-[var(--lp-border)] bg-[var(--lp-bg-raised)] p-1" role="radiogroup" aria-label="Billing period">
+            {(["monthly", "yearly"] as Period[]).map((p) => (
+              <button
+                key={p}
+                type="button"
+                role="radio"
+                aria-checked={period === p}
+                onClick={() => setPeriod(p)}
+                className={`rounded-full px-5 py-1.5 text-base transition-colors ${period === p ? "bg-white/[0.1] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]"}`}
+              >
+                {p === "yearly" ? "Yearly" : "Monthly"}
+              </button>
+            ))}
+          </div>
+          {pro.saving > 0 ? (
+            <span className="rounded-full bg-[rgba(74,222,128,0.1)] px-3 py-1 text-sm text-[#86efac]">
+              Yearly saves {taka(pro.saving)}
+              {pro.freeMonths ? ` · ${pro.freeMonths} months free` : ` · ${pro.savingPercent}% off`}
+            </span>
+          ) : null}
         </div>
-        <span className="rounded-full bg-[rgba(74,222,128,0.1)] px-3 py-1 text-sm text-[#86efac]">Yearly saves {bdt(saving)}</span>
-      </div>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-3">
-        {plans.map((plan) => {
+        {catalog.plans.map((plan) => {
           const featured = plan.id === "pro";
-          const price = priceFor(plan.id, period);
+          const price = priceFor(plan.id);
+          const copy = planCopy(plan.id, plan.limits);
+          const cta = CTA[plan.id];
           return (
             <article
               key={plan.id}
@@ -172,7 +107,7 @@ export function Pricing() {
                   <span className="rounded-full bg-[var(--lp-accent)] px-2.5 py-0.5 text-xs font-medium text-white">Recommended</span>
                 ) : null}
               </div>
-              <p className="mt-2 min-h-[48px] text-base leading-relaxed text-[var(--lp-muted)]">{plan.audience}</p>
+              <p className="mt-2 min-h-[48px] text-base leading-relaxed text-[var(--lp-muted)]">{copy.audience}</p>
 
               <div className="mt-6 flex h-11 items-baseline gap-2">
                 <span className="text-3xl font-semibold leading-none tracking-[-0.03em]">{price.amount}</span>
@@ -180,13 +115,13 @@ export function Pricing() {
               </div>
               <p className="mt-1 text-sm text-[var(--lp-subtle)]">{price.note}</p>
 
-              <Link href={plan.cta.href} className={`lp-btn mt-6 w-full ${featured ? "lp-btn-primary" : "lp-btn-secondary"}`}>
-                {plan.cta.label}
+              <Link href={cta.href} className={`lp-btn mt-6 w-full ${featured ? "lp-btn-primary" : "lp-btn-secondary"}`}>
+                {cta.label}
               </Link>
-              <p className="mt-2.5 h-4 text-center text-xs text-[var(--lp-subtle)]">{featured ? "bKash · Nagad · Rocket · Card" : ""}</p>
+              <p className="mt-2.5 h-4 text-center text-xs text-[var(--lp-subtle)]">{featured && catalog.payments_enabled ? "bKash · Nagad · Rocket · Card" : ""}</p>
 
               <dl className="mt-6 grid grid-cols-3 gap-2 rounded-xl border border-[var(--lp-border)] bg-black/20 p-3 text-center">
-                {plan.limits.map(([label, value]) => (
+                {copy.headline.map(([label, value]) => (
                   <div key={label}>
                     <dd className="text-md font-medium text-[var(--lp-text)]">{value}</dd>
                     <dt className="mt-0.5 text-2xs text-[var(--lp-subtle)]">{label}</dt>
@@ -195,9 +130,9 @@ export function Pricing() {
               </dl>
 
               <div className="mt-6">
-                <p className="text-sm font-medium text-[var(--lp-text)]">{plan.inherits ?? "Includes"}</p>
+                <p className="text-sm font-medium text-[var(--lp-text)]">{copy.inherits ?? "Includes"}</p>
                 <ul className="mt-4 space-y-3">
-                  {plan.features.map((feature) => (
+                  {copy.features.map((feature) => (
                     <li key={feature.label} className="flex gap-3 text-base leading-snug">
                       {feature.planned ? (
                         <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--lp-subtle)]" aria-hidden="true" />
@@ -224,7 +159,7 @@ export function Pricing() {
         <span className="inline-flex items-center gap-1.5">
           <Clock3 className="h-3.5 w-3.5" aria-hidden="true" /> Planned, not available yet
         </span>
-        <span>Free needs no card. Pro is paid ahead in taka, with no auto-renewal.</span>
+        <span>Free needs no card. Pro is paid ahead in taka and never renews by itself.</span>
       </p>
 
       <div className="mt-10 flex flex-col items-center gap-4">
@@ -251,14 +186,14 @@ export function Pricing() {
                 <th className="w-[36%] px-6 py-3 font-normal">
                   <span className="sr-only">Feature</span>
                 </th>
-                {plans.map((plan) => (
+                {catalog.plans.map((plan) => (
                   <th key={plan.id} className="px-4 py-3 text-center font-medium text-[var(--lp-text)]">
                     {plan.name}
                   </th>
                 ))}
               </tr>
             </thead>
-            {comparison.map((section) => (
+            {comparisonRows(catalog).map((section) => (
               <tbody key={section.group}>
                 <tr>
                   <th colSpan={4} className="border-t border-[var(--lp-border)] bg-white/[0.015] px-6 py-2 text-xs font-medium text-[var(--lp-subtle)]">
