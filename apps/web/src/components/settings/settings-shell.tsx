@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
@@ -57,7 +57,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       {active ? <span className="absolute -left-2 top-1.5 bottom-1.5 w-[3px] rounded-full bg-[var(--lp-accent)]" aria-hidden="true" /> : null}
       <item.icon weight={active ? "fill" : "bold"} className={cn("h-4 w-4", active ? "text-white" : "text-[#9a9aa4]")} />
       <span className="flex-1 truncate">{item.label}</span>
-      {item.soon ? <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-3xs leading-[18px] text-[var(--lp-muted)]">Soon</span> : null}
+      {item.soon ? <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-2xs leading-[18px] text-[var(--lp-muted)]">Soon</span> : null}
     </Link>
   );
 }
@@ -102,6 +102,15 @@ export function SettingsShell({ children }: { context?: "personal" | "workspace"
   const workspaceName = workspace?.name || "Workspace";
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
+  // On phones the tab row scrolls sideways: bring the current page's tab into view.
+  const rowRef = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    const row = rowRef.current;
+    const current = row?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!row || !current) return;
+    row.scrollLeft = current.offsetLeft - (row.clientWidth - current.offsetWidth) / 2;
+  }, [pathname]);
+
 
   return (
     <div className="mx-auto w-full max-w-[1180px]">
@@ -114,8 +123,13 @@ export function SettingsShell({ children }: { context?: "personal" | "workspace"
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10">
         <nav aria-label="Settings" className="min-w-0">
-          {/* Small screens: one scrollable row, account links then workspace links. */}
-          <ul className="-mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-1 lg:hidden">
+          {/* Small screens: one scrollable row, account links then workspace links.
+              The right edge fades so it reads as "more this way", and the current
+              page is scrolled into view. */}
+          <ul
+            ref={rowRef}
+            className="relative -mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-1 [mask-image:linear-gradient(to_right,black_calc(100%-40px),transparent)] [scrollbar-width:none] lg:hidden"
+          >
             {[...personalItems, null, ...workspaceItems].map((item, i) =>
               item === null ? (
                 <li key="divider" className="mx-1 h-5 w-px shrink-0 bg-[var(--lp-border-strong)]" aria-hidden="true" />

@@ -549,3 +549,9 @@ html:has(.lp-console) {
   font-size: 14px;
 }
 
+
+/* Sidebar nav: the list fades out above the footer instead of being cut off
+   by its border, which reads as "more below". */
+.lp-console .lp-scroll-fade {
+  mask-image: linear-gradient(to bottom, black calc(100% - 28px), transparent);
+}

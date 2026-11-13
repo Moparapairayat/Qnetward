@@ -231,7 +231,7 @@ export function PortScanClient() {
               type="button"
               onClick={() => setShowAdvanced((v) => !v)}
               aria-expanded={showAdvanced}
-              className="ml-auto inline-flex items-center gap-1 text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
+              className="ml-auto inline-flex -my-1.5 py-1.5 items-center gap-1 text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
             >
               <SlidersHorizontal className="h-3.5 w-3.5" /> Options
               <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showAdvanced && "rotate-180")} />

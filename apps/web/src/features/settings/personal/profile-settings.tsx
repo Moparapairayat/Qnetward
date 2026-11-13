@@ -355,7 +355,7 @@ function SocialLinksCard({ profile, disabled }: { profile: UserProfile; disabled
       {links.length < LINKS_MAX ? (
         <button
           type="button"
-          className="mt-2 inline-flex items-center gap-1.5 text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)] disabled:opacity-40"
+          className="mt-0.5 inline-flex items-center gap-1.5 py-1.5 text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)] disabled:opacity-40"
           disabled={disabled}
           onClick={() => set([...links, ""])}
         >

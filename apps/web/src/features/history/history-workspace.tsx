@@ -429,7 +429,7 @@ export function HistoryWorkspace() {
                       : "border-[var(--lp-border)] text-[var(--lp-muted)] hover:border-[var(--lp-border-strong)] hover:text-[var(--lp-text)]",
                   )}
                 >
-                  <span className="text-3xs text-[var(--lp-subtle)]">{target.protocol === "tcpping" ? "TCP" : "ICMP"}</span>
+                  <span className="text-2xs text-[var(--lp-subtle)]">{target.protocol === "tcpping" ? "TCP" : "ICMP"}</span>
                   <span className="lp-mono">{label}</span>
                 </button>
               );

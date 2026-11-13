@@ -284,7 +284,7 @@ function DeviceDetail({ device, canEdit }: { device: NetworkDevice; canEdit: boo
         </span>
         <div className="flex flex-wrap items-center gap-2">
           {iface ? (
-            <button type="button" className="text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setIface(0)}>
+            <button type="button" className="-my-1.5 py-1.5 text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setIface(0)}>
               Show all interfaces
             </button>
           ) : null}

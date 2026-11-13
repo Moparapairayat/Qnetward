@@ -52,7 +52,7 @@ function PlanBadge({ plan }: { plan?: string }) {
   return (
     <span
       className={cn(
-        "shrink-0 rounded px-1.5 text-3xs font-medium leading-[18px]",
+        "shrink-0 rounded px-1.5 text-2xs font-medium leading-[18px]",
         label === "Pro"
           ? "bg-[rgba(255,61,127,0.14)] text-[#ff8fb3]"
           : label === "Enterprise"
@@ -304,12 +304,12 @@ function NavLink({
       />
       {collapsed ? null : <span className="flex-1 truncate">{item.label}</span>}
       {item.soon && !collapsed ? (
-        <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-3xs leading-[18px] text-[var(--lp-muted)]">Soon</span>
+        <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-2xs leading-[18px] text-[var(--lp-muted)]">Soon</span>
       ) : null}
       {badge ? (
         <span
           className={cn(
-            "grid min-w-[18px] place-items-center rounded-full bg-[var(--lp-accent)] px-1 text-3xs font-semibold leading-[18px] text-white",
+            "grid min-w-[18px] place-items-center rounded-full bg-[var(--lp-accent)] px-1 text-2xs font-semibold leading-[18px] text-white",
             collapsed && "absolute right-1 top-1 min-w-[14px] text-[9px] leading-[14px]",
           )}
           aria-label={`${badge} firing`}
@@ -385,7 +385,7 @@ export function Sidebar({ session }: { session: SessionResponse }) {
           <WorkspaceSwitcher session={session} collapsed={collapsed} />
         </div>
 
-        <nav className={cn("flex-1 pb-4 pt-1", collapsed ? "overflow-visible px-2" : "lp-scroll-subtle overflow-y-auto px-3")} aria-label="Main">
+        <nav className={cn("min-h-0 flex-1 pb-6 pt-1", collapsed ? "overflow-visible px-2" : "lp-scroll-subtle lp-scroll-fade overflow-y-auto px-3")} aria-label="Main">
           {sidebarSections(isAdmin).map((section) => {
             const hasActive = section.items.some((item) => item.href === pathname);
             const single = section.items.length === 1;

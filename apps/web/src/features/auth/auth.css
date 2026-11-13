@@ -597,7 +597,7 @@
   border: 1px solid var(--lp-border);
   border-radius: 4px;
   padding: 0 5px;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 16px;
   color: var(--lp-subtle);
 }
@@ -705,4 +705,11 @@
   .lp-auth .auth-input-group {
     gap: 6px;
   }
+}
+
+/* A bigger tap area for "Forgot your password?" without moving the label row. */
+.lp-auth .auth-inline-link {
+  display: inline-block;
+  padding-block: 6px;
+  margin-block: -6px;
 }

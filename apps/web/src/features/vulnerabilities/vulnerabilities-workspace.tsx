@@ -52,8 +52,8 @@ function VulnRow({ vuln, canDecide }: { vuln: VulnView; canDecide: boolean }) {
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="lp-mono text-sm text-[var(--lp-text)]">{vuln.cve}</span>
-            {vuln.kev ? <span className="rounded border border-[rgba(255,61,127,0.45)] px-1 text-3xs font-medium text-[#ff8fb3]">Exploited in the wild</span> : null}
-            {decided ? <span className="rounded border border-[var(--lp-border)] px-1 text-3xs text-[var(--lp-muted)]">{decisionLabel[decided.status]}</span> : null}
+            {vuln.kev ? <span className="rounded border border-[rgba(255,61,127,0.45)] px-1 text-2xs font-medium text-[#ff8fb3]">Exploited in the wild</span> : null}
+            {decided ? <span className="rounded border border-[var(--lp-border)] px-1 text-2xs text-[var(--lp-muted)]">{decisionLabel[decided.status]}</span> : null}
           </span>
           <span className="mt-0.5 block truncate text-xs text-[var(--lp-muted)]">
             {vuln.product} {vuln.version} on <span className="lp-mono">{vuln.host}:{vuln.port}</span>
@@ -198,7 +198,7 @@ export function VulnerabilitiesWorkspace() {
             bodyClassName="p-0"
             aside={
               <div className="flex flex-wrap items-center gap-2">
-                <input className="h-8 w-44 px-2.5 text-xs" placeholder="Search CVE, host, product" value={query} onChange={(e) => setQuery(e.target.value)} />
+                <input className="h-8 w-44 px-2.5 text-xs" aria-label="Search findings" placeholder="Search CVE, host, product" value={query} onChange={(e) => setQuery(e.target.value)} />
                 <div className="flex rounded-lg border border-[var(--lp-border)] p-0.5" role="tablist" aria-label="Filter by severity">
                   {(["all", ...severities] as const).map((s) => (
                     <button

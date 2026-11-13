@@ -11,7 +11,7 @@ import {
 } from "@/features/overview/overview-helpers";
 import { buildOverviewDemoData } from "@/features/overview/overview-demo-data";
 import { GettingStarted } from "@/features/overview/overview-view";
-import { ComingNext, ResponseTimeChart, StatCards, TargetHealthCard, TargetsSummary, WelcomeHeader } from "@/features/overview/overview-dashboard";
+import { ResponseTimeChart, StatCards, TargetHealthCard, TargetsSummary, WelcomeHeader } from "@/features/overview/overview-dashboard";
 import { MonitorResponseChart } from "@/features/overview/monitor-response-chart";
 import { useLiveInterval } from "@/lib/live";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -239,7 +239,6 @@ export function OverviewWorkspace() {
       </div>
       <TargetsSummary targets={targetSnapshots} historyMap={chartHistoryMap} />
       {hasData ? null : <GettingStarted hasAlertRules={alertRuleCount > 0} />}
-      <ComingNext />
     </div>
   );
 }

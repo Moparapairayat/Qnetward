@@ -79,8 +79,8 @@ export function WelcomeHeader({
 }) {
   const deps = health ? [health.database, health.redis, health.object_storage].filter((d) => d.enabled) : [];
   const degraded = health?.ok === false || deps.some((d) => !d.healthy);
-  const serviceLabel = !health ? "Checking services" : degraded ? "Service degraded" : "Services healthy";
-  const serviceColor = !health ? "#85858e" : degraded ? "#fbbf24" : "#4ade80";
+  const serviceLabel = degraded ? "Service degraded" : "Services healthy";
+  const serviceColor = degraded ? "#fbbf24" : "#4ade80";
   const first = (name ?? "").trim().split(/\s+/)[0];
   const withData = targets.filter((t) => t.healthState !== "idle" && t.healthState !== "disabled");
   const healthy = withData.filter((t) => t.healthState === "stable").length;
@@ -104,14 +104,17 @@ export function WelcomeHeader({
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <Link
-          href="/status"
-          className="mr-1 hidden items-center gap-2 text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)] sm:flex"
-          title="Database, cache, and object storage status"
-        >
-          <span className="h-2 w-2 rounded-full" style={{ background: serviceColor }} />
-          {serviceLabel}
-        </Link>
+        {/* Shown once the status is known; a grey "checking" label only added noise. */}
+        {health ? (
+          <Link
+            href="/status"
+            className="mr-1 hidden items-center gap-2 text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)] sm:flex"
+            title="Database, cache, and object storage status"
+          >
+            <span className="h-2 w-2 rounded-full" style={{ background: serviceColor }} />
+            {serviceLabel}
+          </Link>
+        ) : null}
         <Link href="/tcp-ping" className="console-btn border border-[rgba(255,61,127,0.4)] bg-[rgba(255,61,127,0.08)] text-[#ff8fb3] hover:bg-[rgba(255,61,127,0.14)]">
           <Plus className="h-3.5 w-3.5" /> New probe
         </Link>
@@ -702,7 +705,7 @@ export function TargetHealthCard({ targets }: { targets: OverviewTargetSnapshot[
           <ul className="mt-2 space-y-1.5 text-xs">
             {attention.slice(0, 3).map((t) => (
               <li key={t.id}>
-                <Link href={t.href} className="flex items-center gap-2 text-[var(--lp-text)] hover:text-[var(--lp-accent)]">
+                <Link href={t.href} className="-my-1.5 flex items-center gap-2 py-1.5 text-[var(--lp-text)] hover:text-[var(--lp-accent)]">
                   <span className="h-1.5 w-1.5 rounded-sm" style={{ background: stateMeta[t.healthState].color }} />
                   <span className="truncate">{t.name}</span>
                   <span className="ml-auto text-[var(--lp-subtle)]">{stateMeta[t.healthState].label}</span>
@@ -793,7 +796,7 @@ export function TargetsSummary({ targets, historyMap }: { targets: OverviewTarge
               rows.map((t) => (
                 <tr key={t.id} className="group border-b border-[var(--lp-border)] last:border-b-0 hover:bg-white/[0.02]">
                   <td className="px-4 py-3">
-                    <Link href={t.href} className="text-[var(--lp-text)] hover:text-[var(--lp-accent)]">
+                    <Link href={t.href} className="-my-2 inline-block py-2 text-[var(--lp-text)] hover:text-[var(--lp-accent)]">
                       {t.name}
                     </Link>
                   </td>
@@ -842,43 +845,6 @@ export function TargetsSummary({ targets, historyMap }: { targets: OverviewTarge
             )}
           </tbody>
         </table>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------ coming next */
-
-const upcoming = [
-  { href: "/topology", title: "Topology", body: "A live map of your network built from LLDP and CDP.", phase: 3 },
-  { href: "/attack-surface", title: "Attack surface", body: "Subdomains, open services, and certificates you didn't know about.", phase: 4 },
-  { href: "/assistant", title: "AI assistant", body: "Ask about outages in plain language and get likely causes.", phase: 5 },
-];
-
-export function ComingNext() {
-  return (
-    <section aria-labelledby="next-title">
-      <div className="mb-3 flex items-baseline justify-between">
-        <h2 id="next-title" className="text-base font-medium">
-          Coming next
-        </h2>
-        <span className="text-xs text-[var(--lp-subtle)]">Previews with sample data</span>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {upcoming.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="group rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4 transition-colors hover:border-[var(--lp-border-strong)] hover:bg-[#202025]"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">{item.title}</span>
-              <span className="rounded border border-[var(--lp-border)] px-1.5 text-3xs leading-4 text-[var(--lp-subtle)]">Phase {item.phase}</span>
-            </div>
-            <p className="mt-2 text-xs leading-relaxed text-[var(--lp-muted)]">{item.body}</p>
-            <span className="mt-3 inline-block text-xs text-[var(--lp-accent)] opacity-80 group-hover:opacity-100">See preview →</span>
-          </Link>
-        ))}
       </div>
     </section>
   );

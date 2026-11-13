@@ -186,7 +186,7 @@ export function PublicStatusPage({ data: initial }: { data: PublicStatusResponse
       </div>
 
       <footer className="mt-14 flex items-center justify-center">
-        <Link href="/" className="inline-flex items-center gap-2 text-xs text-[var(--lp-subtle)] hover:text-[var(--lp-text)]">
+        <Link href="/" className="inline-flex -my-1.5 py-1.5 items-center gap-2 text-xs text-[var(--lp-subtle)] hover:text-[var(--lp-text)]">
           <QnetwardMark size={16} /> Powered by Qnetward
         </Link>
       </footer>

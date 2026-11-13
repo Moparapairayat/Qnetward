@@ -154,7 +154,7 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
                 aria-checked={win === w.id}
                 onClick={() => setWin(w.id)}
                 className={cn(
-                  "rounded px-2 py-0.5 text-xs transition-colors",
+                  "rounded px-2.5 py-1.5 text-xs transition-colors sm:px-2 sm:py-0.5",
                   win === w.id ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
                 )}
               >

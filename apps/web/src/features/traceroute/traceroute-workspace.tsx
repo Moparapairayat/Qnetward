@@ -41,7 +41,7 @@ function HopRow({ hop, scale }: { hop: TracerouteHop; scale: number }) {
           <div className="min-w-0">
             <p className="truncate text-sm text-[var(--lp-text)]" title={hop.name || hop.addr}>
               {hop.name || hop.addr}
-              {hop.reached ? <span className="ml-2 rounded border border-[rgba(74,222,128,0.3)] px-1.5 text-3xs text-[#86efac]">Destination</span> : null}
+              {hop.reached ? <span className="ml-2 rounded border border-[rgba(74,222,128,0.3)] px-1.5 text-2xs text-[#86efac]">Destination</span> : null}
             </p>
             {hop.name ? <p className="lp-mono truncate text-2xs text-[var(--lp-subtle)]">{hop.addr}</p> : null}
           </div>

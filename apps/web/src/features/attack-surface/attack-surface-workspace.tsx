@@ -62,7 +62,7 @@ function HostRow({ host, isNew, newPorts }: { host: SurfaceHost; isNew: boolean;
       <td className="min-w-0 px-4 py-2.5">
         <p className="lp-mono break-all text-xs text-[var(--lp-text)]">
           {host.name}
-          {isNew ? <span className="ml-2 rounded border border-[rgba(96,165,250,0.35)] px-1 font-sans text-3xs text-[#93c5fd]">New</span> : null}
+          {isNew ? <span className="ml-2 rounded border border-[rgba(96,165,250,0.35)] px-1 font-sans text-2xs text-[#93c5fd]">New</span> : null}
         </p>
         <p className="text-2xs text-[var(--lp-subtle)]">
           {host.source}
@@ -71,7 +71,7 @@ function HostRow({ host, isNew, newPorts }: { host: SurfaceHost; isNew: boolean;
         {host.services?.length ? (
           <p className="mt-0.5 flex flex-wrap gap-1">
             {host.services.map((s) => (
-              <span key={s.port} className="rounded border border-[var(--lp-border)] px-1 text-3xs text-[var(--lp-muted)]" title={s.banner}>
+              <span key={s.port} className="rounded border border-[var(--lp-border)] px-1 text-2xs text-[var(--lp-muted)]" title={s.banner}>
                 {s.product ? `${s.product} ${s.version}` : (s.banner ?? "").slice(0, 32)}
               </span>
             ))}
@@ -414,7 +414,7 @@ export function AttackSurfaceWorkspace() {
                     {s.status === "done" ? (
                       <GradeBadge grade={s.grade} size="sm" />
                     ) : (
-                      <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-3xs", s.status === "running" ? "border-[var(--lp-border)] text-[var(--lp-subtle)]" : "border-[rgba(255,61,127,0.35)] text-[#ff8fb3]")}>
+                      <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-2xs", s.status === "running" ? "border-[var(--lp-border)] text-[var(--lp-subtle)]" : "border-[rgba(255,61,127,0.35)] text-[#ff8fb3]")}>
                         {s.status === "running" ? "…" : "!"}
                       </span>
                     )}

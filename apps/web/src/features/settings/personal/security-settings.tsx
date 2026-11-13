@@ -213,7 +213,7 @@ function SessionsCard({ disabled }: { disabled: boolean }) {
           })}
           {ordered.length > SESSIONS_PREVIEW ? (
             <li className="px-4 py-2">
-              <button type="button" className="text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setShowAll((v) => !v)}>
+              <button type="button" className="-my-1.5 py-1.5 text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setShowAll((v) => !v)}>
                 {showAll ? "Show fewer" : `Show all ${ordered.length} sessions`}
               </button>
             </li>
@@ -237,7 +237,7 @@ function ActivityCard() {
       title="Recent account activity"
       description="Sign-ins, failed attempts, and password and session changes on your account. If something here wasn't you, change your password."
       hint={events.length > ACTIVITY_PREVIEW ? (
-        <button type="button" className="text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setShowAll((v) => !v)}>
+        <button type="button" className="-my-1.5 py-1.5 text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setShowAll((v) => !v)}>
           {showAll ? "Show less" : `Show all ${events.length}`}
         </button>
       ) : null}

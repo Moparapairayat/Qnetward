@@ -120,7 +120,7 @@ export function WorldHexMap() {
             >
               <span className={`fi fi-${m.id} rounded-[2px]`} style={{ width: 16, height: 12, backgroundSize: "cover" }} />
               <span className="font-medium text-[var(--lp-text)]">{m.name}</span>
-              <span className="lp-mono text-3xs" style={{ color: m.primary ? "var(--lp-accent)" : "var(--lp-subtle)" }}>
+              <span className="lp-mono text-2xs" style={{ color: m.primary ? "var(--lp-accent)" : "var(--lp-subtle)" }}>
                 {m.primary ? "primary" : "planned"}
               </span>
             </div>
