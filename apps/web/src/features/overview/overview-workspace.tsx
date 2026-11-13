@@ -14,6 +14,7 @@ import { GettingStarted } from "@/features/overview/overview-view";
 import { ComingNext, ResponseTimeChart, StatCards, TargetHealthCard, TargetsSummary, WelcomeHeader } from "@/features/overview/overview-dashboard";
 import { MonitorResponseChart } from "@/features/overview/monitor-response-chart";
 import { useLiveInterval } from "@/lib/live";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function mergeTrackedRules(alertRules: AlertRule[], recentTargets: RecentHistoryTarget[]) {
   const merged = new Map<string, AlertRule>();
@@ -215,6 +216,12 @@ export function OverviewWorkspace() {
   const alertRuleCount = alertRulesSource.length;
   const firingCount = alertRulesSource.filter((rule) => rule.enabled && rule.last_state === "alert").length;
   const hasData = targetSnapshots.length > 0;
+  // Until the first answers arrive the page would read as an empty workspace
+  // ("0 targets", "No probe results yet"); show its shape instead.
+  const firstLoad = !isDemo && (sessionQuery.isPending || alertRulesQuery.isPending || recentTargetsQuery.isPending);
+  if (firstLoad) {
+    return <OverviewSkeleton />;
+  }
 
   return (
     <div className="grid grid-cols-1 gap-5 [&>*]:min-w-0">
@@ -233,6 +240,27 @@ export function OverviewWorkspace() {
       <TargetsSummary targets={targetSnapshots} historyMap={chartHistoryMap} />
       {hasData ? null : <GettingStarted hasAlertRules={alertRuleCount > 0} />}
       <ComingNext />
+    </div>
+  );
+}
+
+function OverviewSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-5" role="status" aria-label="Loading the overview">
+      <div className="grid gap-2">
+        <Skeleton className="h-8 w-64 max-w-full" />
+        <Skeleton className="h-4 w-80 max-w-full" />
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} className="h-[142px] rounded-xl" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)]">
+        <Skeleton className="h-[296px] rounded-xl" />
+        <Skeleton className="h-[296px] rounded-xl" />
+      </div>
+      <Skeleton className="h-[260px] rounded-xl" />
     </div>
   );
 }

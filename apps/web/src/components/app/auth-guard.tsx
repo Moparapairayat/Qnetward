@@ -9,8 +9,8 @@ import { Sidebar } from "@/components/app/sidebar";
 import { LiveEvents } from "@/components/app/live-events";
 import { Topbar } from "@/components/app/topbar";
 import { CommandPalette } from "@/components/app/command-palette";
-import { QnetwardMark } from "@/features/landing/qnetward-mark";
 import { LiveToaster } from "@/components/app/live-toaster";
+import { ConsoleShellSkeleton } from "@/components/app/route-states";
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -32,26 +32,15 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     }
   }, [pathname, router, session.data?.authenticated, session.data?.platform_role, session.data?.read_only, session.isLoading]);
 
-  if (session.isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center" role="status" aria-label="Loading your workspace">
-        <span className="lp-pulse">
-          <QnetwardMark size={32} />
-        </span>
-      </div>
-    );
-  }
-
-  if (!session.data?.authenticated) {
-    return null;
-  }
-
-  if (session.data.read_only && pathname !== "/overview") {
-    return null;
-  }
-
-  if (pathname.startsWith("/admin") && session.data.platform_role !== "admin") {
-    return null;
+  // While the session is checked, and while a redirect is on its way, show the
+  // console frame instead of a blank screen.
+  if (
+    session.isLoading ||
+    !session.data?.authenticated ||
+    (session.data.read_only && pathname !== "/overview") ||
+    (pathname.startsWith("/admin") && session.data.platform_role !== "admin")
+  ) {
+    return <ConsoleShellSkeleton />;
   }
 
   return (
