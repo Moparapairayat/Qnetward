@@ -70,6 +70,14 @@ func (l *agentLinks) add(agentID int64) (chan []byte, func()) {
 	}
 }
 
+// has says whether an agent is connected here.
+func (l *agentLinks) has(agentID int64) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	_, ok := l.links[agentID]
+	return ok
+}
+
 // send passes a command to an agent connected here, and says whether it was.
 func (l *agentLinks) send(agentID int64, msg []byte) bool {
 	l.mu.Lock()
@@ -147,7 +155,10 @@ func (h *eventHub) publishLive(workspaceID int64, evt liveEvent) {
 
 // handleAgentLive is the agent's live connection.
 func (srv *Server) handleAgentLive(w http.ResponseWriter, r *http.Request) {
-	if srv.store == nil {
+	// One store for the life of the connection, which can outlast the request
+	// that opened it: the reader goroutine below keeps using it.
+	st := srv.store
+	if st == nil {
 		writeJSON(w, http.StatusServiceUnavailable, apiError{Error: "storage not available"})
 		return
 	}
@@ -157,7 +168,7 @@ func (srv *Server) handleAgentLive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-	agent, err := srv.store.AgentHeartbeat(ctx, hashOpaqueToken(secret), store.AgentInfo{RemoteIP: clientIPFromRequest(r)})
+	agent, err := st.AgentHeartbeat(ctx, hashOpaqueToken(secret), store.AgentInfo{RemoteIP: clientIPFromRequest(r)})
 	cancel()
 	if err != nil {
 		if errors.Is(err, store.ErrAgentCredentials) {
@@ -195,7 +206,7 @@ func (srv *Server) handleAgentLive(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			_ = conn.SetReadDeadline(time.Now().Add(2 * agentLivePing))
-			srv.agentLiveMessage(agent, data)
+			srv.agentLiveMessage(st, agent, data)
 		}
 	}()
 
@@ -227,7 +238,7 @@ func (srv *Server) handleAgentLive(w http.ResponseWriter, r *http.Request) {
 
 // agentLiveMessage handles one live reading from an agent. Readings are
 // cleaned like stored samples, then passed to open consoles without storing.
-func (srv *Server) agentLiveMessage(agent store.Agent, data []byte) {
+func (srv *Server) agentLiveMessage(st *store.Store, agent store.Agent, data []byte) {
 	var msg struct {
 		Type   string              `json:"type"`
 		Host   *store.HostSample   `json:"host,omitempty"`
@@ -253,7 +264,7 @@ func (srv *Server) agentLiveMessage(agent store.Agent, data []byte) {
 		}
 		// Only a device this agent polls.
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		d, err := srv.store.GetDevice(ctx, agent.WorkspaceID, msg.Device.DeviceID)
+		d, err := st.GetDevice(ctx, agent.WorkspaceID, msg.Device.DeviceID)
 		cancel()
 		if err != nil || d.AgentID == nil || *d.AgentID != agent.ID {
 			return

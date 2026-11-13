@@ -146,5 +146,15 @@ func TestAgentLiveLink(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 	}
+	// Close the link and wait for its handler to finish, so nothing it started
+	// is still running when the test's store is swapped out.
+	conn.Close()
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) && testSrv.agentLinks.has(created.Agent.ID) {
+		time.Sleep(20 * time.Millisecond)
+	}
+	if testSrv.agentLinks.has(created.Agent.ID) {
+		t.Fatal("the agent's handler should stop once its link closes")
+	}
 	testSrv.background.Wait()
 }
