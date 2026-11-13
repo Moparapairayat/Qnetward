@@ -127,12 +127,21 @@ func (c *Client) ValidKey(header string) bool {
 	return c.Configured() && subtle.ConstantTimeCompare([]byte(strings.TrimSpace(header)), []byte(c.APIKey)) == 1
 }
 
+// endpoint joins the installation URL and an API path. Panels show their
+// "Base URL" with /api on the end (https://pay.example.com/api), while the
+// paths here start with /api, so either form of the URL works.
+func (c *Client) endpoint(path string) string {
+	base := strings.TrimRight(strings.TrimSpace(c.BaseURL), "/")
+	base = strings.TrimSuffix(base, "/api")
+	return base + path
+}
+
 func (c *Client) post(ctx context.Context, path string, body, out any) error {
 	raw, err := json.Marshal(body)
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, strings.TrimRight(c.BaseURL, "/")+path, bytes.NewReader(raw))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.endpoint(path), bytes.NewReader(raw))
 	if err != nil {
 		return err
 	}
