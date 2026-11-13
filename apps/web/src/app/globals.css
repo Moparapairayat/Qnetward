@@ -1520,3 +1520,14 @@ dd,
     font-size: 16px !important;
   }
 }
+
+/* Keyboard focus: one visible ring for every link and control that has no
+   focus style of its own. Pointer clicks don't show it (:focus-visible). Kept in
+   the base layer so a component's own focus utilities still win. */
+@layer base {
+  :where(a, button, summary, [role="button"], [role="tab"], [role="menuitem"], [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: 2px solid #ff3d7f;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}

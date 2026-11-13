@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { featurePreviews, previewBySlug } from "@/features/previews/feature-previews";
 import { PreviewPage } from "@/features/previews/preview-page";
@@ -8,6 +9,11 @@ export function generateStaticParams() {
 }
 
 export const dynamicParams = false;
+
+export async function generateMetadata({ params }: { params: Promise<{ feature: string }> }): Promise<Metadata> {
+  const { feature } = await params;
+  return { title: previewBySlug.get(feature)?.title ?? "Preview" };
+}
 
 export default async function FeaturePreviewRoute({ params }: { params: Promise<{ feature: string }> }) {
   const { feature } = await params;

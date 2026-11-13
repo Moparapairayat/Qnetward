@@ -106,7 +106,7 @@ export function SettingsShell({ children }: { context?: "personal" | "workspace"
   return (
     <div className="mx-auto w-full max-w-[1180px]">
       <header className="pb-6">
-        <h1 className="text-xl font-medium tracking-[-0.02em]">Settings</h1>
+        <p className="text-xl font-medium tracking-[-0.02em]">Settings</p>
         <p className="mt-1 text-sm text-[var(--lp-muted)]">
           Your own account, and everything shared in <span className="text-[var(--lp-text)]">{workspaceName}</span>.
         </p>

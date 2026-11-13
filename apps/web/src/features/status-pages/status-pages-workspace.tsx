@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -240,17 +241,24 @@ function PageCard({ page, monitors, onEdit }: { page: StatusPage; monitors: Map<
         <button type="button" className="console-btn console-btn-secondary h-8 w-8 px-0" aria-label={`Edit ${page.title}`} onClick={onEdit}>
           <Pencil className="h-3.5 w-3.5" />
         </button>
-        <button
-          type="button"
-          className="console-btn console-btn-secondary h-8 w-8 px-0 hover:text-[#ff8fb3]"
-          aria-label={`Delete ${page.title}`}
-          disabled={remove.isPending}
-          onClick={() => {
-            if (window.confirm(`Delete ${page.title}? Its link stops working right away.`)) remove.mutate();
-          }}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
+        <ConfirmDialog
+          title={`Delete ${page.title}?`}
+          message="Its public link stops working right away. This can't be undone."
+          confirmLabel="Delete page"
+          busy={remove.isPending}
+          onConfirm={() => remove.mutate()}
+          trigger={(open) => (
+            <button
+              type="button"
+              className="console-btn console-btn-secondary h-8 w-8 px-0 hover:text-[#ff8fb3]"
+              aria-label={`Delete ${page.title}`}
+              disabled={remove.isPending}
+              onClick={open}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+        />
       </div>
     </li>
   );

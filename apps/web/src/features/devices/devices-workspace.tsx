@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -383,16 +384,23 @@ function DeviceDetail({ device, canEdit }: { device: NetworkDevice; canEdit: boo
             <button type="button" className="console-btn console-btn-secondary h-8 px-3 text-xs" onClick={() => setEditing(true)}>
               Edit
             </button>
-            <button
-              type="button"
-              className="console-btn h-8 gap-1.5 bg-[rgba(255,61,127,0.12)] px-3 text-xs text-[#ff8fb3] hover:bg-[rgba(255,61,127,0.22)]"
-              disabled={remove.isPending}
-              onClick={() => {
-                if (window.confirm(`Remove ${device.name} and its history?`)) remove.mutate();
-              }}
-            >
-              <Trash2 className="h-3.5 w-3.5" /> Remove
-            </button>
+            <ConfirmDialog
+              title={`Remove ${device.name}?`}
+              message="Its readings and history are deleted too. This can't be undone."
+              confirmLabel="Remove device"
+              busy={remove.isPending}
+              onConfirm={() => remove.mutate()}
+              trigger={(open) => (
+                <button
+                  type="button"
+                  className="console-btn h-8 gap-1.5 bg-[rgba(255,61,127,0.12)] px-3 text-xs text-[#ff8fb3] hover:bg-[rgba(255,61,127,0.22)]"
+                  disabled={remove.isPending}
+                  onClick={open}
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Remove
+                </button>
+              )}
+            />
           </div>
         ) : null}
       </div>

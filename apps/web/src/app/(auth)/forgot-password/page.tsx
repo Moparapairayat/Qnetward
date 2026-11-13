@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { KeyRound } from "@/components/icons";
 import { AuthLayoutCard } from "@/components/auth/auth-layout-card";
 import { GuestOnly } from "@/components/auth/guest-only";
 import { ForgotPasswordForm } from "@/components/forms/forgot-password-form";
+
+export const metadata: Metadata = { title: "Forgot your password" };
 
 export default function ForgotPasswordPage() {
   return (

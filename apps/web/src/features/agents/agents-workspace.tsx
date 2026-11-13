@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, CheckCircle2, Copy, Loader2, Plus, RadioTower, Trash2 } from "@/components/icons";
@@ -177,17 +178,24 @@ function AgentRow({ agent, canManage }: { agent: ProbeAgent; canManage: boolean 
       <div className="flex shrink-0 items-center gap-3 pl-5 sm:pl-0">
         {agent.last_seen_at ? <span className="text-xs text-[var(--lp-subtle)]">Seen {ago(agent.last_seen_at)}</span> : null}
         {canManage ? (
-          <button
-            type="button"
-            className="console-btn console-btn-secondary h-8 w-8 px-0 hover:text-[#ff8fb3]"
-            aria-label={`Remove ${agent.name}`}
-            disabled={remove.isPending}
-            onClick={() => {
-              if (window.confirm(`Remove ${agent.name}? It stops working immediately, and the machine has to enroll again to come back.`)) remove.mutate();
-            }}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          <ConfirmDialog
+            title={`Remove ${agent.name}?`}
+            message="It stops working immediately, and the machine has to enroll again to come back."
+            confirmLabel="Remove agent"
+            busy={remove.isPending}
+            onConfirm={() => remove.mutate()}
+            trigger={(open) => (
+              <button
+                type="button"
+                className="console-btn console-btn-secondary h-8 w-8 px-0 hover:text-[#ff8fb3]"
+                aria-label={`Remove ${agent.name}`}
+                disabled={remove.isPending}
+                onClick={open}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+          />
         ) : null}
       </div>
     </li>

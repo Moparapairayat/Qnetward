@@ -103,10 +103,18 @@ export function LiveToaster() {
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [clearUnseen]);
 
-  // Prefix the page title while there are unseen alerts; Next sets the base title.
+  // Prefix the page title while there are unseen alerts. Next sets each page's
+  // own title on navigation, so watch the title and put the count back.
   useEffect(() => {
     const strip = (title: string) => title.replace(/^\(\d+\) /, "");
-    document.title = unseen > 0 ? `(${unseen}) ${strip(document.title)}` : strip(document.title);
+    const apply = () => {
+      const want = unseen > 0 ? `(${unseen}) ${strip(document.title)}` : strip(document.title);
+      if (document.title !== want) document.title = want;
+    };
+    apply();
+    const observer = new MutationObserver(apply);
+    observer.observe(document.head, { subtree: true, childList: true, characterData: true });
+    return () => observer.disconnect();
   }, [unseen]);
 
   return (

@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useState, type ComponentType, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, CheckCircle2, Copy, Pencil, Plus, Send, Trash2, Webhook, XCircle } from "@/components/icons";
@@ -439,17 +440,24 @@ function ChannelRow({ channel, canManage, onEdit }: { channel: NotificationChann
           <button type="button" className="console-btn console-btn-secondary h-8 w-8 px-0" aria-label={`Edit ${channel.name}`} onClick={onEdit}>
             <Pencil className="h-3.5 w-3.5" />
           </button>
-          <button
-            type="button"
-            className="console-btn console-btn-secondary h-8 w-8 px-0 hover:text-[#ff8fb3]"
-            aria-label={`Delete ${channel.name}`}
-            disabled={remove.isPending}
-            onClick={() => {
-              if (window.confirm(`Delete ${channel.name}? Alerts stop going there right away.`)) remove.mutate();
-            }}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          <ConfirmDialog
+            title={`Delete ${channel.name}?`}
+            message="Alerts stop going there right away. This can't be undone."
+            confirmLabel="Delete channel"
+            busy={remove.isPending}
+            onConfirm={() => remove.mutate()}
+            trigger={(open) => (
+              <button
+                type="button"
+                className="console-btn console-btn-secondary h-8 w-8 px-0 hover:text-[#ff8fb3]"
+                aria-label={`Delete ${channel.name}`}
+                disabled={remove.isPending}
+                onClick={open}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+          />
         </div>
       ) : null}
     </li>
