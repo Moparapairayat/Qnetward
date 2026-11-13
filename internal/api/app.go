@@ -236,6 +236,7 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/assets/domains/verify", srv.handleDomainVerify)
 	mux.HandleFunc("/api/status-pages", srv.handleStatusPages)
 	mux.HandleFunc("GET /api/public/status/{slug}", srv.handlePublicStatusPage)
+	mux.HandleFunc("GET /api/public/status/{slug}/events", srv.handlePublicStatusEvents)
 	mux.HandleFunc("/api/workspace/channels", srv.handleChannels)
 	mux.HandleFunc("/api/workspace/channels/test", srv.handleChannelTest)
 	mux.HandleFunc("/ws", srv.handleWS)

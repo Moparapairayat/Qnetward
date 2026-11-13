@@ -323,3 +323,47 @@ func (s *Store) GetPublicStatusPage(ctx context.Context, slug string) (PublicSta
 	}
 	return page, days.Err()
 }
+
+// StatusPageScope is what a public page's live stream needs to know: whose
+// events to watch, and which monitors (with their status) the page shows.
+type StatusPageScope struct {
+	WorkspaceID int64
+	Monitors    map[int64]string
+}
+
+// PublicStatusPageScope reads a published page's workspace and monitors, for
+// its live stream. It runs as the login role, like GetPublicStatusPage, and
+// never leaves the server.
+func (s *Store) PublicStatusPageScope(ctx context.Context, slug string) (StatusPageScope, error) {
+	if s == nil {
+		return StatusPageScope{}, errors.New("store is not available")
+	}
+	slug = strings.ToLower(strings.TrimSpace(slug))
+	if !statusSlug.MatchString(slug) {
+		return StatusPageScope{}, ErrStatusPageNotFound
+	}
+	scope := StatusPageScope{Monitors: map[int64]string{}}
+	var pageID int64
+	err := s.db.QueryRowContext(ctx, `SELECT id, workspace_id FROM status_pages WHERE slug = $1 AND published`, slug).Scan(&pageID, &scope.WorkspaceID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return StatusPageScope{}, ErrStatusPageNotFound
+	}
+	if err != nil {
+		return StatusPageScope{}, err
+	}
+	rows, err := s.db.QueryContext(ctx, `SELECT m.id, CASE WHEN m.enabled THEN m.status ELSE 'paused' END
+		FROM status_page_monitors l JOIN monitors m ON m.id = l.monitor_id WHERE l.page_id = $1`, pageID)
+	if err != nil {
+		return StatusPageScope{}, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int64
+		var status string
+		if err := rows.Scan(&id, &status); err != nil {
+			return StatusPageScope{}, err
+		}
+		scope.Monitors[id] = status
+	}
+	return scope, rows.Err()
+}

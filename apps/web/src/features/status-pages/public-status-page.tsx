@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle2, CircleDashed, XCircle } from "@/components/icons";
 import type { PublicStatusComponent, PublicStatusResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -87,12 +86,50 @@ function Component({ component, days }: { component: PublicStatusComponent; days
 }
 
 /** A status page as the public sees it: one verdict up top, then each service's recent days. */
-export function PublicStatusPage({ data }: { data: PublicStatusResponse }) {
-  const router = useRouter();
+export function PublicStatusPage({ data: initial }: { data: PublicStatusResponse }) {
+  const [data, setData] = useState(initial);
+  const [live, setLive] = useState(false);
+  // Read by the fallback poll without restarting the stream when it changes.
+  const liveRef = useRef(false);
+  const slug = initial.page.slug;
+
+  // Live: the page listens for its own changes and reloads its data when one
+  // happens, so a visitor sees an outage the moment it's recorded. The stream
+  // says only "something changed"; the data comes from the public endpoint.
+  // If the stream can't connect, the page checks once a minute instead.
   useEffect(() => {
-    const id = window.setInterval(() => router.refresh(), 60_000);
-    return () => window.clearInterval(id);
-  }, [router]);
+    let stopped = false;
+    const refresh = () =>
+      fetch(`/api/public/status/${encodeURIComponent(slug)}`, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d: PublicStatusResponse | null) => {
+          if (d && !stopped) setData(d);
+        })
+        .catch(() => {});
+    const poll = window.setInterval(() => {
+      if (!liveRef.current) void refresh();
+    }, 60_000);
+    let source: EventSource | null = null;
+    if (typeof EventSource !== "undefined") {
+      source = new EventSource(`/api/public/status/${encodeURIComponent(slug)}/events`);
+      source.addEventListener("ready", () => {
+        liveRef.current = true;
+        setLive(true);
+        void refresh(); // catch up on anything from before the stream opened
+      });
+      source.addEventListener("update", () => void refresh());
+      source.addEventListener("gone", () => window.location.reload());
+      source.onerror = () => {
+        liveRef.current = false;
+        setLive(false);
+      };
+    }
+    return () => {
+      stopped = true;
+      window.clearInterval(poll);
+      source?.close();
+    };
+  }, [slug]);
 
   const { page } = data;
   const verdict = banner[data.status] ?? banner.unknown;
@@ -109,8 +146,15 @@ export function PublicStatusPage({ data }: { data: PublicStatusResponse }) {
       <div className={cn("mt-8 flex items-center gap-3 rounded-xl border px-5 py-4", verdict.tone)}>
         <verdict.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
         <p className="flex-1 text-md font-medium">{verdict.text}</p>
-        <p className="hidden text-xs opacity-80 sm:block">
-          Updated {updated.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC
+        <p className="hidden items-center gap-1.5 text-xs opacity-80 sm:flex">
+          {live ? (
+            <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-current opacity-60" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-current" />
+            </span>
+          ) : null}
+          {live ? "Live · " : "Updated "}
+          {updated.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC
         </p>
       </div>
 

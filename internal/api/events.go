@@ -125,6 +125,10 @@ func (e liveEvent) frame() []byte {
 type eventHub struct {
 	mu   sync.Mutex
 	subs map[int64]map[chan liveEvent]struct{}
+	// pubs are public status page visitors, kept apart from consoles so they
+	// can't use up a workspace's console streams.
+	pubs     map[int64]map[chan liveEvent]struct{}
+	pubCount int
 	// logOf returns the store that keeps events, or nil without a database.
 	// It's read on use because the server's store is set after the hub.
 	logOf func() *store.Store
@@ -134,7 +138,7 @@ type eventHub struct {
 }
 
 func newEventHub() *eventHub {
-	return &eventHub{subs: map[int64]map[chan liveEvent]struct{}{}}
+	return &eventHub{subs: map[int64]map[chan liveEvent]struct{}{}, pubs: map[int64]map[chan liveEvent]struct{}{}}
 }
 
 // subscribe returns a channel of the workspace's events, or false when the
@@ -156,6 +160,38 @@ func (h *eventHub) subscribe(workspaceID int64) (chan liveEvent, func(), bool) {
 		delete(h.subs[workspaceID], ch)
 		if len(h.subs[workspaceID]) == 0 {
 			delete(h.subs, workspaceID)
+		}
+	}, true
+}
+
+// Caps on public status page streams: per workspace, and per instance.
+const (
+	publicStreamsPerWorkspace = 500
+	publicStreamsTotal        = 5000
+)
+
+// subscribePublic is subscribe for status page visitors, with their own caps.
+func (h *eventHub) subscribePublic(workspaceID int64) (chan liveEvent, func(), bool) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if len(h.pubs[workspaceID]) >= publicStreamsPerWorkspace || h.pubCount >= publicStreamsTotal {
+		return nil, nil, false
+	}
+	ch := make(chan liveEvent, 16)
+	if h.pubs[workspaceID] == nil {
+		h.pubs[workspaceID] = map[chan liveEvent]struct{}{}
+	}
+	h.pubs[workspaceID][ch] = struct{}{}
+	h.pubCount++
+	return ch, func() {
+		h.mu.Lock()
+		defer h.mu.Unlock()
+		if _, ok := h.pubs[workspaceID][ch]; ok {
+			delete(h.pubs[workspaceID], ch)
+			h.pubCount--
+		}
+		if len(h.pubs[workspaceID]) == 0 {
+			delete(h.pubs, workspaceID)
 		}
 	}, true
 }
@@ -210,6 +246,16 @@ func (h *eventHub) deliver(workspaceID int64, evt liveEvent) {
 			case ch <- liveEvent{Type: EventResync, At: time.Now().UnixMilli()}:
 			default:
 			}
+		}
+	}
+	// Status page visitors only care about monitors and the page itself.
+	if evt.Type != EventMonitor && evt.Type != EventMonitorChanged && evt.Type != EventStatusPage {
+		return
+	}
+	for ch := range h.pubs[workspaceID] {
+		select {
+		case ch <- evt:
+		default: // a slow visitor misses one; the next change, or its poll, catches up
 		}
 	}
 }

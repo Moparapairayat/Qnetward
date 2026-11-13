@@ -22,3 +22,10 @@ Agents asked the console for work every 30 seconds and sent host metrics once a 
 - Changes take effect within a second instead of up to 30.
 - Hosts can be watched at one-second resolution and switch interfaces at two seconds, with no extra storage.
 - Live readings add NOTIFY traffic only while a page is open; each instance keeps the one LISTEN connection from step one.
+
+## Step four: live status pages and an event stream for integrations
+
+- `GET /api/public/status/{slug}/events` lets status page visitors see changes as they happen. It sends only `ready`, `update` (fetch the page again), and `gone` (unpublished): never targets, errors, or anything about the workspace. It fires on a status change of one of the page's own monitors, or when monitors or the page change, at most once a second.
+- Visitors get their own pool of streams (500 per workspace, 5000 per instance) so they can't use up the 50 console streams, and each address may open 30 streams a minute.
+- The page reloads its data with `no-store` on `update`, so the server-side 30-second cache can't hide a fresh outage, and falls back to a one-minute check if the stream can't connect.
+- `GET /api/events` already accepted read-scoped API keys; it is now documented as the integration stream, with resume by `Last-Event-ID`, alongside `POST /api/monitors/run`, `/api/hosts/live`, and `/api/devices/live`. A versioned `/v1/events` comes with the Public API v1 phase.
