@@ -71,6 +71,8 @@ function PaymentResult() {
       return <Notice tone="info">The payment is still being confirmed. Pro turns on as soon as UddoktaPay marks it complete.</Notice>;
     case "failed":
       return <Notice tone="error">The payment didn&apos;t go through, and nothing was charged to the plan. Try again, or use another method.</Notice>;
+    case "unpaid":
+      return <Notice tone="info">The payment wasn&apos;t finished, so nothing was charged. Pick Pro again whenever you&apos;re ready.</Notice>;
     case "cancelled":
       return <Notice tone="info">Payment cancelled. Your plan hasn&apos;t changed.</Notice>;
     default:

@@ -257,9 +257,13 @@ func (srv *Server) settlePayment(ctx context.Context, r *http.Request, invoiceID
 	switch {
 	case verified.Pending():
 		return "pending", returnTo
-	case !verified.Completed():
+	case verified.Failed():
 		_ = srv.store.FailPayment(ctx, payment.ID)
 		return "failed", returnTo
+	case !verified.Completed():
+		// Not paid yet (INITIATED: the visitor left the payment page without
+		// paying). Nothing is recorded, so paying later still completes it.
+		return "unpaid", returnTo
 	case math.Round(verified.AmountValue()*100) < math.Round(payment.Amount*100):
 		log.Printf("invoice %s paid %s for payment %d of %.2f; not applying", invoiceID, verified.Amount, payment.ID, payment.Amount)
 		return "failed", returnTo

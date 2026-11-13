@@ -150,6 +150,34 @@ func TestUddoktaPayCheckoutAndSettlement(t *testing.T) {
 		t.Fatal("failed and pending payments must not add time")
 	}
 
+	// Leaving the payment page without paying (INITIATED) records nothing; a
+	// gateway error marks it failed; and paying in full afterwards still
+	// applies the plan, so money taken is never left without Pro.
+	var started struct {
+		PaymentID int64 `json:"payment_id"`
+	}
+	_ = json.Unmarshal(checkout(`{"plan":"pro","months":1}`).Body.Bytes(), &started)
+	fake.override[inv(5)] = map[string]any{"status": "INITIATED"}
+	if loc := settle(inv(5)); !strings.HasSuffix(loc, "payment=unpaid") {
+		t.Fatalf("unpaid: expected unpaid, got %q", loc)
+	}
+	if p, err := st.GetPayment(t.Context(), started.PaymentID); err != nil || p.Status != "pending" {
+		t.Fatalf("an unpaid checkout must stay pending, got %q (%v)", p.Status, err)
+	}
+	fake.override[inv(5)] = map[string]any{"status": "ERROR"}
+	if loc := settle(inv(5)); !strings.HasSuffix(loc, "payment=failed") {
+		t.Fatalf("gateway error: expected failed, got %q", loc)
+	}
+	delete(fake.override, inv(5))
+	if loc := settle(inv(5)); !strings.HasSuffix(loc, "payment=success") {
+		t.Fatalf("paid after a failure: expected success, got %q", loc)
+	}
+	afterLate, _ := st.WorkspacePlanExpiry(t.Context(), workspaceID)
+	if !afterLate.After(expiry.AddDate(0, 0, 27)) {
+		t.Fatalf("a payment completed after a failure must add its month, got %v from %v", afterLate, expiry)
+	}
+	expiry = afterLate
+
 	// The webhook needs the API key, then settles like the return does.
 	hook := func(key string) *httptest.ResponseRecorder {
 		req := httptest.NewRequest(http.MethodPost, "/api/billing/uddoktapay/webhook", strings.NewReader(`{"invoice_id":"`+inv(4)+`"}`))

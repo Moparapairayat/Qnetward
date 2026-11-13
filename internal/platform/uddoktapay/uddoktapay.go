@@ -58,6 +58,16 @@ func (p Payment) Completed() bool { return strings.EqualFold(p.Status, "COMPLETE
 // Pending reports whether the payment is still waiting, as with a manual bank transfer.
 func (p Payment) Pending() bool { return strings.EqualFold(p.Status, "PENDING") }
 
+// Failed reports whether the gateway says the payment definitely didn't go
+// through. Other unpaid states, such as INITIATED, may still be paid.
+func (p Payment) Failed() bool {
+	switch strings.ToUpper(strings.TrimSpace(p.Status)) {
+	case "ERROR", "FAILED", "CANCELLED", "CANCELED", "EXPIRED":
+		return true
+	}
+	return false
+}
+
 // AmountValue is the amount as a number.
 func (p Payment) AmountValue() float64 {
 	v, _ := strconv.ParseFloat(strings.TrimSpace(p.Amount), 64)

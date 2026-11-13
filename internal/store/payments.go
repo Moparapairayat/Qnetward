@@ -74,6 +74,8 @@ func (s *Store) GetPayment(ctx context.Context, id int64) (Payment, error) {
 // CompletePayment marks a pending payment paid and moves the workspace onto
 // its plan for the months bought, after any time already paid for. It does
 // this once: completing a payment again changes nothing and reports false.
+// A payment marked failed can still complete: the gateway's word that it was
+// paid in full wins, so money taken is never left without its plan.
 func (s *Store) CompletePayment(ctx context.Context, id int64, invoiceID, transactionID, method string) (Payment, bool, error) {
 	if s == nil {
 		return Payment{}, false, errors.New("store is not available")
@@ -87,7 +89,7 @@ func (s *Store) CompletePayment(ctx context.Context, id int64, invoiceID, transa
 	var p Payment
 	err = scanPayment(tx.QueryRowContext(ctx, `
 		UPDATE payments SET status = 'paid', invoice_id = $2, transaction_id = $3, payment_method = $4, paid_at = NOW()
-		WHERE id = $1 AND status = 'pending'
+		WHERE id = $1 AND status IN ('pending', 'failed')
 		RETURNING `+paymentColumns, id, invoiceID, transactionID, method), &p)
 	if errors.Is(err, sql.ErrNoRows) {
 		existing, getErr := s.GetPayment(ctx, id)
