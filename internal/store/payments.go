@@ -174,3 +174,55 @@ func (s *Store) ExpirePlans(ctx context.Context) (int64, error) {
 	}
 	return res.RowsAffected()
 }
+
+// SetPaymentInvoice records the gateway's invoice for a checkout as soon as it
+// exists, so the payment can be checked later even if the browser never
+// comes back from the gateway.
+func (s *Store) SetPaymentInvoice(ctx context.Context, id int64, invoiceID string) error {
+	if s == nil {
+		return errors.New("store is not available")
+	}
+	_, err := s.db.ExecContext(ctx, `UPDATE payments SET invoice_id = $2 WHERE id = $1 AND invoice_id IS NULL`, id, invoiceID)
+	return err
+}
+
+// PaymentsToReconcile lists pending payments with a known invoice, started
+// after since, oldest first: the ones whose outcome is still to be learned
+// from the gateway.
+func (s *Store) PaymentsToReconcile(ctx context.Context, since time.Time, limit int) ([]Payment, error) {
+	if s == nil {
+		return nil, errors.New("store is not available")
+	}
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT `+paymentColumns+` FROM payments
+		WHERE status = 'pending' AND invoice_id IS NOT NULL AND created_at > $1
+		ORDER BY created_at
+		LIMIT $2`, since, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Payment
+	for rows.Next() {
+		var p Payment
+		if err := scanPayment(rows, &p); err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
+
+// ExpireStalePayments marks checkouts started before the cutoff and never paid
+// as failed, so they leave the receipts list. A gateway that later confirms
+// one as paid still completes it (see CompletePayment).
+func (s *Store) ExpireStalePayments(ctx context.Context, before time.Time) (int64, error) {
+	if s == nil {
+		return 0, errors.New("store is not available")
+	}
+	res, err := s.db.ExecContext(ctx, `UPDATE payments SET status = 'failed' WHERE status = 'pending' AND created_at < $1`, before)
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
+}

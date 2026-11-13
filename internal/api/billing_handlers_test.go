@@ -39,7 +39,7 @@ func (f *fakeGateway) server(t *testing.T, key string) *httptest.Server {
 		id := fmt.Sprintf("%s%d", f.prefix, len(f.invoices)+1)
 		f.invoices[id] = map[string]any{
 			"invoice_id": id, "status": "COMPLETED", "amount": body["amount"], "metadata": body["metadata"],
-			"payment_method": "bkash", "transaction_id": "TX-" + id,
+			"payment_method": "bkash", "transaction_id": "TX-" + id, "phone": body["phone"], "full_name": body["full_name"],
 		}
 		f.mu.Unlock()
 		_ = json.NewEncoder(w).Encode(map[string]any{"status": true, "message": "Payment Url", "payment_url": "https://gateway.test/payment/" + id})
@@ -107,6 +107,13 @@ func TestUddoktaPayCheckoutAndSettlement(t *testing.T) {
 		return ws.Plan
 	}
 
+	// No phone yet: the gateway needs one, so checkout asks for billing details.
+	if rr := checkout(`{"plan":"pro","months":1}`); rr.Code != http.StatusConflict || !strings.Contains(rr.Body.String(), "billing_details_required") {
+		t.Fatalf("checkout without a phone: expected 409, got %d %s", rr.Code, rr.Body.String())
+	}
+	if _, err := st.SaveBillingDetails(t.Context(), workspaceID, store.BillingDetails{Name: "Kestrel Labs Ltd", Phone: "01712345678", Country: "BD"}); err != nil {
+		t.Fatal(err)
+	}
 	if rr := checkout(`{"plan":"pro","months":3}`); rr.Code != http.StatusBadRequest {
 		t.Fatalf("unknown period: expected 400, got %d", rr.Code)
 	}
@@ -116,6 +123,9 @@ func TestUddoktaPayCheckoutAndSettlement(t *testing.T) {
 	}
 	if gateway := fake.invoices[inv(1)]["metadata"].(map[string]any); gateway["return_to"] == "" {
 		t.Fatal("the checkout should record where to send the browser back to")
+	}
+	if got := fake.invoices[inv(1)]; got["phone"] != "01712345678" || got["full_name"] != "Kestrel Labs Ltd" {
+		t.Fatalf("the gateway should get the billing name and phone, got %v / %v", got["full_name"], got["phone"])
 	}
 	if loc := settle(inv(1)); !strings.HasSuffix(loc, "payment=success") || plan() != "pro" {
 		t.Fatalf("expected Pro after paying, redirected to %q with plan %q", loc, plan())
@@ -197,6 +207,30 @@ func TestUddoktaPayCheckoutAndSettlement(t *testing.T) {
 		t.Fatalf("expected twelve more months after the webhook, got %v", later)
 	}
 
+	// A customer pays and closes the tab, so the browser never comes back and
+	// no webhook arrives: the reconciler asks the gateway and applies the plan.
+	var abandoned struct {
+		PaymentID int64 `json:"payment_id"`
+	}
+	_ = json.Unmarshal(checkout(`{"plan":"pro","months":1}`).Body.Bytes(), &abandoned)
+	if p, err := st.GetPayment(t.Context(), abandoned.PaymentID); err != nil || p.InvoiceID != inv(6) {
+		t.Fatalf("checkout should keep the gateway's invoice, got %q (%v)", p.InvoiceID, err)
+	}
+	beforeReconcile, _ := st.WorkspacePlanExpiry(t.Context(), workspaceID)
+	testSrv.reconcilePayments(t.Context())
+	if p, _ := st.GetPayment(t.Context(), abandoned.PaymentID); p.Status != "paid" {
+		t.Fatalf("the reconciler should complete a paid checkout, status %q", p.Status)
+	}
+	reconciled, _ := st.WorkspacePlanExpiry(t.Context(), workspaceID)
+	if !reconciled.After(beforeReconcile.AddDate(0, 0, 27)) {
+		t.Fatalf("the reconciled payment should add its month, %v -> %v", beforeReconcile, reconciled)
+	}
+	// Running it again changes nothing.
+	testSrv.reconcilePayments(t.Context())
+	if again, _ := st.WorkspacePlanExpiry(t.Context(), workspaceID); !again.Equal(*reconciled) {
+		t.Fatal("reconciling again must not add time")
+	}
+
 	req := httptest.NewRequest(http.MethodGet, "/api/billing", nil)
 	req.AddCookie(cookie)
 	get := httptest.NewRecorder()
@@ -257,5 +291,59 @@ func TestPublicPlans(t *testing.T) {
 	}
 	if rr.Header().Get("Cache-Control") == "" {
 		t.Fatal("the list should be cacheable")
+	}
+}
+
+func TestNormalizePhone(t *testing.T) {
+	for _, c := range []struct{ in, country, want string }{
+		{"01712345678", "BD", "01712345678"},
+		{"+880 1712-345678", "BD", "01712345678"},
+		{"8801712345678", "", "01712345678"},
+		{"+44 20 7946 0958", "GB", "+442079460958"},
+		{"442079460958", "GB", "+442079460958"},
+	} {
+		if got, err := normalizePhone(c.in, c.country); err != nil || got != c.want {
+			t.Errorf("%q (%s): got %q, %v; want %q", c.in, c.country, got, err, c.want)
+		}
+	}
+	for _, c := range []struct{ in, country string }{
+		{"0171234567", "BD"},  // one digit short
+		{"01212345678", "BD"}, // no operator starts with 012
+		{"017123456789", "BD"},
+		{"call me", "BD"},
+		{"12", "GB"},
+		{"", "BD"},
+	} {
+		if got, err := normalizePhone(c.in, c.country); err == nil {
+			t.Errorf("%q (%s) should be refused, got %q", c.in, c.country, got)
+		}
+	}
+}
+
+// Owners save billing details, and the name, phone, and country are cleaned.
+func TestBillingDetails(t *testing.T) {
+	st := installTestStore(t)
+	_, cookie := issueTestSession(t, st)
+	call := func(method, body string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(method, "/api/billing/details", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.AddCookie(cookie)
+		rr := httptest.NewRecorder()
+		testSrv.handleBillingDetails(rr, req)
+		return rr
+	}
+	if rr := call(http.MethodGet, ""); rr.Code != http.StatusOK || !strings.Contains(rr.Body.String(), `"country": "BD"`) {
+		t.Fatalf("empty details: %d %s", rr.Code, rr.Body.String())
+	}
+	if rr := call(http.MethodPut, `{"name":"Kestrel","phone":"123","country":"BD"}`); rr.Code != http.StatusBadRequest {
+		t.Fatalf("a bad phone should be refused, got %d", rr.Code)
+	}
+	if rr := call(http.MethodPut, `{"name":"  Kestrel   Labs ","phone":"+880 1812-345678","company":"Kestrel Labs Ltd","city":"Dhaka","country":"bd"}`); rr.Code != http.StatusOK {
+		t.Fatalf("save: %d %s", rr.Code, rr.Body.String())
+	}
+	var got store.BillingDetails
+	_ = json.Unmarshal(call(http.MethodGet, "").Body.Bytes(), &got)
+	if got.Name != "Kestrel Labs" || got.Phone != "01812345678" || got.Company != "Kestrel Labs Ltd" || got.City != "Dhaka" || got.Country != "BD" {
+		t.Fatalf("saved details: %+v", got)
 	}
 }

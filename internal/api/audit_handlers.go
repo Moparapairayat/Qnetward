@@ -25,7 +25,12 @@ func (srv *Server) recordAudit(r *http.Request, workspaceID int64, actor store.U
 	if srv.store == nil {
 		return
 	}
-	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 3*time.Second)
+	// r is nil for work the server does by itself, such as reconciling payments.
+	base, ip, agent := context.Background(), "", "qnetward"
+	if r != nil {
+		base, ip, agent = context.WithoutCancel(r.Context()), clientIPFromRequest(r), r.UserAgent()
+	}
+	ctx, cancel := context.WithTimeout(base, 3*time.Second)
 	defer cancel()
 	err := srv.store.RecordAuditEvent(ctx, store.AuditEvent{
 		WorkspaceID: workspaceID,
@@ -35,8 +40,8 @@ func (srv *Server) recordAudit(r *http.Request, workspaceID int64, actor store.U
 		TargetType:  target.Type,
 		TargetID:    target.ID,
 		TargetLabel: target.Label,
-		IPAddress:   clientIPFromRequest(r),
-		UserAgent:   r.UserAgent(),
+		IPAddress:   ip,
+		UserAgent:   agent,
 		Metadata:    metadata,
 	})
 	if err != nil {

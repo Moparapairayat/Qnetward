@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Lock } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import { proPricing, type Period, type PlanId } from "@/lib/plans";
-import type { BillingResponse, PublicPlansResponse } from "@/lib/types";
+import type { BillingDetails, BillingResponse, PublicPlansResponse } from "@/lib/types";
+import { Modal } from "@/components/ui/modal";
+import { BillingDetailsForm } from "@/features/workspace/billing-details-form";
 import { formatDate } from "@/components/settings/settings-ui";
 import { Pricing } from "@/features/landing/pricing";
 
@@ -34,10 +37,29 @@ export function UpgradeWorkspace() {
   const current = planFor(billing?.plan);
   const pro = proPricing((billing?.prices ?? []).filter((p) => p.plan === "pro"));
 
+  const detailsQuery = useQuery({
+    queryKey: ["billing-details"],
+    queryFn: () => apiRequest<BillingDetails>("/api/billing/details"),
+    enabled: billing?.can_pay === true,
+  });
+  // The months waiting on billing details: the payment gateway needs a phone
+  // number, so the first purchase asks for one, then carries on to pay.
+  const [askDetailsFor, setAskDetailsFor] = useState<number | null>(null);
+
   const checkout = useMutation({
     mutationFn: (months: number) => apiRequest<{ payment_url: string }>("/api/billing/checkout", { method: "POST", body: JSON.stringify({ plan: "pro", months }) }),
     onSuccess: (resp) => window.location.assign(resp.payment_url),
+    onError: (err: ApiError, months) => {
+      if ((err.payload as { billing_details_required?: boolean } | undefined)?.billing_details_required) setAskDetailsFor(months);
+    },
   });
+  const buy = (months: number) => {
+    if (detailsQuery.data && !detailsQuery.data.phone) {
+      setAskDetailsFor(months);
+      return;
+    }
+    checkout.mutate(months);
+  };
 
   const action = (id: PlanId, period: Period) => {
     if (id === "free") {
@@ -80,12 +102,12 @@ export function UpgradeWorkspace() {
           type="button"
           className={`${button} lp-btn-primary`}
           disabled={!billing.can_pay || checkout.isPending}
-          onClick={() => checkout.mutate(choice.months)}
+          onClick={() => buy(choice.months)}
         >
           {checkout.isPending ? "Opening checkout…" : current === "pro" ? `Add ${choice.months === 12 ? "a year" : "a month"} of Pro` : "Upgrade to Pro"}
         </button>
         {!billing.can_pay ? <p className="mt-2 text-center text-xs text-[var(--lp-subtle)]">Only workspace owners and admins can pay.</p> : null}
-        {checkout.isError ? <p className="mt-2 text-center text-xs text-[#ff8fb3]">{(checkout.error as ApiError).message}</p> : null}
+        {checkout.isError && askDetailsFor === null ? <p className="mt-2 text-center text-xs text-[#ff8fb3]">{(checkout.error as ApiError).message}</p> : null}
       </>
     );
   };
@@ -105,6 +127,32 @@ export function UpgradeWorkspace() {
       </div>
       {billingQuery.isError ? <p className="text-sm text-[#ff8fb3]">{(billingQuery.error as ApiError).message || "Couldn't load this workspace's plan."}</p> : null}
       <Pricing initial={plansQuery.data ?? null} defaultPeriod={defaultPeriod} current={billing ? current : undefined} renderAction={action} />
+
+      <Modal
+        open={askDetailsFor !== null}
+        onClose={() => setAskDetailsFor(null)}
+        title="Billing details"
+        description="The payment page needs your name and the phone number you'll pay from. You only do this once."
+        className="max-w-[480px]"
+      >
+        {askDetailsFor !== null && detailsQuery.data ? (
+          <BillingDetailsForm
+            compact
+            initial={detailsQuery.data}
+            submitLabel="Continue to payment"
+            onSaved={() => {
+              const months = askDetailsFor;
+              setAskDetailsFor(null);
+              checkout.mutate(months);
+            }}
+            footer={
+              <button type="button" className="console-btn console-btn-secondary h-9 px-4" onClick={() => setAskDetailsFor(null)}>
+                Cancel
+              </button>
+            }
+          />
+        ) : null}
+      </Modal>
     </div>
   );
 }

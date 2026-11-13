@@ -5,10 +5,11 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, ApiError } from "@/lib/api";
-import type { BillingPayment, BillingResponse, SessionResponse, WorkspaceTeamResponse, WorkspaceUsageResponse } from "@/lib/types";
+import type { BillingDetails, BillingPayment, BillingResponse, SessionResponse, WorkspaceTeamResponse, WorkspaceUsageResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { planCopy, proPricing, taka, type PlanId } from "@/lib/plans";
 import { formatDate, Notice, SettingsCard, SettingsPageTitle } from "@/components/settings/settings-ui";
+import { BillingDetailsForm } from "@/features/workspace/billing-details-form";
 
 const PLAN_NAMES: Record<PlanId, string> = { free: "Free", pro: "Pro", enterprise: "Enterprise" };
 
@@ -159,6 +160,13 @@ export function BillingWorkspace() {
     queryFn: () => apiRequest<BillingResponse>("/api/billing"),
     enabled: authenticated,
   });
+  // Receipts come back only for owners and admins, who also manage billing details.
+  const canManage = billingQuery.data?.payments !== undefined;
+  const detailsQuery = useQuery({
+    queryKey: ["billing-details"],
+    queryFn: () => apiRequest<BillingDetails>("/api/billing/details"),
+    enabled: canManage,
+  });
 
   const workspace = teamQuery.data?.workspace;
   const billing = billingQuery.data;
@@ -231,6 +239,22 @@ export function BillingWorkspace() {
       </SettingsCard>
 
       <PlanBanner billing={billing} plans={usageQuery.data?.plans} current={current} />
+
+      {canManage ? (
+        <SettingsCard
+          id="billing-details"
+          title="Billing details"
+          description="Who payments are from. The name and phone go to the payment page, which needs a phone number; the company and address appear on receipts."
+        >
+          {detailsQuery.data ? (
+            <BillingDetailsForm key={detailsQuery.data.updated_at ?? "new"} initial={detailsQuery.data} disabled={!billingQuery.data?.can_pay} />
+          ) : detailsQuery.isError ? (
+            <Notice tone="error">{(detailsQuery.error as ApiError).message || "Couldn't load billing details."}</Notice>
+          ) : (
+            <p className="text-sm text-[var(--lp-subtle)]">Loading…</p>
+          )}
+        </SettingsCard>
+      ) : null}
 
       <SettingsCard id="invoices" title="Payments" description="Receipts for Pro, newest first. Only owners and admins see them.">
         {payments.length ? (

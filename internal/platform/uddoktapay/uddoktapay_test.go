@@ -18,3 +18,18 @@ func TestEndpoint(t *testing.T) {
 		}
 	}
 }
+
+func TestInvoiceFromURL(t *testing.T) {
+	for in, want := range map[string]string{
+		"https://qnetward.paymently.io/checkout/5zJW5cVHzS0Fg4lBo0TKAaKkBvbdrWqOB52XKCgn":  "5zJW5cVHzS0Fg4lBo0TKAaKkBvbdrWqOB52XKCgn",
+		"https://sandbox.uddoktapay.com/payment/254663aa2a6a4a5df2aa8dc9f28aa1744a8bae9f/": "254663aa2a6a4a5df2aa8dc9f28aa1744a8bae9f",
+		"https://pay.example.com/checkout/short":                                           "",
+		"https://pay.example.com/checkout/has%20space1234":                                 "",
+		"not a url at all": "",
+		"":                 "",
+	} {
+		if got := InvoiceFromURL(in); got != want {
+			t.Errorf("%q: got %q, want %q", in, got, want)
+		}
+	}
+}

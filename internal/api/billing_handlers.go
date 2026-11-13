@@ -135,6 +135,16 @@ func (srv *Server) handleBillingCheckout(w http.ResponseWriter, r *http.Request)
 
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
+	// The gateway needs a phone number; ask for billing details first.
+	details, err := srv.store.GetBillingDetails(ctx, workspace.ID)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, apiError{Error: "couldn't load billing details"})
+		return
+	}
+	if details.Phone == "" {
+		writeJSON(w, http.StatusConflict, map[string]any{"error": "add a phone number to the billing details first", "billing_details_required": true})
+		return
+	}
 	payment, err := srv.store.CreatePayment(ctx, store.Payment{
 		WorkspaceID: workspace.ID, UserID: user.ID, Provider: "uddoktapay", Plan: option.Plan, Months: option.Months, Amount: option.Amount, Currency: "BDT",
 	})
@@ -142,7 +152,10 @@ func (srv *Server) handleBillingCheckout(w http.ResponseWriter, r *http.Request)
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: "couldn't start the payment"})
 		return
 	}
-	name := strings.TrimSpace(user.Name)
+	name := details.Name
+	if name == "" {
+		name = strings.TrimSpace(user.Name)
+	}
 	if name == "" {
 		name = user.Email
 	}
@@ -156,6 +169,7 @@ func (srv *Server) handleBillingCheckout(w http.ResponseWriter, r *http.Request)
 	paymentURL, err := srv.payments.CreateCharge(ctx, uddoktapay.Charge{
 		FullName: name,
 		Email:    user.Email,
+		Phone:    details.Phone,
 		Amount:   option.Amount,
 		Metadata: map[string]string{
 			"payment_id":   strconv.FormatInt(payment.ID, 10),
@@ -171,6 +185,13 @@ func (srv *Server) handleBillingCheckout(w http.ResponseWriter, r *http.Request)
 		_ = srv.store.FailPayment(ctx, payment.ID)
 		writeJSON(w, http.StatusBadGateway, apiError{Error: err.Error()})
 		return
+	}
+	// Keep the invoice now: if the browser never returns from the gateway,
+	// the reconciler can still learn the outcome from it.
+	if invoiceID := uddoktapay.InvoiceFromURL(paymentURL); invoiceID != "" {
+		if err := srv.store.SetPaymentInvoice(ctx, payment.ID, invoiceID); err != nil {
+			log.Printf("recording invoice for payment %d failed: %v", payment.ID, err)
+		}
 	}
 	srv.recordAudit(r, workspace.ID, user, "billing.checkout_started", idTarget("payment", payment.ID, ""),
 		map[string]any{"plan": option.Plan, "months": option.Months, "amount": option.Amount, "currency": "BDT"})
@@ -232,7 +253,8 @@ func (srv *Server) billingReturnBase(r *http.Request, candidate string) string {
 }
 
 // settlePayment verifies an invoice with the gateway and, if it's paid in
-// full for one of our pending payments, applies the plan. It returns
+// full for one of our pending payments, applies the plan. r is nil when the
+// reconciler calls it. It returns
 // success, pending, or failed, and the site the checkout started from.
 func (srv *Server) settlePayment(ctx context.Context, r *http.Request, invoiceID string) (string, string) {
 	verified, err := srv.payments.Verify(ctx, invoiceID)

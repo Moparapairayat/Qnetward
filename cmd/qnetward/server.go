@@ -204,6 +204,8 @@ func runServe(args []string) {
 	defer stopMonitors()
 	// Live updates reach consoles on every instance, whether or not this one runs monitors.
 	go apiServer.RunEventBus(monitorsCtx)
+	// Payments run whether or not this instance checks monitors.
+	go apiServer.RunPaymentReconciler(monitorsCtx)
 	if *runMonitors {
 		go apiServer.RunMonitors(monitorsCtx)
 		go apiServer.RunSecurityWatches(monitorsCtx)

@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -29,8 +31,11 @@ type Client struct {
 
 // Charge is a checkout to create.
 type Charge struct {
-	FullName    string
-	Email       string
+	FullName string
+	Email    string
+	// Phone is not in UddoktaPay's documented API, but panels that keep
+	// customers (where it is required) read it; others ignore it.
+	Phone       string
 	Amount      float64
 	Metadata    map[string]string
 	RedirectURL string
@@ -104,6 +109,9 @@ func (c *Client) CreateCharge(ctx context.Context, ch Charge) (string, error) {
 	}
 	if ch.WebhookURL != "" {
 		body["webhook_url"] = ch.WebhookURL
+	}
+	if ch.Phone != "" {
+		body["phone"] = ch.Phone
 	}
 	var resp struct {
 		Status     bool   `json:"status"`
@@ -181,4 +189,24 @@ func (c *Client) post(ctx context.Context, path string, body, out any) error {
 		return fmt.Errorf("the payment gateway answered %d with something unexpected", resp.StatusCode)
 	}
 	return nil
+}
+
+// InvoiceFromURL reads the invoice ID from a checkout's payment page, such as
+// https://pay.example.com/checkout/Erm9wzjM0FBwjSYT0QVb (or /payment/...).
+// It returns "" when the URL doesn't end in something that looks like one.
+func InvoiceFromURL(paymentURL string) string {
+	u, err := url.Parse(strings.TrimSpace(paymentURL))
+	if err != nil {
+		return ""
+	}
+	id := path.Base(strings.TrimRight(u.Path, "/"))
+	if len(id) < 8 || len(id) > 128 {
+		return ""
+	}
+	for _, c := range id {
+		if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '-' || c == '_') {
+			return ""
+		}
+	}
+	return id
 }

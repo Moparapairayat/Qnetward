@@ -606,6 +606,18 @@ export type BillingPayment = {
   paid_at?: string | null;
 };
 
+/** GET/PUT /api/billing/details: who the workspace's payments are from. */
+export type BillingDetails = {
+  name: string;
+  phone: string;
+  company: string;
+  address: string;
+  city: string;
+  postcode: string;
+  country: string;
+  updated_at?: string;
+};
+
 export type PlanPrice = { plan: string; months: number; amount: number };
 
 /** GET /api/plans: the public price list, the same numbers the server enforces and charges. */

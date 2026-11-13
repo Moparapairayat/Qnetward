@@ -296,6 +296,7 @@
   .lp-console input[type="url"],
   .lp-console input[type="number"],
   .lp-console input[type="search"],
+  .lp-console input[type="tel"],
   .lp-console input:not([type]):not(.auth-input),
   .lp-console select,
   .lp-console textarea {
