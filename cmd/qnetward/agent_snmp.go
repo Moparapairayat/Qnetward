@@ -133,6 +133,25 @@ func (p *devicePoller) count() int {
 	return len(p.jobs)
 }
 
+// runNow makes a device due at once.
+func (p *devicePoller) runNow(deviceID int64) bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if _, ok := p.jobs[deviceID]; !ok {
+		return false
+	}
+	p.next[deviceID] = time.Now()
+	return true
+}
+
+// job returns a device's settings, for Live mode polls between scheduled ones.
+func (p *devicePoller) job(deviceID int64) (deviceJob, bool) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	j, ok := p.jobs[deviceID]
+	return j, ok
+}
+
 // startDue polls every device whose turn has come.
 func (p *devicePoller) startDue(ctx context.Context, wg *sync.WaitGroup) {
 	now := time.Now()

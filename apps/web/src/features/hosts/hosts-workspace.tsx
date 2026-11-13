@@ -11,6 +11,7 @@ import { cn, formatDateTime } from "@/lib/utils";
 import { DefinitionList, PageHeader, Panel, RunStatus, StatStrip } from "@/components/tools/probe-ui";
 import { HostAlertsPanel } from "@/features/hosts/host-alerts-panel";
 import { useLiveInterval } from "@/lib/live";
+import { HostLivePanel } from "@/features/hosts/host-live-panel";
 
 const WARN = 85;
 const CRIT = 95;
@@ -183,6 +184,7 @@ function HostDetail({ host }: { host: Host }) {
 
   return (
     <div className="grid gap-4 border-t border-[var(--lp-border)] bg-white/[0.015] px-4 py-4">
+      <HostLivePanel hostId={host.id} online={host.online} />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs text-[var(--lp-subtle)]">{latest ? `Last sample ${formatDateTime(host.latest_at)}` : "Waiting for the first sample"}</span>
         <div className="flex rounded-lg border border-[var(--lp-border)] p-0.5" role="tablist" aria-label="Time range">

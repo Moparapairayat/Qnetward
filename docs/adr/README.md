@@ -46,3 +46,4 @@ patterns don't.
 | [0030](0030-host-metrics-from-agents.md) | Host metrics come from the probe agent | Accepted |
 | [0031](0031-network-devices-over-snmp.md) | Network devices are polled over SNMP by agents | Accepted |
 | [0032](0032-live-events-through-postgres.md) | Live events go through a Postgres log with LISTEN/NOTIFY | Accepted |
+| [0033](0033-agent-live-link.md) | Agents keep a live link for commands and Live mode | Accepted |

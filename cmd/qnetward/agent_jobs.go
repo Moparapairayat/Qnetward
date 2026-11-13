@@ -113,6 +113,18 @@ func (r *jobRunner) count() int {
 	return len(r.jobs)
 }
 
+// runNow makes a monitor due at once, for "Run now" in the console.
+func (r *jobRunner) runNow(monitorID int64) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	sj, ok := r.jobs[monitorID]
+	if !ok {
+		return false
+	}
+	sj.next = time.Now()
+	return true
+}
+
 // startDue starts every job whose time has come, as slots allow.
 func (r *jobRunner) startDue(ctx context.Context, wg *sync.WaitGroup) {
 	r.mu.Lock()

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useShellStore } from "@/store/ui-store";
 import { useNoticeStore } from "@/store/notice-store";
+import { liveBus } from "@/lib/live-bus";
 
 const MONITORS = [["monitors"], ["monitor-series"], ["recent-history-targets"], ["overview-history"]];
 const SECURITY = [["security-scans"], ["security-scan"], ["surface-scans"], ["surface-scan"], ["security-watches"], ["vulnerabilities"], ["compliance"], ["deep-scans"], ["deep-scan"], ["asset-domains"]];
@@ -94,6 +95,16 @@ export function LiveEvents() {
     source.addEventListener("ready", () => setLiveConnected(true));
     source.addEventListener("resync", onResync);
     source.addEventListener("notice", onNotice);
+    // Second-by-second readings go to the pages showing them, not to refetches.
+    const onReading = (e: MessageEvent) => {
+      try {
+        liveBus?.dispatchEvent(new CustomEvent(e.type, { detail: JSON.parse(e.data) }));
+      } catch {
+        /* ignore a malformed reading */
+      }
+    };
+    source.addEventListener("host.live", onReading);
+    source.addEventListener("device.live", onReading);
     source.onerror = () => setLiveConnected(false);
     for (const type of Object.keys(STALE)) source.addEventListener(type, onEvent);
 

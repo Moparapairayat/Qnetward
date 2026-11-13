@@ -85,6 +85,8 @@ type Server struct {
 	payments       *uddoktapay.Client
 	// events fans live updates out to open consoles.
 	events *eventHub
+	// agentLinks holds agents' live connections to this instance.
+	agentLinks *agentLinks
 	// background tracks work that outlives its request, such as alert
 	// deliveries, so shutdown and tests can wait for it.
 	background sync.WaitGroup
@@ -118,6 +120,7 @@ func New(deps Deps, opts Options) *Server {
 		demoWorkspace:  strings.TrimSpace(opts.DemoWorkspace),
 		billing:        opts.Billing,
 		events:         newEventHub(),
+		agentLinks:     newAgentLinks(),
 		payments:       &uddoktapay.Client{BaseURL: strings.TrimSpace(opts.Billing.UddoktaPayURL), APIKey: strings.TrimSpace(opts.Billing.UddoktaPayKey)},
 		demoCreatedAt:  time.Now().UTC(),
 		targetPolicy:   opts.TargetPolicy,
@@ -217,6 +220,10 @@ func (srv *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/hosts/alerts", srv.handleHostAlerts)
 	mux.HandleFunc("/api/devices", srv.handleDevices)
 	mux.HandleFunc("/api/agent/devices", srv.handleAgentDevices)
+	mux.HandleFunc("/api/agent/live", srv.handleAgentLive)
+	mux.HandleFunc("/api/hosts/live", srv.handleHostLive)
+	mux.HandleFunc("/api/devices/live", srv.handleDeviceLive)
+	mux.HandleFunc("/api/monitors/run", srv.handleMonitorRun)
 	mux.HandleFunc("/api/security/passive", srv.handlePassiveScans)
 	mux.HandleFunc("/api/security/watches", srv.handleSecurityWatches)
 	mux.HandleFunc("/api/security/surface", srv.handleSurfaceScans)

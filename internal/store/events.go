@@ -125,10 +125,62 @@ func listenDSN(dsn string) string {
 	return strings.Replace(dsn, "-pooler.", ".", 1)
 }
 
+// Notification channels besides the event log: commands for agents, and live
+// readings too frequent and short-lived to store.
+const (
+	agentChannel = "qnetward_agent"
+	liveChannel  = "qnetward_live"
+)
+
+// Listeners receive what one LISTEN connection hears.
+type Listeners struct {
+	// Event gets each new logged workspace event.
+	Event func(WorkspaceEvent)
+	// Agent gets commands for an agent: whichever instance holds its live
+	// connection passes them on.
+	Agent func(agentID int64, msg json.RawMessage)
+	// Live gets unlogged live readings for a workspace's consoles.
+	Live func(workspaceID int64, msg json.RawMessage)
+}
+
+// NotifyAgent sends a command to an agent through whichever API instance it is
+// connected to.
+func (s *Store) NotifyAgent(ctx context.Context, agentID int64, msg []byte) error {
+	return s.notify(ctx, agentChannel, map[string]any{"a": agentID, "m": json.RawMessage(msg)})
+}
+
+// NotifyLive sends an unlogged live reading to the workspace's consoles on
+// every instance.
+func (s *Store) NotifyLive(ctx context.Context, workspaceID int64, msg []byte) error {
+	return s.notify(ctx, liveChannel, map[string]any{"w": workspaceID, "m": json.RawMessage(msg)})
+}
+
+func (s *Store) notify(ctx context.Context, channel string, body any) error {
+	if s == nil {
+		return errors.New("store is not available")
+	}
+	payload, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	if len(payload) > 7800 {
+		return errors.New("notification too large")
+	}
+	_, err = s.db.ExecContext(ctx, `SELECT pg_notify($1, $2)`, channel, string(payload))
+	return err
+}
+
 // ListenEvents holds one connection that hears every new event and hands each
 // to deliver. It returns when ctx ends or the connection fails; ready is
 // called once the connection is listening.
 func (s *Store) ListenEvents(ctx context.Context, ready func(), deliver func(WorkspaceEvent)) error {
+	return s.Listen(ctx, ready, Listeners{Event: deliver})
+}
+
+// Listen holds one connection that hears new events, agent commands, and live
+// readings, and hands each to its listener. It returns when ctx ends or the
+// connection fails; ready is called once the connection is listening.
+func (s *Store) Listen(ctx context.Context, ready func(), l Listeners) error {
 	if s == nil {
 		return errors.New("store is not available")
 	}
@@ -141,14 +193,39 @@ func (s *Store) ListenEvents(ctx context.Context, ready func(), deliver func(Wor
 		defer cancel()
 		_ = conn.Close(closeCtx)
 	}()
-	if _, err := conn.Exec(ctx, "LISTEN "+eventsChannel); err != nil {
-		return err
+	for _, ch := range []string{eventsChannel, agentChannel, liveChannel} {
+		if _, err := conn.Exec(ctx, "LISTEN "+ch); err != nil {
+			return err
+		}
 	}
 	ready()
 	for {
 		n, err := conn.WaitForNotification(ctx)
 		if err != nil {
 			return err
+		}
+		switch n.Channel {
+		case agentChannel:
+			var msg struct {
+				A int64           `json:"a"`
+				M json.RawMessage `json:"m"`
+			}
+			if l.Agent != nil && json.Unmarshal([]byte(n.Payload), &msg) == nil && msg.A > 0 {
+				l.Agent(msg.A, msg.M)
+			}
+			continue
+		case liveChannel:
+			var msg struct {
+				W int64           `json:"w"`
+				M json.RawMessage `json:"m"`
+			}
+			if l.Live != nil && json.Unmarshal([]byte(n.Payload), &msg) == nil && msg.W > 0 {
+				l.Live(msg.W, msg.M)
+			}
+			continue
+		}
+		if l.Event == nil {
+			continue
 		}
 		var msg struct {
 			ID  int64           `json:"id"`
@@ -171,6 +248,6 @@ func (s *Store) ListenEvents(ctx context.Context, ready func(), deliver func(Wor
 			}
 			e = full
 		}
-		deliver(e)
+		l.Event(e)
 	}
 }

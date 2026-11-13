@@ -224,19 +224,29 @@ func (srv *Server) RunEventBus(ctx context.Context) {
 	backoff := time.Second
 	for ctx.Err() == nil {
 		started := time.Now()
-		err := h.eventLog().ListenEvents(ctx, func() {
+		err := h.eventLog().Listen(ctx, func() {
 			h.listening.Store(true)
 			log.Printf("live events: listening")
-		}, func(e store.WorkspaceEvent) {
-			var evt liveEvent
-			if json.Unmarshal(e.Payload, &evt) != nil {
-				evt = liveEvent{Type: e.Type}
-			}
-			evt.ID, evt.Type = e.ID, e.Type
-			if evt.At == 0 {
-				evt.At = e.At.UnixMilli()
-			}
-			h.deliver(e.WorkspaceID, evt)
+		}, store.Listeners{
+			Event: func(e store.WorkspaceEvent) {
+				var evt liveEvent
+				if json.Unmarshal(e.Payload, &evt) != nil {
+					evt = liveEvent{Type: e.Type}
+				}
+				evt.ID, evt.Type = e.ID, e.Type
+				if evt.At == 0 {
+					evt.At = e.At.UnixMilli()
+				}
+				h.deliver(e.WorkspaceID, evt)
+			},
+			// A command for an agent: passed on if the agent is connected here.
+			Agent: func(agentID int64, msg json.RawMessage) { srv.agentLinks.send(agentID, msg) },
+			Live: func(workspaceID int64, msg json.RawMessage) {
+				var evt liveEvent
+				if json.Unmarshal(msg, &evt) == nil && evt.Type != "" {
+					h.deliver(workspaceID, evt)
+				}
+			},
 		})
 		h.listening.Store(false)
 		if ctx.Err() != nil {

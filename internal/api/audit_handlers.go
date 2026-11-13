@@ -44,6 +44,10 @@ func (srv *Server) recordAudit(r *http.Request, workspaceID int64, actor store.U
 	}
 	if typ := auditLiveEvent(action); typ != "" && workspaceID > 0 {
 		srv.events.publish(workspaceID, liveEvent{Type: typ})
+		// Agents pick up changed monitors and devices now, not at their next check-in.
+		if typ == EventMonitorChanged || typ == EventDevice {
+			srv.syncAgents(workspaceID)
+		}
 	}
 }
 

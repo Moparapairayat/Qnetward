@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Pencil, Plus, Radio, Trash2, X } from "@/components/icons";
+import { Loader2, Pencil, Play, Plus, Radio, Trash2, X } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
 import type { Monitor, MonitorCheck, MonitorLocation, MonitorPayload, MonitorProtocol, ProbeAgent, ProbeAgentListResponse, SessionResponse, WorkspaceUsageResponse } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
@@ -424,6 +424,42 @@ function MonitorForm({
   );
 }
 
+
+// Checks a monitor now, from every place it runs. The result arrives through
+// the live stream like any other check.
+function RunNowButton({ id, name }: { id: number; name: string }) {
+  const [state, setState] = useState<"idle" | "running" | "error">("idle");
+  const [message, setMessage] = useState("");
+  const run = () => {
+    setState("running");
+    apiRequest<{ places: number }>(`/api/monitors/run?id=${id}`, { method: "POST" })
+      .then((r) => {
+        setMessage(`Checking from ${r.places} ${r.places === 1 ? "place" : "places"}`);
+        setTimeout(() => setState("idle"), 4000);
+      })
+      .catch((e: ApiError) => {
+        setState("error");
+        setMessage(e.status === 429 ? "Just ran; try again in a few seconds" : e.message);
+        setTimeout(() => setState("idle"), 4000);
+      });
+  };
+  return (
+    <button
+      type="button"
+      className={cn(
+        "console-btn h-8 w-8 px-0 hover:bg-white/[0.05]",
+        state === "error" ? "text-[#fcd34d]" : state === "running" ? "text-[var(--lp-accent)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
+      )}
+      aria-label={`Run ${name} now`}
+      title={state === "idle" ? "Run now" : message || "Running…"}
+      disabled={state === "running"}
+      onClick={run}
+    >
+      {state === "running" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+    </button>
+  );
+}
+
 function MonitorRow({
   monitor,
   editing,
@@ -525,6 +561,7 @@ function MonitorRow({
             </>
           ) : (
             <>
+              {monitor.enabled ? <RunNowButton id={monitor.id} name={monitor.name} /> : null}
               <button type="button" className="console-btn h-8 w-8 px-0 text-[var(--lp-muted)] hover:bg-white/[0.05] hover:text-[var(--lp-text)]" aria-label={`Edit ${monitor.name}`} onClick={onEdit}>
                 <Pencil className="h-3.5 w-3.5" />
               </button>

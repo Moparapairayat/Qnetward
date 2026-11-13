@@ -10,6 +10,7 @@ import { cn, formatDateTime } from "@/lib/utils";
 import { DefinitionList, PageHeader, Panel, RunStatus, StatStrip } from "@/components/tools/probe-ui";
 import { Chart, formatUptime } from "@/features/hosts/hosts-workspace";
 import { useLiveInterval } from "@/lib/live";
+import { useLiveReadings } from "@/lib/live-bus";
 
 export function formatBits(bps?: number | null) {
   if (bps == null || !Number.isFinite(bps)) return "–";
@@ -255,7 +256,11 @@ function DeviceDetail({ device, canEdit }: { device: NetworkDevice; canEdit: boo
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["devices"] }),
   });
   const data = (series.data?.points ?? []).map((p) => ({ ...p, ts: new Date(p.at).getTime() }));
-  const ifs = device.interfaces ?? [];
+  // Live mode: while this is open the agent polls every two seconds, and the
+  // interface rates below come from those polls instead of the last stored one.
+  const live = useLiveReadings<{ reachable: boolean; interfaces?: DeviceInterface[] | null }>("device", device.id, 30);
+  const liveIfs = live.streaming ? live.readings[live.readings.length - 1]?.sample.interfaces : null;
+  const ifs = liveIfs?.some((f) => f.has_rates) ? liveIfs : device.interfaces ?? [];
   const chosen = ifs.find((f) => f.index === iface);
 
   if (editing) return <DeviceForm device={device} onDone={() => setEditing(false)} />;
@@ -263,8 +268,18 @@ function DeviceDetail({ device, canEdit }: { device: NetworkDevice; canEdit: boo
     <div className="grid gap-4 border-t border-[var(--lp-border)] bg-white/[0.015] px-4 py-4">
       {device.last_error ? <p className="rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.06)] px-3 py-2 text-xs text-[#ff8fb3]">{device.last_error}</p> : null}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs text-[var(--lp-subtle)]">
-          {chosen ? `Interface ${chosen.name}` : "All interfaces"} · {device.last_polled_at ? `last poll ${formatDateTime(device.last_polled_at)}` : "not polled yet"}
+        <span className="flex items-center gap-2 text-xs text-[var(--lp-subtle)]">
+          {live.streaming ? (
+            <span className="flex items-center gap-1.5 rounded-md border border-[rgba(74,222,128,0.3)] bg-[rgba(74,222,128,0.08)] px-1.5 py-0.5 text-[#86efac]">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#4ade80] opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#4ade80]" />
+              </span>
+              Live
+            </span>
+          ) : null}
+          {chosen ? `Interface ${chosen.name}` : "All interfaces"} ·{" "}
+          {live.streaming ? "updating every 2 seconds" : device.last_polled_at ? `last poll ${formatDateTime(device.last_polled_at)}` : "not polled yet"}
         </span>
         <div className="flex flex-wrap items-center gap-2">
           {iface ? (

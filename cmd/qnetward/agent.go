@@ -20,7 +20,7 @@ import (
 )
 
 // agentVersion is reported to the console with every heartbeat.
-const agentVersion = "0.3.0"
+const agentVersion = "0.4.0"
 
 // agentState is what an enrolled agent keeps between runs. The secret is as
 // good as a password for this agent, so the file is readable by its owner only.
@@ -108,6 +108,19 @@ func agentMain(ctx context.Context, server, token, stateDir string, once bool, o
 	ctx, stop := context.WithCancel(ctx)
 	defer stop()
 
+	// The live link: commands from the console, and live readings back.
+	link := newLiveLink(state.Server, state.Secret)
+	linkErr := make(chan error, 1)
+	go func() { linkErr <- link.run(ctx) }()
+	var hostLive liveWindow
+	var hostLiveAt time.Time
+	var liveHosts *hostCollector
+	deviceLive := map[int64]liveWindow{}
+	deviceLiveBusy := map[int64]bool{}
+	deviceLiveDone := make(chan int64, 8)
+	liveTick := time.NewTicker(250 * time.Millisecond)
+	defer liveTick.Stop()
+
 	beat := time.NewTimer(0)
 	defer beat.Stop()
 	tick := time.NewTicker(time.Second)
@@ -165,6 +178,70 @@ func agentMain(ctx context.Context, server, token, stateDir string, once bool, o
 				}
 			}
 			beat.Reset(interval)
+		case err := <-linkErr:
+			if errors.Is(err, errAgentRemoved) {
+				return err
+			}
+		case cmd := <-link.commands:
+			switch cmd.Type {
+			case "sync":
+				// Monitors or devices changed: fetch the work list now.
+				beat.Reset(0)
+			case "run":
+				runner.runNow(cmd.MonitorID)
+			case "run_device":
+				devices.runNow(cmd.DeviceID)
+			case "live":
+				hostLive = windowFrom(cmd, time.Second)
+				if liveHosts == nil {
+					liveHosts = newHostCollector()
+				}
+			case "live_device":
+				if _, ok := devices.job(cmd.DeviceID); ok {
+					deviceLive[cmd.DeviceID] = windowFrom(cmd, 2*time.Second)
+				}
+			}
+		case id := <-deviceLiveDone:
+			delete(deviceLiveBusy, id)
+		case now := <-liveTick.C:
+			// Live mode: stream this machine while someone has its page open.
+			if hostLive.on(now) && now.Sub(hostLiveAt) >= hostLive.every {
+				hostLiveAt = now
+				_ = link.send(map[string]any{"type": "host_sample", "host": liveHosts.sample(ctx, now)})
+			}
+			for id, w := range deviceLive {
+				if !w.on(now) {
+					delete(deviceLive, id)
+					continue
+				}
+				if deviceLiveBusy[id] {
+					continue
+				}
+				job, ok := devices.job(id)
+				if !ok {
+					delete(deviceLive, id)
+					continue
+				}
+				deviceLiveBusy[id] = true
+				wg.Add(1)
+				go func(id int64, job deviceJob, every time.Duration) {
+					defer wg.Done()
+					start := time.Now()
+					s := devices.poll(ctx, job)
+					_ = link.send(map[string]any{"type": "device_sample", "device": s})
+					// Keep to the requested pace even when a poll is quick.
+					if rest := every - time.Since(start); rest > 0 {
+						select {
+						case <-ctx.Done():
+						case <-time.After(rest):
+						}
+					}
+					select {
+					case deviceLiveDone <- id:
+					case <-ctx.Done(): // shutting down: nobody reads it any more
+					}
+				}(id, job, w.every)
+			}
 		case <-sample.C:
 			hosts.collect(ctx, time.Now())
 			if err := hosts.send(ctx, c, state.Secret); errors.Is(err, errAgentRemoved) {
