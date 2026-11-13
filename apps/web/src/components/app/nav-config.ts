@@ -121,6 +121,7 @@ export const navSections: NavSection[] = [
       { href: "/workspace/api-keys", label: "API keys", icon: KeyRound, keywords: "tokens sdk terraform ci automation" },
       { href: "/workspace/audit-log", label: "Audit log", icon: FileClock, keywords: "activity history who what when security" },
       { href: "/workspace/billing", label: "Billing", icon: CreditCard, keywords: "plan subscription usage" },
+      { href: "/upgrade", label: "Plans", icon: CreditCard, keywords: "upgrade pro pricing price buy" },
       { href: "/sso", label: "SSO & SCIM", icon: Bot, keywords: "saml oidc enterprise", soon: true },
       { href: "/status", label: "System status", icon: Settings, keywords: "deployment status runtime database redis storage" },
     ],

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Clock3, Minus } from "@/components/icons";
 import { apiRequest } from "@/lib/api";
@@ -28,8 +28,25 @@ function CellValue({ value }: { value: Cell }) {
   return <span className="text-sm text-[var(--lp-text)]">{value}</span>;
 }
 
-export function Pricing({ initial }: { initial: PublicPlansResponse | null }) {
-  const [period, setPeriod] = useState<Period>("yearly");
+type PricingProps = {
+  /** The price list rendered on the server; fetched in the browser when missing. */
+  initial?: PublicPlansResponse | null;
+  defaultPeriod?: Period;
+  /** In the console: the workspace's plan, marked Current. */
+  current?: PlanId;
+  /** In the console: each plan's button. The landing page links to signup instead. */
+  renderAction?: (id: PlanId, period: Period) => ReactNode;
+  /** The landing page fades sections in as they scroll into view. */
+  reveal?: boolean;
+};
+
+/**
+ * The plan cards, the monthly / yearly switch, and the comparison table. The
+ * landing page and the console's Plans page both use this, so they always
+ * show the same prices and limits.
+ */
+export function Pricing({ initial, defaultPeriod = "yearly", current, renderAction, reveal = false }: PricingProps) {
+  const [period, setPeriod] = useState<Period>(defaultPeriod);
   // The server renders the page with the price list; the browser fetches it
   // only if that failed (during a build, say).
   const query = useQuery({
@@ -54,7 +71,7 @@ export function Pricing({ initial }: { initial: PublicPlansResponse | null }) {
 
   if (!catalog) {
     return (
-      <div className="lp-reveal grid gap-4 lg:grid-cols-3" aria-busy="true" aria-label="Loading prices">
+      <div className={`${reveal ? "lp-reveal " : ""}grid gap-4 lg:grid-cols-3`} aria-busy="true" aria-label="Loading prices">
         {[0, 1, 2].map((i) => (
           <div key={i} className="h-[560px] animate-pulse rounded-2xl border border-[var(--lp-border)] bg-[var(--lp-bg-raised)]" />
         ))}
@@ -63,7 +80,7 @@ export function Pricing({ initial }: { initial: PublicPlansResponse | null }) {
   }
 
   return (
-    <div className="lp-reveal">
+    <div className={reveal ? "lp-reveal" : undefined}>
       {hasBoth ? (
         <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
           <div className="grid grid-cols-2 rounded-full border border-[var(--lp-border)] bg-[var(--lp-bg-raised)] p-1" role="radiogroup" aria-label="Billing period">
@@ -98,7 +115,7 @@ export function Pricing({ initial }: { initial: PublicPlansResponse | null }) {
           // with the period they picked here.
           const cta =
             plan.id === "pro" && catalog.payments_enabled
-              ? { ...CTA.pro, href: `/signup?next=${encodeURIComponent(`/workspace/billing?plan=pro&period=${period}`)}` }
+              ? { ...CTA.pro, href: `/signup?next=${encodeURIComponent(`/upgrade?period=${period}`)}` }
               : CTA[plan.id];
           return (
             <article
@@ -108,7 +125,9 @@ export function Pricing({ initial }: { initial: PublicPlansResponse | null }) {
             >
               <div className="flex h-7 items-center justify-between gap-3">
                 <h3 className="text-lg font-semibold">{plan.name}</h3>
-                {featured ? (
+                {plan.id === current ? (
+                  <span className="rounded-full border border-[var(--lp-border-strong)] px-2.5 py-0.5 text-xs text-[var(--lp-text)]">Current plan</span>
+                ) : featured ? (
                   <span className="rounded-full bg-[var(--lp-accent)] px-2.5 py-0.5 text-xs font-medium text-white">Recommended</span>
                 ) : null}
               </div>
@@ -120,9 +139,15 @@ export function Pricing({ initial }: { initial: PublicPlansResponse | null }) {
               </div>
               <p className="mt-1 text-sm text-[var(--lp-subtle)]">{price.note}</p>
 
-              <Link href={cta.href} className={`lp-btn mt-6 w-full ${featured ? "lp-btn-primary" : "lp-btn-secondary"}`}>
-                {cta.label}
-              </Link>
+              <div className="mt-6">
+                {renderAction ? (
+                  renderAction(plan.id, period)
+                ) : (
+                  <Link href={cta.href} className={`lp-btn w-full ${featured ? "lp-btn-primary" : "lp-btn-secondary"}`}>
+                    {cta.label}
+                  </Link>
+                )}
+              </div>
               <p className="mt-2.5 h-4 text-center text-xs text-[var(--lp-subtle)]">{featured && catalog.payments_enabled ? "bKash · Nagad · Rocket · Card" : ""}</p>
 
               <dl className="mt-6 grid grid-cols-3 gap-2 rounded-xl border border-[var(--lp-border)] bg-black/20 p-3 text-center">

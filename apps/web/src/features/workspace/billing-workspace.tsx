@@ -1,17 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check, Lock } from "@/components/icons";
+import { useQuery } from "@tanstack/react-query";
 import { apiRequest, ApiError } from "@/lib/api";
-import type { BillingPayment, BillingResponse, PlanLimits, SessionResponse, WorkspaceTeamResponse, WorkspaceUsageResponse } from "@/lib/types";
+import type { BillingPayment, BillingResponse, SessionResponse, WorkspaceTeamResponse, WorkspaceUsageResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { planCopy, proPricing, taka, type PlanId } from "@/lib/plans";
 import { formatDate, Notice, SettingsCard, SettingsPageTitle } from "@/components/settings/settings-ui";
 
-const PLAN_IDS: PlanId[] = ["free", "pro", "enterprise"];
 const PLAN_NAMES: Record<PlanId, string> = { free: "Free", pro: "Pro", enterprise: "Enterprise" };
 
 // The workspace record still uses the pre-launch plan names.
@@ -80,204 +78,43 @@ function PaymentResult() {
   }
 }
 
-type Period = 1 | 12;
-
-const LIMIT_ROWS: { key: keyof PlanLimits; label: string; suffix?: string }[] = [
-  { key: "monitors", label: "Monitors" },
-  { key: "members", label: "Members" },
-  { key: "api_keys", label: "API keys" },
-  { key: "probes_per_hour", label: "Probes", suffix: "/ hr" },
-  { key: "scans_per_hour", label: "Port scans", suffix: "/ hr" },
-];
-
 /**
- * The three plans side by side. Every card has the same rows in the same
- * places, price, line, action, limits, features, so they compare at a glance.
+ * Where to change plan: one wide line here, and the full cards on the Plans
+ * page, which has room to compare them.
  */
-function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; plans?: WorkspaceUsageResponse["plans"]; current: PlanId }) {
+function PlanBanner({ billing, plans, current }: { billing?: BillingResponse; plans?: WorkspaceUsageResponse["plans"]; current: PlanId }) {
   const pro = proPricing((billing?.prices ?? []).filter((p) => p.plan === "pro"));
-  const monthly = pro.monthly;
-  const yearly = pro.yearly;
-  // Yearly by default; falls back to whichever price the server offers.
-  // A pricing link (?plan=pro&period=monthly) arrives with its choice made.
-  const params = useSearchParams();
-  const wantsPro = params.get("plan") === "pro";
-  const [period, setPeriod] = useState<Period>(params.get("period") === "monthly" ? 1 : 12);
-  const proCard = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (wantsPro) proCard.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [wantsPro]);
-  const price = (period === 12 ? yearly : monthly) ?? monthly ?? yearly;
-  const saving = pro.saving;
-  const canBuy = Boolean(billing?.payments_enabled && price);
+  const from = pro.yearly ?? pro.monthly;
+  const proLimits = plans?.find((p) => p.id === "pro")?.limits;
+  if (current === "enterprise") return null;
 
-  const checkout = useMutation({
-    mutationFn: () => apiRequest<{ payment_url: string }>("/api/billing/checkout", { method: "POST", body: JSON.stringify({ plan: "pro", months: price?.months ?? period }) }),
-    onSuccess: (resp) => {
-      window.location.assign(resp.payment_url);
-    },
-  });
-
-  const priceFor = (id: PlanId) => {
-    if (id === "free") return { amount: "BDT 0", unit: "forever", note: "No card needed" };
-    if (id === "enterprise") return { amount: "Custom", unit: "", note: "Annual agreement" };
-    if (!price) return { amount: "Pro", unit: "", note: "Pricing isn't set on this server" };
-    return price.months === 12
-      ? { amount: taka(price.perMonth), unit: "/ month", note: `${taka(price.total)} paid once for 12 months` }
-      : { amount: taka(price.total), unit: "/ month", note: "Paid a month at a time" };
-  };
-
-  const action = (id: PlanId) => {
-    const isCurrent = id === current;
-    if (id === "free") {
-      return (
-        <button type="button" className="console-btn console-btn-secondary h-9 w-full justify-center" disabled>
-          {isCurrent ? "Your current plan" : "Included with every workspace"}
-        </button>
-      );
-    }
-    if (id === "enterprise") {
-      return (
-        <a href="mailto:sales@qnetward.com?subject=Qnetward%20Enterprise" className="console-btn console-btn-secondary h-9 w-full justify-center">
-          {isCurrent ? "Your current plan" : "Contact sales"}
-        </a>
-      );
-    }
-    if (current === "enterprise") {
-      return (
-        <button type="button" className="console-btn console-btn-secondary h-9 w-full justify-center" disabled>
-          Included in Enterprise
-        </button>
-      );
-    }
-    if (!canBuy) {
-      return (
-        <button type="button" className="console-btn console-btn-secondary h-9 w-full justify-center" disabled title="Online payment isn't set up on this server yet">
-          <Lock className="h-3.5 w-3.5" /> Not available yet
-        </button>
-      );
-    }
-    return (
-      <button
-        type="button"
-        className="console-btn console-btn-primary h-9 w-full justify-center"
-        disabled={!billing?.can_pay || checkout.isPending}
-        title={billing?.can_pay ? undefined : "Only workspace owners and admins can pay"}
-        onClick={() => checkout.mutate()}
-      >
-        {checkout.isPending ? "Opening checkout…" : isCurrent ? `Add ${period === 12 ? "a year" : "a month"}` : "Upgrade to Pro"}
-      </button>
-    );
-  };
-
+  const title = current === "pro" ? "Keep Pro going" : "Grow into Pro";
+  const body =
+    current === "pro"
+      ? "Add a month or a year before it ends; the time is added after what you already have."
+      : proLimits
+        ? `${proLimits.monitors.toLocaleString("en-US")} monitors, ${proLimits.status_pages} status pages, ${proLimits.agents} probe agents, and ${proLimits.deep_scans_per_month} deep scans a month.`
+        : "Higher limits for teams that rely on Qnetward every day.";
   return (
-    <section aria-labelledby="plans-title" className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-5">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0">
-          <h2 id="plans-title" className="text-md font-medium">
-            Plans
-          </h2>
-          <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--lp-muted)]">
-            Pro is paid ahead, a month or a year at a time. When it ends, the workspace goes back to Free and keeps everything.
+    <section
+      aria-labelledby="plan-banner-title"
+      className="flex flex-col gap-4 rounded-xl border border-[rgba(255,61,127,0.35)] bg-[linear-gradient(100deg,rgba(255,61,127,0.10),rgba(255,61,127,0.02)_55%,transparent)] p-5 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <div className="min-w-0">
+        <h2 id="plan-banner-title" className="text-md font-medium">
+          {title}
+        </h2>
+        <p className="mt-1 text-sm leading-relaxed text-[var(--lp-muted)]">{body}</p>
+        {from && current !== "pro" ? (
+          <p className="mt-1.5 text-sm">
+            From <span className="font-medium text-[var(--lp-text)]">{taka(from.perMonth)}</span>
+            <span className="text-[var(--lp-subtle)]"> / month{from.months === 12 ? ", paid yearly" : ""}</span>
           </p>
-        </div>
-        {monthly && yearly ? (
-          <div className="flex items-center gap-2">
-            <div className="grid grid-cols-2 rounded-lg border border-[var(--lp-border)] bg-black/20 p-0.5" role="radiogroup" aria-label="Billing period">
-              {([1, 12] as Period[]).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  role="radio"
-                  aria-checked={period === m}
-                  onClick={() => setPeriod(m)}
-                  className={cn(
-                    "rounded-md px-3 py-1 text-xs font-medium transition-colors",
-                    period === m ? "bg-white/[0.1] text-white" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
-                  )}
-                >
-                  {m === 12 ? "Yearly" : "Monthly"}
-                </button>
-              ))}
-            </div>
-            {saving > 0 ? (
-              <span className="rounded-md bg-[rgba(74,222,128,0.1)] px-2 py-1 text-2xs font-medium text-[#86efac]">
-                Yearly saves {taka(saving)}
-                {pro.freeMonths ? ` · ${pro.freeMonths} months free` : ` · ${pro.savingPercent}% off`}
-              </span>
-            ) : null}
-          </div>
         ) : null}
       </div>
-
-      <div className="mt-5 grid gap-3 lg:grid-cols-3">
-        {PLAN_IDS.map((id) => {
-          const isCurrent = id === current;
-          const featured = id === "pro";
-          const pr = priceFor(id);
-          const limits = plans?.find((plan) => plan.id === id)?.limits;
-          const copy = limits ? planCopy(id, limits) : null;
-          const p = { id, name: PLAN_NAMES[id] };
-          return (
-            <div
-              key={p.id}
-              ref={featured ? proCard : undefined}
-              className={cn(
-                "relative flex flex-col rounded-xl border p-5",
-                featured && wantsPro && current !== "enterprise" && "ring-2 ring-[rgba(255,61,127,0.45)] ring-offset-2 ring-offset-[#1b1b1f]",
-                featured ? "border-[rgba(255,61,127,0.5)] bg-[linear-gradient(180deg,rgba(255,61,127,0.07),rgba(255,61,127,0)_45%)]" : "border-[var(--lp-border)] bg-white/[0.01]",
-              )}
-            >
-              <div className="flex h-6 items-center justify-between gap-2">
-                <p className="text-md font-semibold">{p.name}</p>
-                {isCurrent ? (
-                  <span className="rounded-full border border-[var(--lp-border-strong)] px-2 text-2xs leading-5 text-[var(--lp-text)]">Current</span>
-                ) : featured ? (
-                  <span className="rounded-full bg-[var(--lp-accent)] px-2 text-2xs font-medium leading-5 text-white">Recommended</span>
-                ) : null}
-              </div>
-
-              <p className="mt-4 flex h-8 items-baseline gap-1.5">
-                <span className="text-2xl font-semibold leading-none tracking-[-0.02em]">{pr.amount}</span>
-                {pr.unit ? <span className="text-sm text-[var(--lp-subtle)]">{pr.unit}</span> : null}
-              </p>
-              <p className="mt-1.5 truncate text-xs leading-4 text-[var(--lp-subtle)]">{pr.note}</p>
-              <p className="mt-3 min-h-[36px] text-sm leading-snug text-[var(--lp-muted)]">{copy?.audience}</p>
-
-              <div className="mt-4">{action(p.id)}</div>
-              {/* Same height on every card, so the limits below line up. */}
-              <p className="mt-2 h-4 truncate text-center text-2xs leading-4 text-[var(--lp-subtle)]">
-                {featured && canBuy && current !== "enterprise" ? "bKash · Nagad · Rocket · Card" : ""}
-              </p>
-              {featured && checkout.isError ? <p className="mt-1 text-center text-xs text-[#ff8fb3]">{(checkout.error as ApiError).message}</p> : null}
-
-              <dl className="mt-5 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-[var(--lp-border)] pt-4 text-xs">
-                {LIMIT_ROWS.map((row) => (
-                  <div key={row.key} className="contents">
-                    <dt className="text-[var(--lp-subtle)]">{row.label}</dt>
-                    <dd className="lp-mono text-right text-[var(--lp-text)]">
-                      {limits ? limits[row.key].toLocaleString() : "—"}
-                      {row.suffix ? <span className="font-sans text-[var(--lp-subtle)]"> {row.suffix}</span> : null}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-
-              <ul className="mt-4 grid gap-2 border-t border-[var(--lp-border)] pt-4 text-sm text-[var(--lp-muted)]">
-                {(copy?.features ?? []).map((f) => (
-                  <li key={f.label} className="flex items-start gap-2">
-                    <Check className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", f.planned ? "text-[var(--lp-subtle)]" : featured ? "text-[var(--lp-accent)]" : "text-[var(--lp-green)]")} />
-                    <span>
-                      {f.label}
-                      {f.planned ? <span className="text-[var(--lp-subtle)]"> (planned)</span> : null}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
+      <Link href="/upgrade" className="console-btn console-btn-primary h-9 shrink-0 justify-center px-4">
+        {current === "pro" ? "Add time" : "See plans"}
+      </Link>
     </section>
   );
 }
@@ -356,7 +193,7 @@ export function BillingWorkspace() {
             </p>
           </div>
           <p className="max-w-xs text-xs leading-relaxed text-[var(--lp-subtle)]">
-            {current === "pro" && expires ? "Add more time from the Pro card below before it ends; it's added after the current period." : plan.blurb}
+            {current === "pro" && expires ? "Add more time from Plans before it ends; it's added after the current period." : plan.blurb}
           </p>
         </div>
         {usage?.data_region ? (
@@ -393,9 +230,7 @@ export function BillingWorkspace() {
         )}
       </SettingsCard>
 
-      <Suspense fallback={null}>
-        <PlansGrid billing={billing} plans={usageQuery.data?.plans} current={current} />
-      </Suspense>
+      <PlanBanner billing={billing} plans={usageQuery.data?.plans} current={current} />
 
       <SettingsCard id="invoices" title="Payments" description="Receipts for Pro, newest first. Only owners and admins see them.">
         {payments.length ? (

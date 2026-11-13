@@ -399,7 +399,7 @@ export function LandingPage({ plans }: { plans: PublicPlansResponse | null }) {
               aside="Everything that exists today is free, with room for a small team. Pro raises the limits when you need more, paid in taka with bKash, Nagad, Rocket, or card."
             />
             <div className="mt-14">
-              <Pricing initial={plans} />
+              <Pricing initial={plans} reveal />
             </div>
           </div>
         </section>

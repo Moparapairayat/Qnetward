@@ -14,10 +14,10 @@ async function signIn(page: Page, path: string, user: { email: string; password:
 
 test("a pricing link goes on to Pro checkout after sign-in", async ({ page, request, baseURL }) => {
   const user = await provisionVerifiedUser(request, resolveOrigin(baseURL));
-  await signIn(page, `/login?next=${encodeURIComponent("/workspace/billing?plan=pro&period=monthly")}`, user);
+  await signIn(page, `/login?next=${encodeURIComponent("/upgrade?period=monthly")}`, user);
 
-  await expect(page).toHaveURL(/\/workspace\/billing\?plan=pro&period=monthly$/, { timeout: 20_000 });
-  await expect(page.getByRole("heading", { name: /billing and plan/i })).toBeVisible();
+  await expect(page).toHaveURL(/\/upgrade\?period=monthly$/, { timeout: 20_000 });
+  await expect(page.getByRole("heading", { name: /^plans$/i })).toBeVisible();
   // The period picked on the pricing page is the one shown.
   await expect(page.getByRole("radio", { name: "Monthly" })).toHaveAttribute("aria-checked", "true");
 });
