@@ -368,7 +368,7 @@ export function HistoryWorkspace() {
       <form className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4" onSubmit={form.handleSubmit((values) => void loadHistory(values))}>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
           <div className="lg:w-auto">
-            <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Protocol</span>
+            <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Protocol</span>
             <div className="flex h-10 rounded-lg border border-[var(--lp-border-strong)] bg-white/[0.03] p-1" role="radiogroup" aria-label="Protocol">
               {(["ping", "tcpping"] as const).map((value) => (
                 <button
@@ -378,7 +378,7 @@ export function HistoryWorkspace() {
                   aria-checked={mode === value}
                   onClick={() => form.setValue("type", value, { shouldValidate: form.formState.isSubmitted })}
                   className={cn(
-                    "rounded-md px-3 text-[13px] transition-colors",
+                    "rounded-md px-3 text-sm transition-colors",
                     mode === value ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
                   )}
                 >
@@ -411,7 +411,7 @@ export function HistoryWorkspace() {
 
         {recentTargets.length ? (
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            <span className="mr-1 text-[12px] text-[var(--lp-subtle)]">Recent</span>
+            <span className="mr-1 text-xs text-[var(--lp-subtle)]">Recent</span>
             {recentTargets.map((target) => {
               const label = target.protocol === "tcpping" ? `${target.target}:${target.port}` : target.target;
               const active =
@@ -423,13 +423,13 @@ export function HistoryWorkspace() {
                   onClick={() => pickRecent(target)}
                   title={`Last sample ${relativeTime(target.last_sample_at, now)}`}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[12px] transition-colors",
+                    "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors",
                     active
                       ? "border-[rgba(255,61,127,0.45)] bg-[rgba(255,61,127,0.1)] text-[var(--lp-text)]"
                       : "border-[var(--lp-border)] text-[var(--lp-muted)] hover:border-[var(--lp-border-strong)] hover:text-[var(--lp-text)]",
                   )}
                 >
-                  <span className="text-[10px] text-[var(--lp-subtle)]">{target.protocol === "tcpping" ? "TCP" : "ICMP"}</span>
+                  <span className="text-3xs text-[var(--lp-subtle)]">{target.protocol === "tcpping" ? "TCP" : "ICMP"}</span>
                   <span className="lp-mono">{label}</span>
                 </button>
               );
@@ -438,7 +438,7 @@ export function HistoryWorkspace() {
         ) : null}
 
         {requestError ? (
-          <p className="mt-4 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-[13px] text-[#ff8fb3]">{requestError}</p>
+          <p className="mt-4 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-sm text-[#ff8fb3]">{requestError}</p>
         ) : null}
       </form>
 
@@ -482,11 +482,11 @@ export function HistoryWorkspace() {
         ) : (
           <div className="flex h-[220px] flex-col items-center justify-center rounded-lg border border-dashed border-[var(--lp-border)] text-center">
             <History className="h-5 w-5 text-[var(--lp-subtle)]" />
-            <p className="mt-3 text-[13px] text-[var(--lp-muted)]">Pick a target to see its history</p>
-            <p className="mt-1 text-[12px] text-[var(--lp-subtle)]">Every ping and TCP ping you run is stored and shows up here.</p>
+            <p className="mt-3 text-sm text-[var(--lp-muted)]">Pick a target to see its history</p>
+            <p className="mt-1 text-xs text-[var(--lp-subtle)]">Every ping and TCP ping you run is stored and shows up here.</p>
           </div>
         )}
-        {hasData ? <p className="mt-2 text-[12px] text-[var(--lp-subtle)]">Failures sit on the floor in red · hover to read a sample</p> : null}
+        {hasData ? <p className="mt-2 text-xs text-[var(--lp-subtle)]">Failures sit on the floor in red · hover to read a sample</p> : null}
       </Panel>
 
       <Panel
@@ -510,9 +510,9 @@ export function HistoryWorkspace() {
       >
         {tablePoints.length ? (
           <div className="max-h-[460px] overflow-y-auto border-t border-[var(--lp-border)]">
-            <table className="w-full text-[13px]">
+            <table className="w-full text-sm">
               <thead className="sticky top-0 bg-[#1b1b1f]">
-                <tr className="border-b border-[var(--lp-border)] text-left text-[12px] text-[var(--lp-subtle)]">
+                <tr className="border-b border-[var(--lp-border)] text-left text-xs text-[var(--lp-subtle)]">
                   <th className="px-4 py-2 font-medium">Time</th>
                   <th className="px-4 py-2 font-medium">Seq</th>
                   <th className="px-4 py-2 text-right font-medium">Latency</th>
@@ -540,7 +540,7 @@ export function HistoryWorkspace() {
             </table>
           </div>
         ) : (
-          <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">
+          <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">
             {hasData ? "No failures in these samples." : selection ? "No stored samples for this target yet." : "Samples appear here once you load a target."}
           </p>
         )}

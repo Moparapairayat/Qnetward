@@ -80,10 +80,10 @@ function SectionHeader({
   return (
     <div className="lp-reveal grid gap-6 lg:grid-cols-12 lg:items-end">
       <div className={aside ? "lg:col-span-7" : "lg:col-span-12"}>
-        {label ? <div className="mb-4 text-[13px] text-[var(--lp-accent)]">{label}</div> : null}
-        <h2 className="text-[32px] font-normal leading-[1.12] tracking-[-0.025em] sm:text-[44px]">{title}</h2>
+        {label ? <div className="mb-4 text-sm text-[var(--lp-accent)]">{label}</div> : null}
+        <h2 className="text-2xl font-normal leading-[1.12] tracking-[-0.025em] sm:text-4xl">{title}</h2>
       </div>
-      {aside ? <div className="text-[16px] leading-relaxed text-[var(--lp-muted)] lg:col-span-5 lg:pb-1.5">{aside}</div> : null}
+      {aside ? <div className="text-md leading-relaxed text-[var(--lp-muted)] lg:col-span-5 lg:pb-1.5">{aside}</div> : null}
     </div>
   );
 }
@@ -113,7 +113,7 @@ export function LandingPage() {
       <LandingEffects />
       {/* announcement */}
       <div className="border-b border-[var(--lp-border)] bg-[var(--lp-bg-raised)]">
-        <div className="lp-container flex h-10 items-center justify-center gap-3 text-[13px]">
+        <div className="lp-container flex h-10 items-center justify-center gap-3 text-sm">
           <span className="lp-badge lp-badge-new">New</span>
           <span className="text-[var(--lp-muted)]">
             <span className="hidden sm:inline">Uptime monitors for websites, APIs, and servers are live</span>
@@ -136,32 +136,32 @@ export function LandingPage() {
           </div>
           <NetworkCanvas className="absolute inset-x-0 top-0 h-[760px] w-full opacity-40 [mask-image:linear-gradient(to_bottom,black_55%,transparent)] sm:opacity-80" />
           <div className="lp-container relative pb-16 pt-10 text-center sm:pt-20">
-            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[var(--lp-border)] bg-white/[0.03] px-3 py-1 text-[12px] text-[var(--lp-muted)]">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[var(--lp-border)] bg-white/[0.03] px-3 py-1 text-xs text-[var(--lp-muted)]">
               <span className="lp-pulse h-1.5 w-1.5 rounded-full bg-[var(--lp-green)]" />
               Network · Infrastructure · Security
             </div>
-            <h1 className="mx-auto mt-5 max-w-4xl text-[38px] font-normal leading-[1.08] tracking-[-0.035em] sm:text-[72px]">
+            <h1 className="mx-auto mt-5 max-w-4xl text-3xl font-normal leading-[1.08] tracking-[-0.035em] sm:text-5xl">
               <span className="lp-hero-text">See every network, server, and threat</span>
               <span className="lp-cursor" />
             </h1>
-            <p className="mx-auto mt-5 max-w-3xl text-[16px] leading-relaxed text-[var(--lp-muted)] sm:text-[18px]">
+            <p className="mx-auto mt-5 max-w-3xl text-md leading-relaxed text-[var(--lp-muted)] sm:text-lg">
               Qnetward probes, monitors, and protects your infrastructure from one platform.{" "}
               <br className="hidden md:block" />
               Diagnostics and uptime monitors today. Agents and attack-surface scans next.
             </p>
             {/* Phones keep both buttons on one row, with shorter labels. */}
             <div className="mx-auto mt-7 grid max-w-sm grid-cols-2 gap-2.5 sm:flex sm:max-w-none sm:items-center sm:justify-center sm:gap-3">
-              <Link href="/signup" className="lp-btn lp-btn-primary h-11 px-3 text-[14px] sm:px-6 sm:text-[15px]">
+              <Link href="/signup" className="lp-btn lp-btn-primary h-11 px-3 text-base sm:px-6 sm:text-md">
                 <span className="sm:hidden">Start free</span>
                 <span className="hidden sm:inline">Start monitoring free</span>
               </Link>
-              <a href="#how" className="lp-btn lp-btn-secondary h-11 px-3 text-[14px] sm:px-6 sm:text-[15px]">
+              <a href="#how" className="lp-btn lp-btn-secondary h-11 px-3 text-base sm:px-6 sm:text-md">
                 <span className="sm:hidden">How it works</span>
                 <span className="hidden sm:inline">See how it works</span>
               </a>
             </div>
             {/* One row on every width: tighter spacing and type on phones. */}
-            <ul className="mt-5 flex flex-nowrap items-center justify-center gap-x-3 whitespace-nowrap text-[12px] text-[var(--lp-subtle)] sm:gap-x-6 sm:text-[13px]">
+            <ul className="mt-5 flex flex-nowrap items-center justify-center gap-x-3 whitespace-nowrap text-xs text-[var(--lp-subtle)] sm:gap-x-6 sm:text-sm">
               {["Free to start", "No credit card", "Self-host ready"].map((item) => (
                 <li key={item} className="flex items-center gap-1.5 sm:gap-2">
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5">
@@ -204,11 +204,11 @@ export function LandingPage() {
             <div className="lg:col-span-5">
               <div className="lg:sticky lg:top-28">
                 <SectionHeader label="How it works" title="Three steps, no install" />
-                <p className="lp-reveal mt-6 max-w-sm text-[16px] leading-relaxed text-[var(--lp-muted)]">
+                <p className="lp-reveal mt-6 max-w-sm text-md leading-relaxed text-[var(--lp-muted)]">
                   The console runs every probe from our side, so you can start before you&apos;ve decided where an
                   agent should live.
                 </p>
-                <Link href="/signup" className="lp-reveal mt-8 inline-flex items-center gap-2 text-[14px] text-[var(--lp-text)] hover:text-[var(--lp-accent)]">
+                <Link href="/signup" className="lp-reveal mt-8 inline-flex items-center gap-2 text-base text-[var(--lp-text)] hover:text-[var(--lp-accent)]">
                   Create a workspace <span aria-hidden="true">→</span>
                 </Link>
               </div>
@@ -220,12 +220,12 @@ export function LandingPage() {
                   {i < steps.length - 1 ? (
                     <span aria-hidden="true" className="absolute bottom-0 left-[15px] top-9 w-px bg-gradient-to-b from-[var(--lp-border-strong)] to-transparent" />
                   ) : null}
-                  <span className="lp-mono relative grid h-8 w-8 place-items-center rounded-full border border-[var(--lp-border-strong)] bg-[var(--lp-bg-raised)] text-[12px] text-[var(--lp-muted)]">
+                  <span className="lp-mono relative grid h-8 w-8 place-items-center rounded-full border border-[var(--lp-border-strong)] bg-[var(--lp-bg-raised)] text-xs text-[var(--lp-muted)]">
                     {i + 1}
                   </span>
                   <div className="min-w-0 pt-0.5">
-                    <h3 className="text-[22px] font-normal tracking-[-0.01em]">{step.title}</h3>
-                    <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-[var(--lp-muted)]">{step.body}</p>
+                    <h3 className="text-xl font-normal tracking-[-0.01em]">{step.title}</h3>
+                    <p className="mt-3 max-w-lg text-md leading-relaxed text-[var(--lp-muted)]">{step.body}</p>
                     <div className="mt-6">{step.visual}</div>
                   </div>
                 </li>
@@ -253,11 +253,11 @@ export function LandingPage() {
           <div className="lp-container grid grid-cols-1 gap-14 lg:grid-cols-12">
             <div className="lg:col-span-5">
               <SectionHeader label="Developers" title="The console is a client like any other" />
-              <p className="lp-reveal mt-6 text-[16px] leading-relaxed text-[var(--lp-muted)]">
+              <p className="lp-reveal mt-6 text-md leading-relaxed text-[var(--lp-muted)]">
                 The same Go engine sits behind the CLI, the REST API, and the WebSocket stream the dashboard uses. If the
                 console can do it, so can your script.
               </p>
-              <dl className="lp-reveal mt-10 border-t border-[var(--lp-border)] text-[14px]">
+              <dl className="lp-reveal mt-10 border-t border-[var(--lp-border)] text-base">
                 {[
                   ["Binary", "One static executable for Linux, macOS, and Windows"],
                   ["Output", "--json on every command, ready for jq or a pipeline"],
@@ -289,17 +289,17 @@ export function LandingPage() {
           <div className="lp-container grid grid-cols-1 gap-14 lg:grid-cols-12">
             <div className="lg:col-span-5">
               <SectionHeader label="Security" title="A scanner should refuse to scan what isn't yours" />
-              <p className="lp-reveal mt-6 text-[16px] leading-relaxed text-[var(--lp-muted)]">
+              <p className="lp-reveal mt-6 text-md leading-relaxed text-[var(--lp-muted)]">
                 Deeper security scanning is on the way. The guardrails on the right ship first, and no active scan runs
                 against a target until every one of them is in place.
               </p>
             </div>
             <div className="lp-reveal grid gap-px overflow-hidden rounded-2xl border border-[var(--lp-border)] bg-[var(--lp-border)] sm:grid-cols-2 lg:col-span-7">
               <div className="bg-[var(--lp-bg)] p-8">
-                <h3 className="text-[13px] text-[var(--lp-muted)]">In place today</h3>
+                <h3 className="text-sm text-[var(--lp-muted)]">In place today</h3>
                 <ul className="mt-6 space-y-4">
                   {securityToday.map((item) => (
-                    <li key={item} className="flex gap-3 text-[14px] leading-relaxed text-[var(--lp-text)]">
+                    <li key={item} className="flex gap-3 text-base leading-relaxed text-[var(--lp-text)]">
                       <Check />
                       {item}
                     </li>
@@ -307,10 +307,10 @@ export function LandingPage() {
                 </ul>
               </div>
               <div className="bg-[var(--lp-bg)] p-8">
-                <h3 className="text-[13px] text-[var(--lp-muted)]">Required before any active scan</h3>
+                <h3 className="text-sm text-[var(--lp-muted)]">Required before any active scan</h3>
                 <ul className="mt-6 space-y-4">
                   {securityBeforeScans.map((item) => (
-                    <li key={item} className="flex gap-3 text-[14px] leading-relaxed text-[var(--lp-muted)]">
+                    <li key={item} className="flex gap-3 text-base leading-relaxed text-[var(--lp-muted)]">
                       <Check muted />
                       {item}
                     </li>
@@ -320,8 +320,8 @@ export function LandingPage() {
             </div>
             <div className="lp-reveal lg:col-span-12">
               <div className="flex items-baseline justify-between gap-6 border-b border-[var(--lp-border)] pb-4">
-                <h3 className="text-[15px] font-medium">How scanning will be gated</h3>
-                <span className="text-[13px] text-[var(--lp-subtle)]">Planned · each tier unlocks the next</span>
+                <h3 className="text-md font-medium">How scanning will be gated</h3>
+                <span className="text-sm text-[var(--lp-subtle)]">Planned · each tier unlocks the next</span>
               </div>
               <ol className="relative mt-8 grid gap-8 md:grid-cols-3 md:gap-6">
                 {/* One line runs through the tier markers: across on wide screens, down on phones. */}
@@ -329,7 +329,7 @@ export function LandingPage() {
                 {scanTiers.map((t, i) => (
                   <li key={t.tier} className="relative grid grid-cols-[32px_1fr] gap-x-4 md:block">
                     <span
-                      className="lp-mono relative z-10 grid h-8 w-8 place-items-center rounded-full border text-[12px]"
+                      className="lp-mono relative z-10 grid h-8 w-8 place-items-center rounded-full border text-xs"
                       style={{
                         borderColor: tierTone[i].border,
                         color: tierTone[i].text,
@@ -341,10 +341,10 @@ export function LandingPage() {
                     </span>
                     <div className="md:mt-5">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="text-[17px] font-normal">{t.name}</h4>
-                        <span className="rounded-md border border-[var(--lp-border)] px-1.5 py-px text-[11.5px] text-[var(--lp-muted)]">{t.who}</span>
+                        <h4 className="text-lg font-normal">{t.name}</h4>
+                        <span className="rounded-md border border-[var(--lp-border)] px-1.5 py-px text-xs text-[var(--lp-muted)]">{t.who}</span>
                       </div>
-                      <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-[var(--lp-muted)]">{t.body}</p>
+                      <p className="mt-2 max-w-sm text-base leading-relaxed text-[var(--lp-muted)]">{t.body}</p>
                     </div>
                   </li>
                 ))}
@@ -363,7 +363,7 @@ export function LandingPage() {
                 <>
                   Probing from several regions separates a local blip from a regional outage. We start in Singapore and
                   add regions where customers need them.
-                  <span className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-[var(--lp-subtle)]">
+                  <span className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--lp-subtle)]">
                     <span className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-[var(--lp-accent)]" /> Primary
                     </span>
@@ -408,7 +408,7 @@ export function LandingPage() {
           <div className="lp-container grid grid-cols-1 gap-14 lg:grid-cols-12">
             <div className="lg:col-span-4">
               <SectionHeader label="FAQ" title="Common questions" />
-              <p className="lp-reveal mt-6 text-[15px] leading-relaxed text-[var(--lp-muted)]">
+              <p className="lp-reveal mt-6 text-md leading-relaxed text-[var(--lp-muted)]">
                 Not covered here? The console is free to explore, so the quickest answer is often to try it.
               </p>
             </div>
@@ -429,19 +429,19 @@ export function LandingPage() {
               />
               <div className="relative grid grid-cols-1 items-center gap-12 lg:grid-cols-12">
                 <div className="lg:col-span-7">
-                  <h2 className="text-[34px] font-normal leading-[1.08] tracking-[-0.03em] sm:text-[56px]">
+                  <h2 className="text-3xl font-normal leading-[1.08] tracking-[-0.03em] sm:text-4xl">
                     <span className="lp-hero-text">Start watching your network</span>
                     <span className="lp-cursor" />
                   </h2>
-                  <p className="mt-5 max-w-md text-[16px] leading-relaxed text-[var(--lp-muted)]">
+                  <p className="mt-5 max-w-md text-md leading-relaxed text-[var(--lp-muted)]">
                     Free to start, no card required. Your first probe runs in under a minute, and your monitors keep
                     checking after you close the tab.
                   </p>
                   <div className="mt-8 flex gap-3">
-                    <Link href="/signup" className="lp-btn lp-btn-primary h-11 flex-[1.6] whitespace-nowrap px-4 text-[15px] sm:flex-none sm:px-6">
+                    <Link href="/signup" className="lp-btn lp-btn-primary h-11 flex-[1.6] whitespace-nowrap px-4 text-md sm:flex-none sm:px-6">
                       Create free account
                     </Link>
-                    <Link href="/login" className="lp-btn lp-btn-secondary h-11 flex-1 whitespace-nowrap px-4 text-[15px] sm:flex-none sm:px-6">
+                    <Link href="/login" className="lp-btn lp-btn-secondary h-11 flex-1 whitespace-nowrap px-4 text-md sm:flex-none sm:px-6">
                       Sign in
                     </Link>
                   </div>

@@ -115,8 +115,8 @@ export function GradeBadge({
       className={cn(
         "inline-grid shrink-0 place-items-center rounded-xl border font-semibold tracking-[-0.03em]",
         size === "lg"
-          ? "h-20 w-20 text-[34px]"
-          : "h-8 w-8 rounded-lg text-[14px]",
+          ? "h-20 w-20 text-3xl"
+          : "h-8 w-8 rounded-lg text-base",
       )}
       style={{ color, borderColor: `${color}55`, background: `${color}14` }}
       aria-label={`Grade ${grade}`}
@@ -129,7 +129,7 @@ export function GradeBadge({
 /** Label and value rows whose long values (SPF, DMARC) wrap instead of widening the page. */
 function Facts({ items }: { items: { label: string; value: ReactNode }[] }) {
   return (
-    <dl className="divide-y divide-[var(--lp-border)] text-[13px]">
+    <dl className="divide-y divide-[var(--lp-border)] text-sm">
       {items.map((item) => (
         <div
           key={item.label}
@@ -162,13 +162,13 @@ function FindingRow({ finding }: { finding: SecurityFinding }) {
       >
         <span
           className={cn(
-            "mt-px shrink-0 rounded-md border px-1.5 py-px text-[11px]",
+            "mt-px shrink-0 rounded-md border px-1.5 py-px text-2xs",
             meta.pill,
           )}
         >
           {meta.label}
         </span>
-        <span className="min-w-0 flex-1 text-[13px] text-[var(--lp-text)]">
+        <span className="min-w-0 flex-1 text-sm text-[var(--lp-text)]">
           {finding.title}
         </span>
         {expandable ? (
@@ -181,7 +181,7 @@ function FindingRow({ finding }: { finding: SecurityFinding }) {
         ) : null}
       </button>
       {open && expandable ? (
-        <div className="grid gap-2 px-4 pb-3.5 pl-[4.6rem] text-[13px] leading-relaxed">
+        <div className="grid gap-2 px-4 pb-3.5 pl-[4.6rem] text-sm leading-relaxed">
           {finding.detail ? (
             <p className="text-[var(--lp-muted)]">{finding.detail}</p>
           ) : null}
@@ -226,8 +226,8 @@ function ReportView({
       <section className="flex flex-col gap-5 rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-5 sm:flex-row sm:items-center">
         <GradeBadge grade={report.grade} />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[18px] font-medium">{report.domain}</p>
-          <p className="mt-0.5 text-[13px] text-[var(--lp-muted)]">
+          <p className="truncate text-lg font-medium">{report.domain}</p>
+          <p className="mt-0.5 text-sm text-[var(--lp-muted)]">
             Score{" "}
             <span className="lp-mono text-[var(--lp-text)]">
               {report.score}
@@ -255,7 +255,7 @@ function ReportView({
               <span
                 key={s}
                 className={cn(
-                  "rounded-md border px-2 py-0.5 text-[12px]",
+                  "rounded-md border px-2 py-0.5 text-xs",
                   severityMeta[s].pill,
                   !report.counts[s] && "opacity-40",
                 )}
@@ -265,7 +265,7 @@ function ReportView({
             ))}
             <span
               className={cn(
-                "rounded-md border px-2 py-0.5 text-[12px]",
+                "rounded-md border px-2 py-0.5 text-xs",
                 severityMeta.pass.pill,
               )}
             >
@@ -294,7 +294,7 @@ function ReportView({
                   aria-selected={filter === c}
                   onClick={() => setFilter(c)}
                   className={cn(
-                    "rounded-md px-2.5 py-1 text-[12px] transition-colors",
+                    "rounded-md px-2.5 py-1 text-xs transition-colors",
                     filter === c
                       ? "bg-white/[0.08] text-[var(--lp-text)]"
                       : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
@@ -316,7 +316,7 @@ function ReportView({
               ))}
             </ul>
           ) : (
-            <p className="border-t border-[var(--lp-border)] px-4 py-6 text-center text-[13px] text-[#86efac]">
+            <p className="border-t border-[var(--lp-border)] px-4 py-6 text-center text-sm text-[#86efac]">
               Nothing to fix here.
             </p>
           )}
@@ -324,7 +324,7 @@ function ReportView({
             <div className="border-t border-[var(--lp-border)]">
               <button
                 type="button"
-                className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-[12px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
                 onClick={() => setShowPassed((v) => !v)}
                 aria-expanded={showPassed}
               >
@@ -402,7 +402,7 @@ function ReportView({
                 ]}
               />
             ) : (
-              <p className="text-[13px] text-[var(--lp-muted)]">
+              <p className="text-sm text-[var(--lp-muted)]">
                 {report.tls.error
                   ? `No HTTPS: ${report.tls.error}.`
                   : "No certificate was checked."}
@@ -426,7 +426,7 @@ function ReportView({
                 {
                   label: "SPF",
                   value: (
-                    <span className="lp-mono break-all text-[12px]">
+                    <span className="lp-mono break-all text-xs">
                       {report.dns.spf[0] ?? "Not set"}
                     </span>
                   ),
@@ -434,7 +434,7 @@ function ReportView({
                 {
                   label: "DMARC",
                   value: (
-                    <span className="lp-mono break-all text-[12px]">
+                    <span className="lp-mono break-all text-xs">
                       {report.dns.dmarc ?? "Not set"}
                       {report.dns.dmarc &&
                       report.dns.dmarc_from &&
@@ -460,7 +460,7 @@ function ReportView({
 
           {report.http.headers && Object.keys(report.http.headers).length ? (
             <Panel title="Headers seen">
-              <dl className="grid gap-2 text-[12px]">
+              <dl className="grid gap-2 text-xs">
                 {Object.entries(report.http.headers).map(([k, v]) => (
                   <div key={k} className="min-w-0">
                     <dt className="text-[var(--lp-subtle)]">{k}</dt>
@@ -649,13 +649,13 @@ export function PassiveChecksWorkspace() {
         </div>
         {run.isError ? (
           <p
-            className="mt-3 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-[13px] text-[#ff8fb3]"
+            className="mt-3 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-sm text-[#ff8fb3]"
             role="alert"
           >
             {(run.error as ApiError).message}
           </p>
         ) : (
-          <p className="mt-2 text-[12px] text-[var(--lp-subtle)]">
+          <p className="mt-2 text-xs text-[var(--lp-subtle)]">
             Takes a few seconds. Each check counts towards your workspace&apos;s
             hourly scans.
           </p>
@@ -665,7 +665,7 @@ export function PassiveChecksWorkspace() {
       <div className="grid grid-cols-1 items-start gap-5 2xl:grid-cols-[minmax(0,1fr)_300px] [&>*]:min-w-0">
         <div className="min-w-0">
           {selected.isLoading ? (
-            <p className="rounded-xl border border-[var(--lp-border)] px-4 py-10 text-center text-[13px] text-[var(--lp-subtle)]">
+            <p className="rounded-xl border border-[var(--lp-border)] px-4 py-10 text-center text-sm text-[var(--lp-subtle)]">
               Loading report…
             </p>
           ) : current?.report ? (
@@ -675,7 +675,7 @@ export function PassiveChecksWorkspace() {
               previous={previous}
               watchSlot={
                 currentWatch ? (
-                  <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-md border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.06)] px-2.5 py-1.5 text-[12px] text-[#86efac] sm:self-center">
+                  <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-md border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.06)] px-2.5 py-1.5 text-xs text-[#86efac] sm:self-center">
                     <Bell className="h-3.5 w-3.5" /> Watched ·{" "}
                     {intervalLabel[currentWatch.interval_hours].toLowerCase()}
                   </span>
@@ -700,10 +700,10 @@ export function PassiveChecksWorkspace() {
           ) : (
             <div className="flex flex-col items-center rounded-xl border border-dashed border-[var(--lp-border)] px-6 py-14 text-center">
               <ShieldCheck className="h-6 w-6 text-[var(--lp-subtle)]" />
-              <p className="mt-3 text-[14px] text-[var(--lp-muted)]">
+              <p className="mt-3 text-base text-[var(--lp-muted)]">
                 Check your first domain
               </p>
-              <p className="mt-1 max-w-md text-[13px] text-[var(--lp-subtle)]">
+              <p className="mt-1 max-w-md text-sm text-[var(--lp-subtle)]">
                 You&apos;ll get a grade from A+ to F, every issue found with how
                 to fix it, and a history to compare against next time.
               </p>
@@ -740,11 +740,11 @@ export function PassiveChecksWorkspace() {
                     >
                       <GradeBadge grade={s.grade} size="sm" />
                       <span className="min-w-0">
-                        <span className="block truncate text-[13px] text-[var(--lp-text)]">
+                        <span className="block truncate text-sm text-[var(--lp-text)]">
                           {s.domain}
                         </span>
                         <span
-                          className="block text-[11px] text-[var(--lp-subtle)]"
+                          className="block text-2xs text-[var(--lp-subtle)]"
                           title={formatDateTime(s.created_at)}
                         >
                           {ago(s.created_at)}
@@ -781,7 +781,7 @@ export function PassiveChecksWorkspace() {
                 ))}
               </ul>
             ) : (
-              <p className="border-t border-[var(--lp-border)] px-4 py-4 text-[13px] text-[var(--lp-subtle)]">
+              <p className="border-t border-[var(--lp-border)] px-4 py-4 text-sm text-[var(--lp-subtle)]">
                 {history.isLoading ? "Loading…" : "No checks yet."}
               </p>
             )}
@@ -822,7 +822,7 @@ export function WatchList({
       bodyClassName="p-0"
       aside={
         limit ? (
-          <span className="text-[12px] text-[var(--lp-subtle)]">
+          <span className="text-xs text-[var(--lp-subtle)]">
             {watches.length} of {limit}
           </span>
         ) : null
@@ -830,7 +830,7 @@ export function WatchList({
     >
       {error ? (
         <p
-          className="mx-3 mb-3 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2 text-[12px] text-[#ff8fb3]"
+          className="mx-3 mb-3 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2 text-xs text-[#ff8fb3]"
           role="alert"
         >
           {error}
@@ -855,10 +855,10 @@ export function WatchList({
                   disabled={!w.last_scan_id}
                   onClick={() => w.last_scan_id && onOpen(w.last_scan_id)}
                 >
-                  <span className="block truncate text-[13px] text-[var(--lp-text)]">
+                  <span className="block truncate text-sm text-[var(--lp-text)]">
                     {w.domain}
                   </span>
-                  <span className="block text-[11px] text-[var(--lp-subtle)]">
+                  <span className="block text-2xs text-[var(--lp-subtle)]">
                     {!w.enabled ? (
                       "Paused"
                     ) : w.last_error ? (
@@ -888,7 +888,7 @@ export function WatchList({
               </div>
               <div className="flex items-center gap-2 pl-11">
                 <select
-                  className="h-7 min-w-0 flex-1 px-2 text-[12px]"
+                  className="h-7 min-w-0 flex-1 px-2 text-xs"
                   aria-label={`How often to check ${w.domain}`}
                   value={w.interval_hours}
                   disabled={busy}
@@ -922,7 +922,7 @@ export function WatchList({
           ))}
         </ul>
       ) : (
-        <p className="border-t border-[var(--lp-border)] px-4 py-4 text-[12px] leading-relaxed text-[var(--lp-subtle)]">
+        <p className="border-t border-[var(--lp-border)] px-4 py-4 text-xs leading-relaxed text-[var(--lp-subtle)]">
           {emptyText ??
             "Watch a domain to check it again on a schedule. You'll get an email, and an alert on channels that subscribe to security checks, when its grade drops or a new high-severity issue appears."}
         </p>

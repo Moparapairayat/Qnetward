@@ -112,9 +112,9 @@ function AvatarCard({ session, data, disabled }: { session?: SessionResponse; da
     >
       <div className="flex items-center gap-4">
         <Avatar name={session?.user?.name} email={session?.user?.email} src={avatarUrl} size={64} />
-        <div className="text-[13px] text-[var(--lp-muted)]">
+        <div className="text-sm text-[var(--lp-muted)]">
           <p className="text-[var(--lp-text)]">{session?.user?.name || session?.user?.email}</p>
-          <p className="text-[12px] text-[var(--lp-subtle)]">
+          <p className="text-xs text-[var(--lp-subtle)]">
             {avatarUrl ? "Visible to people in your workspaces." : "Your initials are shown until you add a picture. Signing in with Google uses your Google photo."}
           </p>
         </div>
@@ -227,7 +227,7 @@ function AboutCard({ profile, disabled }: { profile: UserProfile; disabled: bool
     >
       <div className="grid gap-4">
         <label className="block">
-          <span className="mb-1.5 flex items-baseline justify-between text-[12px] text-[var(--lp-muted)]">
+          <span className="mb-1.5 flex items-baseline justify-between text-xs text-[var(--lp-muted)]">
             Bio
             <span className={value.bio.length > BIO_MAX ? "text-[#ff8fb3]" : "text-[var(--lp-subtle)]"}>
               {value.bio.length}/{BIO_MAX}
@@ -246,7 +246,7 @@ function AboutCard({ profile, disabled }: { profile: UserProfile; disabled: bool
         </label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
-            <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Pronouns</span>
+            <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Pronouns</span>
             <select
               aria-label="Pronouns"
               className="h-9 w-full px-2"
@@ -281,7 +281,7 @@ function AboutCard({ profile, disabled }: { profile: UserProfile; disabled: bool
             ) : null}
           </label>
           <label className="block">
-            <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Website</span>
+            <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Website</span>
             <span className="relative block">
               <Globe className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--lp-subtle)]" />
               <input
@@ -355,7 +355,7 @@ function SocialLinksCard({ profile, disabled }: { profile: UserProfile; disabled
       {links.length < LINKS_MAX ? (
         <button
           type="button"
-          className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-[var(--lp-muted)] hover:text-[var(--lp-text)] disabled:opacity-40"
+          className="mt-2 inline-flex items-center gap-1.5 text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)] disabled:opacity-40"
           disabled={disabled}
           onClick={() => set([...links, ""])}
         >
@@ -439,7 +439,7 @@ export function ProfileSettings() {
       {profileQuery.isError ? (
         <Notice tone="error">{(profileQuery.error as ApiError).message || "Couldn't load your profile."}</Notice>
       ) : !profile ? (
-        <p className="text-[13px] text-[var(--lp-subtle)]">Loading profile…</p>
+        <p className="text-sm text-[var(--lp-subtle)]">Loading profile…</p>
       ) : (
         // Each card keeps its own draft over the saved profile, so saving one leaves the others' edits alone.
         <div className="grid grid-cols-1 gap-5">

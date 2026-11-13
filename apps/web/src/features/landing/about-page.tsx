@@ -38,11 +38,11 @@ export function AboutPage() {
       <LandingNav />
       <main id="main">
         <section className="lp-container max-w-5xl pb-16 pt-20">
-          <p className="text-[13px] text-[var(--lp-accent)]">About</p>
-          <h1 className="mt-4 max-w-3xl text-[40px] font-normal leading-[1.1] tracking-[-0.025em] sm:text-[52px]">
+          <p className="text-sm text-[var(--lp-accent)]">About</p>
+          <h1 className="mt-4 max-w-3xl text-3xl font-normal leading-[1.1] tracking-[-0.025em] sm:text-4xl">
             One place to watch your network, servers, and security
           </h1>
-          <p className="mt-6 max-w-2xl text-[17px] leading-relaxed text-[var(--lp-muted)]">
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[var(--lp-muted)]">
             Most teams stitch together a ping tool, an uptime checker, a metrics agent, an SNMP poller, and a security scanner, then lose the
             context between them. Qnetward puts all of it behind one console, one agent, and one API.
           </p>
@@ -50,8 +50,8 @@ export function AboutPage() {
 
         <section className="lp-divider py-16">
           <div className="lp-container grid max-w-5xl gap-12 lg:grid-cols-[260px_minmax(0,1fr)]">
-            <h2 className="text-[22px] font-normal tracking-[-0.01em]">Why we build it</h2>
-            <div className="space-y-5 text-[16px] leading-relaxed text-[var(--lp-muted)]">
+            <h2 className="text-xl font-normal tracking-[-0.01em]">Why we build it</h2>
+            <div className="space-y-5 text-md leading-relaxed text-[var(--lp-muted)]">
               <p>
                 When something breaks, the first questions are always the same: is it the network, the server, or something we changed? Answering
                 them shouldn&apos;t mean opening five tools. Qnetward measures reachability, latency, host load, device interfaces, and exposure
@@ -70,8 +70,8 @@ export function AboutPage() {
             <dl className="grid grid-cols-2 overflow-hidden rounded-2xl border border-[var(--lp-border)] lg:grid-cols-4">
               {facts.map(([value, label], i) => (
                 <div key={value} className={`px-6 py-6 ${i % 2 ? "border-l" : ""} ${i > 1 ? "border-t lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""} border-[var(--lp-border)]`}>
-                  <dt className="text-[26px] tracking-[-0.02em]">{value}</dt>
-                  <dd className="mt-1.5 text-[14px] leading-snug text-[var(--lp-muted)]">{label}</dd>
+                  <dt className="text-2xl tracking-[-0.02em]">{value}</dt>
+                  <dd className="mt-1.5 text-base leading-snug text-[var(--lp-muted)]">{label}</dd>
                 </div>
               ))}
             </dl>
@@ -80,12 +80,12 @@ export function AboutPage() {
 
         <section className="lp-divider py-16">
           <div className="lp-container max-w-5xl">
-            <h2 className="text-[22px] font-normal tracking-[-0.01em]">What we believe</h2>
+            <h2 className="text-xl font-normal tracking-[-0.01em]">What we believe</h2>
             <div className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-[var(--lp-border)] bg-[var(--lp-border)] sm:grid-cols-2">
               {principles.map((p) => (
                 <div key={p.title} className="bg-[var(--lp-bg)] p-7">
-                  <h3 className="text-[16px]">{p.title}</h3>
-                  <p className="mt-2 text-[14.5px] leading-relaxed text-[var(--lp-muted)]">{p.body}</p>
+                  <h3 className="text-md">{p.title}</h3>
+                  <p className="mt-2 text-base leading-relaxed text-[var(--lp-muted)]">{p.body}</p>
                 </div>
               ))}
             </div>
@@ -95,8 +95,8 @@ export function AboutPage() {
         <section className="lp-divider py-16">
           <div className="lp-container flex max-w-5xl flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-[22px] font-normal tracking-[-0.01em]">Built in the open</h2>
-              <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-[var(--lp-muted)]">
+              <h2 className="text-xl font-normal tracking-[-0.01em]">Built in the open</h2>
+              <p className="mt-2 max-w-xl text-md leading-relaxed text-[var(--lp-muted)]">
                 {team.length} people have shaped Qnetward so far, from the probe engine to the console.
               </p>
               <div className="mt-6 flex -space-x-2.5">
@@ -112,7 +112,7 @@ export function AboutPage() {
                   />
                 ))}
                 {team.length > 8 ? (
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[var(--lp-bg)] bg-[var(--lp-bg-raised)] text-[12px] text-[var(--lp-muted)]">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[var(--lp-bg)] bg-[var(--lp-bg-raised)] text-xs text-[var(--lp-muted)]">
                     +{team.length - 8}
                   </span>
                 ) : null}
@@ -131,7 +131,7 @@ export function AboutPage() {
 
         <section id="contact" className="lp-divider scroll-mt-20 py-16">
           <div className="lp-container max-w-5xl">
-            <h2 className="text-[22px] font-normal tracking-[-0.01em]">Contact</h2>
+            <h2 className="text-xl font-normal tracking-[-0.01em]">Contact</h2>
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
               {[
                 { title: "Sales and questions", body: "Plans, pilots, and anything else.", cta: email, href: `mailto:${email}` },
@@ -139,12 +139,12 @@ export function AboutPage() {
                 { title: "Security reports", body: "Found a vulnerability? Tell us privately first.", cta: email, href: `mailto:${email}?subject=Security%20report` },
               ].map((c) => (
                 <div key={c.title} className="rounded-2xl border border-[var(--lp-border)] bg-[var(--lp-bg-raised)] p-6">
-                  <h3 className="text-[15px]">{c.title}</h3>
-                  <p className="mt-1.5 text-[14px] text-[var(--lp-muted)]">{c.body}</p>
+                  <h3 className="text-md">{c.title}</h3>
+                  <p className="mt-1.5 text-base text-[var(--lp-muted)]">{c.body}</p>
                   <a
                     href={c.href}
                     {...(c.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}
-                    className="mt-4 inline-block text-[14px] text-[var(--lp-accent)] hover:underline"
+                    className="mt-4 inline-block text-base text-[var(--lp-accent)] hover:underline"
                   >
                     {c.cta} →
                   </a>

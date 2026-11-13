@@ -108,9 +108,9 @@ function KindBadge({ kind, size = "md" }: { kind: ChannelKind; size?: "md" | "lg
 function Field({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[13px] text-[var(--lp-muted)]">{label}</span>
+      <span className="mb-1.5 block text-sm text-[var(--lp-muted)]">{label}</span>
       {children}
-      {hint ? <span className="mt-1.5 block text-[12px] leading-relaxed text-[var(--lp-subtle)]">{hint}</span> : null}
+      {hint ? <span className="mt-1.5 block text-xs leading-relaxed text-[var(--lp-subtle)]">{hint}</span> : null}
     </label>
   );
 }
@@ -198,7 +198,7 @@ function ChannelDialog({ open, onClose, editing, initialKind }: { open: boolean;
       </button>
     ) : (
       <>
-        {save.isError ? <span className="mr-auto text-[12px] text-[#ff8fb3]">{(save.error as ApiError).message}</span> : null}
+        {save.isError ? <span className="mr-auto text-xs text-[#ff8fb3]">{(save.error as ApiError).message}</span> : null}
         {step > (editing ? 1 : 0) ? (
           <button type="button" className="console-btn console-btn-secondary" disabled={save.isPending} onClick={() => setStep((s) => s - 1)}>
             Back
@@ -249,8 +249,8 @@ function ChannelDialog({ open, onClose, editing, initialKind }: { open: boolean;
               >
                 <KindBadge kind={k} />
                 <span className="min-w-0">
-                  <span className="block text-[14px] font-medium">{kinds[k].label}</span>
-                  <span className="block text-[12px] leading-snug text-[var(--lp-subtle)]">{kinds[k].blurb}</span>
+                  <span className="block text-base font-medium">{kinds[k].label}</span>
+                  <span className="block text-xs leading-snug text-[var(--lp-subtle)]">{kinds[k].blurb}</span>
                 </span>
               </button>
             ))}
@@ -259,7 +259,7 @@ function ChannelDialog({ open, onClose, editing, initialKind }: { open: boolean;
           <div className="grid gap-5">
             <div className="flex items-start gap-3 rounded-lg border border-[var(--lp-border)] bg-black/20 p-3">
               <KindBadge kind={kind} />
-              <p className="text-[12px] leading-relaxed text-[var(--lp-muted)]">{meta.help}</p>
+              <p className="text-xs leading-relaxed text-[var(--lp-muted)]">{meta.help}</p>
             </div>
             <Field label="Name" hint="Shown in this list, and in the audit log.">
               <input className="h-9 w-full px-3" maxLength={80} autoFocus value={name} onChange={(e) => setName(e.target.value)} />
@@ -268,7 +268,7 @@ function ChannelDialog({ open, onClose, editing, initialKind }: { open: boolean;
               <>
                 <Field label="Bot token" hint={editing ? "Leave blank to keep the current token." : undefined}>
                   <input
-                    className="lp-mono h-9 w-full px-3 text-[13px]"
+                    className="lp-mono h-9 w-full px-3 text-sm"
                     placeholder={editing ? "••••••••" : "123456789:AAE…"}
                     autoComplete="off"
                     value={token}
@@ -276,13 +276,13 @@ function ChannelDialog({ open, onClose, editing, initialKind }: { open: boolean;
                   />
                 </Field>
                 <Field label="Chat ID" hint={editing ? `Leave blank to keep ${editing.target}.` : "A number such as -1001234567890, or @channelname for a public channel."}>
-                  <input className="lp-mono h-9 w-full px-3 text-[13px]" placeholder="-1001234567890" autoComplete="off" value={chatId} onChange={(e) => setChatId(e.target.value)} />
+                  <input className="lp-mono h-9 w-full px-3 text-sm" placeholder="-1001234567890" autoComplete="off" value={chatId} onChange={(e) => setChatId(e.target.value)} />
                 </Field>
               </>
             ) : (
               <Field label={kind === "webhook" ? "Endpoint URL" : "Webhook URL"} hint={editing ? `Leave blank to keep the current URL (${editing.target}).` : "Stored encrypted. Only the last few characters are shown afterwards."}>
                 <input
-                  className="lp-mono h-9 w-full px-3 text-[13px]"
+                  className="lp-mono h-9 w-full px-3 text-sm"
                   placeholder={
                     kind === "slack" ? "https://hooks.slack.com/services/…" : kind === "discord" ? "https://discord.com/api/webhooks/…" : "https://example.com/hooks/qnetward"
                   }
@@ -292,11 +292,11 @@ function ChannelDialog({ open, onClose, editing, initialKind }: { open: boolean;
                 />
               </Field>
             )}
-            {problem ? <p className="-mt-3 text-[12px] text-[#ff8fb3]">{problem}</p> : null}
+            {problem ? <p className="-mt-3 text-xs text-[#ff8fb3]">{problem}</p> : null}
           </div>
         ) : step === 2 ? (
           <fieldset>
-            <legend className="mb-2 text-[13px] text-[var(--lp-muted)]">Which alerts should go here?</legend>
+            <legend className="mb-2 text-sm text-[var(--lp-muted)]">Which alerts should go here?</legend>
             <div className="grid gap-2">
               {allEvents.map((ev) => {
                 const on = events.includes(ev);
@@ -315,22 +315,22 @@ function ChannelDialog({ open, onClose, editing, initialKind }: { open: boolean;
                       onChange={() => setEvents((cur) => (cur.includes(ev) ? cur.filter((e) => e !== ev) : [...cur, ev]))}
                     />
                     <span>
-                      <span className="block text-[14px]">{eventInfo[ev].label}</span>
-                      <span className="block text-[13px] leading-snug text-[var(--lp-subtle)]">{eventInfo[ev].detail}</span>
+                      <span className="block text-base">{eventInfo[ev].label}</span>
+                      <span className="block text-sm leading-snug text-[var(--lp-subtle)]">{eventInfo[ev].detail}</span>
                     </span>
                   </label>
                 );
               })}
             </div>
-            {events.length === 0 ? <p className="mt-2 text-[12px] text-[#ff8fb3]">Choose at least one.</p> : null}
+            {events.length === 0 ? <p className="mt-2 text-xs text-[#ff8fb3]">Choose at least one.</p> : null}
           </fieldset>
         ) : saved ? (
           <div className="grid min-w-0 grid-cols-1 gap-4 [&>*]:min-w-0">
             <div className="flex items-center gap-3 rounded-lg border border-[var(--lp-border)] p-3">
               <KindBadge kind={saved.channel.kind} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[14px] font-medium">{saved.channel.name}</p>
-                <p className="lp-mono truncate text-[12px] text-[var(--lp-subtle)]">{saved.channel.target}</p>
+                <p className="truncate text-base font-medium">{saved.channel.name}</p>
+                <p className="lp-mono truncate text-xs text-[var(--lp-subtle)]">{saved.channel.target}</p>
               </div>
               <button type="button" className="console-btn console-btn-secondary shrink-0" disabled={test.isPending} onClick={() => test.mutate(saved.channel.id)}>
                 <Send className="h-3.5 w-3.5" /> {test.isPending ? "Sending…" : test.data ? "Send again" : "Send test"}
@@ -348,9 +348,9 @@ function ChannelDialog({ open, onClose, editing, initialKind }: { open: boolean;
 
             {saved.signing_secret ? (
               <div className="grid min-w-0 grid-cols-1 gap-2">
-                <p className="text-[13px] text-[var(--lp-muted)]">Signing secret, shown once</p>
+                <p className="text-sm text-[var(--lp-muted)]">Signing secret, shown once</p>
                 <div className="flex gap-2">
-                  <code className="lp-mono flex h-10 min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap rounded-md border border-[var(--lp-border-strong)] bg-black/30 px-3 text-[13px]">
+                  <code className="lp-mono flex h-10 min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap rounded-md border border-[var(--lp-border-strong)] bg-black/30 px-3 text-sm">
                     {saved.signing_secret}
                   </code>
                   <button
@@ -364,7 +364,7 @@ function ChannelDialog({ open, onClose, editing, initialKind }: { open: boolean;
                     {copied ? "Copied" : "Copy"}
                   </button>
                 </div>
-                <p className="text-[12px] leading-relaxed text-[var(--lp-subtle)]">
+                <p className="text-xs leading-relaxed text-[var(--lp-subtle)]">
                   Each request carries <code className="lp-mono text-[var(--lp-muted)]">X-Qnetward-Timestamp</code> and{" "}
                   <code className="lp-mono text-[var(--lp-muted)]">X-Qnetward-Signature: sha256=…</code>, the HMAC-SHA256 of the timestamp, a dot, and the raw body.
                   Reject requests whose signature doesn&apos;t match.
@@ -404,21 +404,21 @@ function ChannelRow({ channel, canManage, onEdit }: { channel: NotificationChann
       <div className="flex min-w-0 flex-1 items-start gap-3">
         <KindBadge kind={channel.kind} />
         <div className="min-w-0">
-          <p className="flex items-center gap-2 text-[14px] font-medium">
+          <p className="flex items-center gap-2 text-base font-medium">
             <span className="truncate">{channel.name}</span>
-            {!channel.enabled ? <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-[11px] font-normal text-[var(--lp-subtle)]">Paused</span> : null}
+            {!channel.enabled ? <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-2xs font-normal text-[var(--lp-subtle)]">Paused</span> : null}
           </p>
-          <p className="truncate text-[12px] text-[var(--lp-subtle)]">
+          <p className="truncate text-xs text-[var(--lp-subtle)]">
             {kinds[channel.kind].label} · <span className="lp-mono">{channel.target}</span> · {channel.events.map((e) => eventInfo[e]?.label ?? e).join(", ")}
           </p>
-          <p className={cn("mt-1 flex items-start gap-1.5 text-[12px]", failing ? "text-[#ff8fb3]" : "text-[var(--lp-subtle)]")}>
+          <p className={cn("mt-1 flex items-start gap-1.5 text-xs", failing ? "text-[#ff8fb3]" : "text-[var(--lp-subtle)]")}>
             {failing ? <XCircle className="mt-px h-3.5 w-3.5 shrink-0" /> : channel.last_sent_at ? <CheckCircle2 className="mt-px h-3.5 w-3.5 shrink-0 text-[var(--lp-green)]" /> : null}
             <span className="min-w-0 break-words">
               {failing ? `Last delivery failed: ${channel.last_error}` : channel.last_sent_at ? `Last delivered ${relative(channel.last_sent_at)}` : "Nothing sent yet"}
             </span>
           </p>
           {test.data && !test.isPending ? (
-            <p className={cn("mt-1 text-[12px]", test.data.ok ? "text-[var(--lp-green)]" : "text-[#ff8fb3]")}>{test.data.ok ? "Test delivered." : `Test failed: ${test.data.error}`}</p>
+            <p className={cn("mt-1 text-xs", test.data.ok ? "text-[var(--lp-green)]" : "text-[#ff8fb3]")}>{test.data.ok ? "Test delivered." : `Test failed: ${test.data.error}`}</p>
           ) : null}
         </div>
       </div>
@@ -495,12 +495,12 @@ export function IntegrationsWorkspace() {
 
       <SettingsCard id="channels" title="Alert channels" description="Every enabled channel gets the alerts it subscribes to, for every monitor in this workspace.">
         {channelsQuery.isLoading ? (
-          <p className="text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+          <p className="text-sm text-[var(--lp-subtle)]">Loading…</p>
         ) : channelsQuery.isError ? (
           <Notice tone="error">{(channelsQuery.error as ApiError).message || "Couldn't load channels."}</Notice>
         ) : channels.length === 0 ? (
           <div>
-            <p className="mb-3 text-[13px] text-[var(--lp-muted)]">No channels yet. Pick where alerts should go:</p>
+            <p className="mb-3 text-sm text-[var(--lp-muted)]">No channels yet. Pick where alerts should go:</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {(Object.keys(kinds) as ChannelKind[]).map((k) => (
                 <button
@@ -512,8 +512,8 @@ export function IntegrationsWorkspace() {
                 >
                   <KindBadge kind={k} size="lg" />
                   <span className="min-w-0">
-                    <span className="block text-[14px] font-medium">{kinds[k].label}</span>
-                    <span className="block text-[12px] leading-snug text-[var(--lp-subtle)]">{kinds[k].blurb}</span>
+                    <span className="block text-base font-medium">{kinds[k].label}</span>
+                    <span className="block text-xs leading-snug text-[var(--lp-subtle)]">{kinds[k].blurb}</span>
                   </span>
                 </button>
               ))}

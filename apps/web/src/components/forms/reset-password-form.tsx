@@ -76,14 +76,14 @@ export function ResetPasswordForm() {
             ...form.register("confirmPassword"),
           }}
         />
-        {passwordsMatch ? <p className="text-sm text-emerald-300">Passwords match</p> : null}
-        {passwordsMismatch && !form.formState.errors.confirmPassword ? <p className="text-sm text-rose-300">Passwords do not match</p> : null}
+        {passwordsMatch ? <p className="text-base text-emerald-300">Passwords match</p> : null}
+        {passwordsMismatch && !form.formState.errors.confirmPassword ? <p className="text-base text-rose-300">Passwords do not match</p> : null}
       </div>
-      {form.formState.errors.root && <p className="auth-notice-error text-sm">{form.formState.errors.root.message}</p>}
+      {form.formState.errors.root && <p className="auth-notice-error text-base">{form.formState.errors.root.message}</p>}
       <button className="auth-primary-button" type="submit" disabled={reset.isPending || !token}>
         {reset.isPending ? "Updating..." : "Set password"}
       </button>
-      {!token && <p className="text-sm text-rose-500">Reset token is missing from the URL.</p>}
+      {!token && <p className="text-base text-rose-500">Reset token is missing from the URL.</p>}
     </form>
   );
 }

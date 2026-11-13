@@ -64,11 +64,11 @@ function MemberRow({
     <li className="flex flex-wrap items-center gap-3 px-4 py-3">
       <Avatar name={member.name} email={member.email} src={member.avatar_url || null} size={34} />
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 truncate text-[13px]">
+        <p className="flex items-center gap-2 truncate text-sm">
           <span className="truncate">{member.name || member.email}</span>
-          {member.is_current ? <span className="rounded border border-[var(--lp-border)] px-1.5 text-[11px] leading-4 text-[var(--lp-subtle)]">You</span> : null}
+          {member.is_current ? <span className="rounded border border-[var(--lp-border)] px-1.5 text-2xs leading-4 text-[var(--lp-subtle)]">You</span> : null}
         </p>
-        <p className="truncate text-[12px] text-[var(--lp-subtle)]">
+        <p className="truncate text-xs text-[var(--lp-subtle)]">
           {member.email} · joined {formatDate(member.joined_at)}
         </p>
       </div>
@@ -76,7 +76,7 @@ function MemberRow({
         {manageable ? (
           <select
             aria-label={`Role for ${member.email}`}
-            className="h-8 px-2 text-[13px]"
+            className="h-8 px-2 text-sm"
             disabled={busy}
             value={member.role}
             onChange={(e) => onRole(e.target.value)}
@@ -89,7 +89,7 @@ function MemberRow({
             ))}
           </select>
         ) : (
-          <span className="px-2 text-[13px] text-[var(--lp-muted)]">{roleLabel(member.role)}</span>
+          <span className="px-2 text-sm text-[var(--lp-muted)]">{roleLabel(member.role)}</span>
         )}
         {manageable ? (
           confirming ? (
@@ -272,7 +272,7 @@ export function TeamWorkspace() {
           </label>
         ) : null}
         {teamQuery.isLoading ? (
-          <p className="text-[13px] text-[var(--lp-subtle)]">Loading members…</p>
+          <p className="text-sm text-[var(--lp-subtle)]">Loading members…</p>
         ) : visibleMembers.length ? (
           <ul className="divide-y divide-[var(--lp-border)] rounded-lg border border-[var(--lp-border)]">
             {visibleMembers.map((member) => (
@@ -294,7 +294,7 @@ export function TeamWorkspace() {
             ))}
           </ul>
         ) : (
-          <p className="text-[13px] text-[var(--lp-subtle)]">No members match “{query}”.</p>
+          <p className="text-sm text-[var(--lp-subtle)]">No members match “{query}”.</p>
         )}
       </SettingsCard>
 
@@ -304,8 +304,8 @@ export function TeamWorkspace() {
             {pending.map((invitation) => (
               <li key={invitation.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <p className="lp-mono truncate text-[13px]">{invitation.email}</p>
-                  <p className="text-[12px] text-[var(--lp-subtle)]">
+                  <p className="lp-mono truncate text-sm">{invitation.email}</p>
+                  <p className="text-xs text-[var(--lp-subtle)]">
                     {roleLabel(invitation.role)} · invited by {invitation.inviter_name} · expires {formatDate(invitation.expires_at)}
                   </p>
                 </div>
@@ -327,17 +327,17 @@ export function TeamWorkspace() {
             ))}
           </ul>
         ) : (
-          <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-[13px] text-[var(--lp-subtle)]">No pending invitations.</p>
+          <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-sm text-[var(--lp-subtle)]">No pending invitations.</p>
         )}
         {past.length ? (
-          <details className="mt-3 text-[13px]">
+          <details className="mt-3 text-sm">
             <summary className="cursor-pointer text-[var(--lp-muted)] hover:text-[var(--lp-text)]">Past invitations ({past.length})</summary>
             <ul className="mt-2 divide-y divide-[var(--lp-border)] rounded-lg border border-[var(--lp-border)]">
               {past.map((invitation) => (
                 <li key={invitation.id} className="flex items-center gap-3 px-4 py-2.5">
-                  <span className="lp-mono min-w-0 flex-1 truncate text-[12px]">{invitation.email}</span>
-                  <span className="text-[12px] text-[var(--lp-subtle)]">{roleLabel(invitation.role)}</span>
-                  <span className={cn("rounded-md border px-1.5 py-px text-[11px]", STATUS_STYLE[invitation.status] ?? STATUS_STYLE.expired)}>{invitation.status}</span>
+                  <span className="lp-mono min-w-0 flex-1 truncate text-xs">{invitation.email}</span>
+                  <span className="text-xs text-[var(--lp-subtle)]">{roleLabel(invitation.role)}</span>
+                  <span className={cn("rounded-md border px-1.5 py-px text-2xs", STATUS_STYLE[invitation.status] ?? STATUS_STYLE.expired)}>{invitation.status}</span>
                 </li>
               ))}
             </ul>
@@ -349,11 +349,11 @@ export function TeamWorkspace() {
         <dl className="grid gap-px overflow-hidden rounded-lg border border-[var(--lp-border)] bg-[var(--lp-border)] sm:grid-cols-2">
           {ROLE_HELP.map((item) => (
             <div key={item.role} className={cn("bg-[#1b1b1f] px-4 py-3", item.role === actorRole && "bg-[#1f1d22]")}>
-              <dt className="flex items-center gap-2 text-[13px]">
+              <dt className="flex items-center gap-2 text-sm">
                 {roleLabel(item.role)}
-                {item.role === actorRole ? <span className="rounded border border-[var(--lp-border)] px-1.5 text-[11px] leading-4 text-[var(--lp-subtle)]">Your role</span> : null}
+                {item.role === actorRole ? <span className="rounded border border-[var(--lp-border)] px-1.5 text-2xs leading-4 text-[var(--lp-subtle)]">Your role</span> : null}
               </dt>
-              <dd className="mt-0.5 text-[12px] leading-relaxed text-[var(--lp-subtle)]">{item.summary}</dd>
+              <dd className="mt-0.5 text-xs leading-relaxed text-[var(--lp-subtle)]">{item.summary}</dd>
             </div>
           ))}
         </dl>

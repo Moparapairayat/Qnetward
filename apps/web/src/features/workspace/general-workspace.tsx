@@ -83,7 +83,7 @@ export function WorkspaceGeneral() {
           {/* Keyed by name, so a rename from elsewhere resets the draft. */}
           <NameCard key={workspace.name} workspace={workspace} canEdit={canEdit} />
           <SettingsCard id="workspace-details" title="Details">
-            <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-[13px] sm:grid-cols-[140px_minmax(0,1fr)]">
+            <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-[140px_minmax(0,1fr)]">
               <dt className="text-[var(--lp-subtle)]">Your role</dt>
               <dd>{roleLabel(workspace.role)}</dd>
               <dt className="text-[var(--lp-subtle)]">Members</dt>
@@ -93,12 +93,12 @@ export function WorkspaceGeneral() {
               <dt className="text-[var(--lp-subtle)]">Created</dt>
               <dd>{formatDate(workspace.created_at)}</dd>
               <dt className="text-[var(--lp-subtle)]">Workspace ID</dt>
-              <dd className="lp-mono text-[12px] text-[var(--lp-muted)]">{workspace.id}</dd>
+              <dd className="lp-mono text-xs text-[var(--lp-muted)]">{workspace.id}</dd>
             </dl>
           </SettingsCard>
         </>
       ) : query.isLoading ? (
-        <p className="text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+        <p className="text-sm text-[var(--lp-subtle)]">Loading…</p>
       ) : null}
     </div>
   );

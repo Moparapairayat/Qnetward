@@ -22,20 +22,20 @@ function ReviewCard({ req }: { req: DeepScanRequest }) {
   return (
     <li className="grid gap-3 border-t border-[var(--lp-border)] px-4 py-4 first:border-t-0">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[14px] font-medium">{req.domain}</span>
+        <span className="text-base font-medium">{req.domain}</span>
         <Pill tone={pending ? "accent" : req.status === "rejected" ? "bad" : req.status === "completed" ? "good" : "muted"}>{req.status}</Pill>
-        <span className="text-[12px] text-[var(--lp-subtle)]">
+        <span className="text-xs text-[var(--lp-subtle)]">
           {req.workspace_name || `Workspace ${req.workspace_id}`} · signed by {req.consent_name} from {req.consent_ip || "unknown"} · {formatDateTime(req.created_at)}
         </span>
       </div>
-      <p className="lp-mono break-all text-[12px] text-[var(--lp-muted)]">
+      <p className="lp-mono break-all text-xs text-[var(--lp-muted)]">
         {req.hosts.join(", ")} · {req.checks.join(", ")} · {formatDateTime(req.window_start)} → {formatDateTime(req.window_end)}
       </p>
       <ConsentBox text={req.consent_text} className="max-h-60" />
-      <p className="lp-mono text-[11px] text-[var(--lp-subtle)]">SHA-256 {req.consent_hash}</p>
+      <p className="lp-mono text-2xs text-[var(--lp-subtle)]">SHA-256 {req.consent_hash}</p>
       {pending ? (
         <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
-          <input className="h-9 w-full px-3 text-[13px]" placeholder="Note for the requester (required to reject)" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
+          <input className="h-9 w-full px-3 text-sm" placeholder="Note for the requester (required to reject)" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
           <button type="button" className="console-btn console-btn-primary h-9 px-4" disabled={review.isPending} onClick={() => review.mutate(true)}>
             Approve
           </button>
@@ -47,10 +47,10 @@ function ReviewCard({ req }: { req: DeepScanRequest }) {
           >
             Reject
           </button>
-          {review.isError ? <p className="text-[12px] text-[#ff8fb3] sm:col-span-3">{(review.error as ApiError).message}</p> : null}
+          {review.isError ? <p className="text-xs text-[#ff8fb3] sm:col-span-3">{(review.error as ApiError).message}</p> : null}
         </div>
       ) : req.reviewer_email ? (
-        <p className="text-[12px] text-[var(--lp-subtle)]">
+        <p className="text-xs text-[var(--lp-subtle)]">
           Reviewed by {req.reviewer_email} {req.reviewed_at ? formatDateTime(req.reviewed_at) : ""}
           {req.review_note ? `: ${req.review_note}` : ""}
         </p>
@@ -92,7 +92,7 @@ export function AdminDeepScansWorkspace() {
         }
       >
         {list.isError ? (
-          <p className="px-4 pb-4 text-[13px] text-[#ff8fb3]">{(list.error as ApiError).message}</p>
+          <p className="px-4 pb-4 text-sm text-[#ff8fb3]">{(list.error as ApiError).message}</p>
         ) : requests.length ? (
           <ul className={cn("border-t border-[var(--lp-border)]")}>
             {requests.map((r) => (
@@ -100,7 +100,7 @@ export function AdminDeepScansWorkspace() {
             ))}
           </ul>
         ) : (
-          <p className="border-t border-[var(--lp-border)] px-4 py-6 text-center text-[13px] text-[var(--lp-subtle)]">{list.isLoading ? "Loading…" : "Nothing to review."}</p>
+          <p className="border-t border-[var(--lp-border)] px-4 py-6 text-center text-sm text-[var(--lp-subtle)]">{list.isLoading ? "Loading…" : "Nothing to review."}</p>
         )}
       </Panel>
     </div>

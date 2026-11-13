@@ -55,17 +55,17 @@ function EventRow({ event }: { event: AuditEvent }) {
         <AuditIcon action={event.action} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] leading-snug">
+        <p className="text-sm leading-snug">
           <span className="text-[var(--lp-text)]">{event.actor_email || "Someone"}</span>{" "}
           <span className="text-[var(--lp-muted)]">{describeAuditEvent(event).replace(/^./, (c) => c.toLowerCase())}</span>
         </p>
-        <p className="mt-0.5 flex flex-wrap gap-x-2.5 gap-y-0.5 text-[12px] text-[var(--lp-subtle)]">
+        <p className="mt-0.5 flex flex-wrap gap-x-2.5 gap-y-0.5 text-xs text-[var(--lp-subtle)]">
           {detail ? <span className="lp-mono break-all">{detail}</span> : null}
           {event.ip_address ? <span className="lp-mono">{event.ip_address}</span> : null}
           {agent ? <span>{agent}</span> : null}
         </p>
       </div>
-      <time className="shrink-0 pt-0.5 text-[12px] tabular-nums text-[var(--lp-subtle)]" dateTime={event.occurred_at} title={formatDateTime(event.occurred_at)}>
+      <time className="shrink-0 pt-0.5 text-xs tabular-nums text-[var(--lp-subtle)]" dateTime={event.occurred_at} title={formatDateTime(event.occurred_at)}>
         {timeLabel(event.occurred_at)}
       </time>
     </li>
@@ -118,7 +118,7 @@ export function AuditLogWorkspace() {
                   aria-selected={category === c.id}
                   onClick={() => setCategory(c.id)}
                   className={cn(
-                    "shrink-0 whitespace-nowrap rounded-md px-2.5 py-1 text-[12px] transition-colors",
+                    "shrink-0 whitespace-nowrap rounded-md px-2.5 py-1 text-xs transition-colors",
                     category === c.id ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
                   )}
                 >
@@ -128,11 +128,11 @@ export function AuditLogWorkspace() {
             </div>
           </div>
           {auditQuery.isLoading ? (
-            <p className="text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+            <p className="text-sm text-[var(--lp-subtle)]">Loading…</p>
           ) : auditQuery.isError ? (
             <Notice tone="error">{(auditQuery.error as ApiError).message || "Couldn't load the audit log."}</Notice>
           ) : events.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-8 text-center text-[13px] text-[var(--lp-subtle)]">
+            <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-8 text-center text-sm text-[var(--lp-subtle)]">
               Nothing recorded yet{category ? " in this category" : ""}.
             </p>
           ) : (
@@ -144,7 +144,7 @@ export function AuditLogWorkspace() {
                   return (
                     <Fragment key={event.id}>
                       {newDay ? (
-                        <li className="bg-white/[0.02] px-4 py-1.5 text-[11.5px] font-medium uppercase tracking-[0.04em] text-[var(--lp-subtle)]">{day}</li>
+                        <li className="bg-white/[0.02] px-4 py-1.5 text-xs font-medium uppercase tracking-[0.04em] text-[var(--lp-subtle)]">{day}</li>
                       ) : null}
                       <EventRow event={event} />
                     </Fragment>

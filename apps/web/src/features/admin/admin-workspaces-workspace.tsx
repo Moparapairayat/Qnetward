@@ -26,7 +26,7 @@ function PlanSelect({ workspaceId, plan, name }: { workspaceId: number; plan: st
     <span className="inline-flex items-center gap-2">
       <select
         aria-label={`Plan for ${name}`}
-        className="h-7 rounded-md border border-[var(--lp-border-strong)] bg-white/[0.03] px-1.5 text-[12px]"
+        className="h-7 rounded-md border border-[var(--lp-border-strong)] bg-white/[0.03] px-1.5 text-xs"
         value={planId(plan)}
         disabled={change.isPending}
         onChange={(e) => change.mutate(e.target.value)}
@@ -35,7 +35,7 @@ function PlanSelect({ workspaceId, plan, name }: { workspaceId: number; plan: st
         <option value="pro">Pro</option>
         <option value="enterprise">Enterprise</option>
       </select>
-      {change.isError ? <span className="text-[11px] text-[#ff8fb3]" title={(change.error as ApiError).message}>Failed</span> : null}
+      {change.isError ? <span className="text-2xs text-[#ff8fb3]" title={(change.error as ApiError).message}>Failed</span> : null}
     </span>
   );
 }
@@ -96,11 +96,11 @@ export function AdminWorkspacesWorkspace() {
         }
       >
         {workspacesQuery.isError ? (
-          <p className="px-4 pb-4 text-[13px] text-[#ff8fb3]">{(workspacesQuery.error as ApiError).message || "Couldn't load workspaces."}</p>
+          <p className="px-4 pb-4 text-sm text-[#ff8fb3]">{(workspacesQuery.error as ApiError).message || "Couldn't load workspaces."}</p>
         ) : workspacesQuery.isLoading ? (
-          <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">Loading workspaces…</p>
+          <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">Loading workspaces…</p>
         ) : rows.length === 0 ? (
-          <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">No workspaces match.</p>
+          <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">No workspaces match.</p>
         ) : (
           <TableShell minWidth={860}>
             <HeadRow>
@@ -123,7 +123,7 @@ export function AdminWorkspacesWorkspace() {
                   </Td>
                   <Td>
                     <p className="truncate">{w.owner_name || "—"}</p>
-                    <p className="lp-mono truncate text-[12px] text-[var(--lp-subtle)]">{w.owner_email}</p>
+                    <p className="lp-mono truncate text-xs text-[var(--lp-subtle)]">{w.owner_email}</p>
                   </Td>
                   <Td>
                     <PlanSelect workspaceId={w.id} plan={w.plan} name={w.name} />

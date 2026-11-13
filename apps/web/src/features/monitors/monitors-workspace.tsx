@@ -122,7 +122,7 @@ function LocationChips({ locations, http }: { locations: MonitorLocation[]; http
           <li
             key={l.agent_id}
             title={!l.online ? "This agent stopped checking in, so its result doesn't count" : l.status === "down" && l.last_error ? l.last_error : undefined}
-            className="inline-flex items-center gap-1.5 rounded-md border border-[var(--lp-border)] bg-white/[0.02] px-1.5 py-0.5 text-[12px] text-[var(--lp-muted)]"
+            className="inline-flex items-center gap-1.5 rounded-md border border-[var(--lp-border)] bg-white/[0.02] px-1.5 py-0.5 text-xs text-[var(--lp-muted)]"
           >
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: tone }} />
             {locationName(l)}
@@ -261,7 +261,7 @@ function MonitorForm({
       )}
     >
       <div>
-        <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Check with</span>
+        <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Check with</span>
         <div className="grid h-9 grid-cols-3 rounded-lg border border-[var(--lp-border-strong)] bg-white/[0.03] p-1" role="radiogroup" aria-label="Check with">
           {(["http", "tcpping", "ping"] as const).map((value) => (
             <button
@@ -271,7 +271,7 @@ function MonitorForm({
               aria-checked={protocol === value}
               onClick={() => form.setValue("protocol", value, { shouldValidate: form.formState.isSubmitted })}
               className={cn(
-                "rounded-md text-[13px] transition-colors",
+                "rounded-md text-sm transition-colors",
                 protocol === value ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
               )}
             >
@@ -305,7 +305,7 @@ function MonitorForm({
 
       {agents.length ? (
         <div>
-          <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Run from</span>
+          <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Run from</span>
           <div className="grid gap-1 rounded-lg border border-[var(--lp-border-strong)] bg-white/[0.03] p-1" role="group" aria-label="Run from">
             {places.map((place) => {
               const on = picked.includes(place.id);
@@ -314,22 +314,22 @@ function MonitorForm({
                 <label
                   key={place.id}
                   className={cn(
-                    "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors",
+                    "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
                     on ? "bg-white/[0.06] text-[var(--lp-text)]" : "text-[var(--lp-muted)]",
                     full ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:text-[var(--lp-text)]",
                   )}
                 >
                   <input type="checkbox" className="h-3.5 w-3.5 accent-[var(--lp-accent)]" checked={on} disabled={full} onChange={() => togglePlace(place.id)} />
                   <span className="min-w-0 flex-1 truncate">{place.name}</span>
-                  {place.online ? null : <span className="text-[11px] text-[var(--lp-subtle)]">offline</span>}
+                  {place.online ? null : <span className="text-2xs text-[var(--lp-subtle)]">offline</span>}
                 </label>
               );
             })}
           </div>
           {fieldError(errors.locations) ? (
-            <p className="mt-1.5 text-[12px] text-[#ff8fb3]">{fieldError(errors.locations)}</p>
+            <p className="mt-1.5 text-xs text-[#ff8fb3]">{fieldError(errors.locations)}</p>
           ) : (
-            <p className="mt-1.5 text-[12px] text-[var(--lp-subtle)]">
+            <p className="mt-1.5 text-xs text-[var(--lp-subtle)]">
               {picked.length > 1
                 ? "It goes down, and alerts, only when every place sees it down."
                 : onlyAgents
@@ -341,7 +341,7 @@ function MonitorForm({
       ) : null}
 
       <div>
-        <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Check every</span>
+        <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Check every</span>
         <div className="grid grid-cols-3 gap-1 rounded-lg border border-[var(--lp-border-strong)] bg-white/[0.03] p-1 sm:grid-cols-6" role="radiogroup" aria-label="Check every">
           {intervals.map((option) => (
             <button
@@ -351,7 +351,7 @@ function MonitorForm({
               aria-checked={interval === option.seconds}
               onClick={() => form.setValue("interval_seconds", option.seconds)}
               className={cn(
-                "h-7 rounded-md text-[12px] transition-colors",
+                "h-7 rounded-md text-xs transition-colors",
                 interval === option.seconds ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
               )}
             >
@@ -371,7 +371,7 @@ function MonitorForm({
 
       <Toggle label="Monitor enabled" {...form.register("enabled")} />
 
-      <p className="rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2.5 text-[12px] leading-relaxed text-[var(--lp-muted)]">
+      <p className="rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2.5 text-xs leading-relaxed text-[var(--lp-muted)]">
         {where ? (
           <>
             Every <span className="text-[var(--lp-text)]">{intervalLabel(Number(interval) || 300)}</span>
@@ -460,11 +460,11 @@ function MonitorRow({
         </span>
         <div className="min-w-0 flex-1 max-sm:basis-[calc(100%-1.25rem)]">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-[14px] font-medium">{monitor.name}</h3>
-            <span className={cn("rounded-md border px-1.5 py-px text-[11px]", meta.pill)}>{meta.label}</span>
-            {since && (state === "up" || state === "down") ? <span className="text-[12px] text-[var(--lp-subtle)]">for {since.replace(" ago", "")}</span> : null}
+            <h3 className="truncate text-base font-medium">{monitor.name}</h3>
+            <span className={cn("rounded-md border px-1.5 py-px text-2xs", meta.pill)}>{meta.label}</span>
+            {since && (state === "up" || state === "down") ? <span className="text-xs text-[var(--lp-subtle)]">for {since.replace(" ago", "")}</span> : null}
           </div>
-          <p className="mt-1 text-[13px] text-[var(--lp-muted)]">
+          <p className="mt-1 text-sm text-[var(--lp-muted)]">
             <span className="text-[var(--lp-subtle)]">{protocolMeta[monitor.protocol].short}</span>
             {monitor.name !== monitorTarget(monitor) ? (
               <>
@@ -479,11 +479,11 @@ function MonitorRow({
           ) : null}
           <div className="mt-3 grid grid-cols-1 items-center gap-x-4 gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_auto]">
             <CheckStrip checks={monitor.recent_checks} />
-            <p className="lp-mono text-[12px] text-[var(--lp-muted)] sm:text-right">
+            <p className="lp-mono text-xs text-[var(--lp-muted)] sm:text-right">
               {formatUptime(monitor.uptime_24h)} <span className="text-[var(--lp-subtle)]">24h</span>
             </p>
           </div>
-          <p className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[12px] text-[var(--lp-subtle)]">
+          <p className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[var(--lp-subtle)]">
             {checked ? <span title={formatDateTime(monitor.last_checked_at)}>Checked {checked}</span> : <span>Not checked yet</span>}
             {state === "up" && monitor.last_status_code ? <span>{monitor.last_status_code}</span> : null}
             {state === "up" && typeof monitor.last_rtt_ms === "number" ? (
@@ -664,7 +664,7 @@ export function MonitorsWorkspace() {
         <p
           role="status"
           className={cn(
-            "flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-[13px]",
+            "flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-sm",
             notice.type === "success"
               ? "border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] text-[#86efac]"
               : "border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] text-[#ff8fb3]",
@@ -692,7 +692,7 @@ export function MonitorsWorkspace() {
                     aria-selected={filter === f.id}
                     onClick={() => setFilter(f.id)}
                     className={cn(
-                      "rounded-md px-2.5 py-1 text-[12px] transition-colors",
+                      "rounded-md px-2.5 py-1 text-xs transition-colors",
                       filter === f.id ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
                     )}
                   >
@@ -704,21 +704,21 @@ export function MonitorsWorkspace() {
           }
         >
           {loading ? (
-            <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">Loading monitors…</p>
+            <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">Loading monitors…</p>
           ) : monitorsQuery.isError ? (
-            <p className="mx-4 mb-4 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-[13px] text-[#ff8fb3]">
+            <p className="mx-4 mb-4 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-sm text-[#ff8fb3]">
               {(monitorsQuery.error as ApiError).message || "Unable to load monitors."}
             </p>
           ) : monitors.length === 0 ? (
             <div className="mx-4 mb-4 flex flex-col items-center rounded-lg border border-dashed border-[var(--lp-border)] px-6 py-12 text-center">
               <Radio className="h-5 w-5 text-[var(--lp-subtle)]" />
-              <p className="mt-3 text-[13px] text-[var(--lp-muted)]">Nothing monitored yet</p>
-              <p className="mt-1 max-w-sm text-[12px] text-[var(--lp-subtle)]">
+              <p className="mt-3 text-sm text-[var(--lp-muted)]">Nothing monitored yet</p>
+              <p className="mt-1 max-w-sm text-xs text-[var(--lp-subtle)]">
                 Add a website, API, or server on the right. Checks keep running when this tab is closed.
               </p>
             </div>
           ) : visible.length === 0 ? (
-            <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">No {filter} monitors.</p>
+            <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">No {filter} monitors.</p>
           ) : (
             <ul className="divide-y divide-[var(--lp-border)] border-t border-[var(--lp-border)]">
               {visible.map((monitor) => (
@@ -751,7 +751,7 @@ export function MonitorsWorkspace() {
           title={editing ? "Edit monitor" : "New monitor"}
           aside={
             editing ? (
-              <button type="button" className="inline-flex items-center gap-1 text-[12px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setEditing(null)}>
+              <button type="button" className="inline-flex items-center gap-1 text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setEditing(null)}>
                 <Plus className="h-3.5 w-3.5" /> New instead
               </button>
             ) : null

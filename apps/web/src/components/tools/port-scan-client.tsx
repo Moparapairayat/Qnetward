@@ -210,10 +210,10 @@ export function PortScanClient() {
 
         <div className="mt-3">
           <Field label="Ports" hint="Comma-separated ports and ranges, up to 4,096" error={errors.ports?.message}>
-            <input id="scan-ports" className="lp-mono h-10 w-full px-3 text-[13px]" placeholder="22,80,443,8000-8100" {...form.register("ports")} />
+            <input id="scan-ports" className="lp-mono h-10 w-full px-3 text-sm" placeholder="22,80,443,8000-8100" {...form.register("ports")} />
           </Field>
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-            <span className="mr-1 text-[12px] text-[var(--lp-subtle)]">Presets</span>
+            <span className="mr-1 text-xs text-[var(--lp-subtle)]">Presets</span>
             {scanPresets.map((preset) => (
               <button
                 key={preset.id}
@@ -222,7 +222,7 @@ export function PortScanClient() {
                   form.setValue("ports", preset.ports, { shouldValidate: true });
                   form.setValue("concurrency", preset.concurrency);
                 }}
-                className="rounded-md border border-[var(--lp-border)] px-2.5 py-1 text-[12px] text-[var(--lp-muted)] transition-colors hover:border-[var(--lp-border-strong)] hover:text-[var(--lp-text)]"
+                className="rounded-md border border-[var(--lp-border)] px-2.5 py-1 text-xs text-[var(--lp-muted)] transition-colors hover:border-[var(--lp-border-strong)] hover:text-[var(--lp-text)]"
               >
                 {preset.label}
               </button>
@@ -231,7 +231,7 @@ export function PortScanClient() {
               type="button"
               onClick={() => setShowAdvanced((v) => !v)}
               aria-expanded={showAdvanced}
-              className="ml-auto inline-flex items-center gap-1 text-[13px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
+              className="ml-auto inline-flex items-center gap-1 text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
             >
               <SlidersHorizontal className="h-3.5 w-3.5" /> Options
               <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showAdvanced && "rotate-180")} />
@@ -251,11 +251,11 @@ export function PortScanClient() {
         ) : null}
 
         {formError ? (
-          <p className="mt-4 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-[13px] text-[#ff8fb3]">
+          <p className="mt-4 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-sm text-[#ff8fb3]">
             {formError}
           </p>
         ) : null}
-        <p className="mt-3 text-[12px] text-[var(--lp-subtle)]">Only scan hosts you own or have permission to test.</p>
+        <p className="mt-3 text-xs text-[var(--lp-subtle)]">Only scan hosts you own or have permission to test.</p>
       </form>
 
       <StatStrip
@@ -273,7 +273,7 @@ export function PortScanClient() {
         <Panel
           title="Port map"
           aside={
-            <span className="flex gap-3 text-[12px] text-[var(--lp-subtle)]">
+            <span className="flex gap-3 text-xs text-[var(--lp-subtle)]">
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-sm bg-[#4ade80]" /> open
               </span>
@@ -291,7 +291,7 @@ export function PortScanClient() {
               <span
                 key={r.port}
                 title={`${r.port} · ${r.state ?? "unknown"}${serviceLabels[r.port ?? 0] ? ` · ${serviceLabels[r.port ?? 0]}` : ""}`}
-                className="lp-mono grid h-7 min-w-[44px] place-items-center rounded px-1 text-[11px]"
+                className="lp-mono grid h-7 min-w-[44px] place-items-center rounded px-1 text-2xs"
                 style={
                   r.state === "open"
                     ? { background: "rgba(74,222,128,0.15)", color: "#86efac" }
@@ -318,7 +318,7 @@ export function PortScanClient() {
                 aria-label="Sort results"
                 value={sortKey}
                 onChange={(e) => setSortKey(e.target.value as PortScanSortKey)}
-                className="h-8 px-2 text-[13px]"
+                className="h-8 px-2 text-sm"
               >
                 <option value="port">Sort by port</option>
                 <option value="state">Sort by state</option>
@@ -330,9 +330,9 @@ export function PortScanClient() {
       >
         {visibleResults.length ? (
           <div className="max-h-[420px] overflow-y-auto border-t border-[var(--lp-border)]">
-            <table className="w-full text-[13px]">
+            <table className="w-full text-sm">
               <thead className="sticky top-0 bg-[#1b1b1f]">
-                <tr className="border-b border-[var(--lp-border)] text-left text-[12px] text-[var(--lp-subtle)]">
+                <tr className="border-b border-[var(--lp-border)] text-left text-xs text-[var(--lp-subtle)]">
                   <th className="px-4 py-2 font-medium">Port</th>
                   <th className="px-4 py-2 font-medium">Service</th>
                   <th className="px-4 py-2 font-medium">State</th>
@@ -346,7 +346,7 @@ export function PortScanClient() {
                     <td className="px-4 py-2 text-[var(--lp-muted)]">{serviceLabels[r.port ?? 0] ?? "—"}</td>
                     <td className="px-4 py-2">
                       <span
-                        className="rounded-md border px-2 py-0.5 text-[12px]"
+                        className="rounded-md border px-2 py-0.5 text-xs"
                         style={
                           r.state === "open"
                             ? { borderColor: "rgba(74,222,128,0.3)", color: "#86efac", background: "rgba(74,222,128,0.08)" }
@@ -365,7 +365,7 @@ export function PortScanClient() {
             </table>
           </div>
         ) : (
-          <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">
+          <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">
             {results.length ? "No open ports in this scan." : "Pick ports or a preset, then scan. Results stream in as each port answers."}
           </p>
         )}

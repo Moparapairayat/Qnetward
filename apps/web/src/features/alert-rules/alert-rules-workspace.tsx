@@ -211,7 +211,7 @@ function AlertRuleForm({
       })}
     >
       <div>
-        <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Protocol</span>
+        <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Protocol</span>
         <div className="grid h-9 grid-cols-2 rounded-lg border border-[var(--lp-border-strong)] bg-white/[0.03] p-1" role="radiogroup" aria-label="Protocol">
           {(["ping", "tcpping"] as const).map((value) => (
             <button
@@ -221,7 +221,7 @@ function AlertRuleForm({
               aria-checked={protocol === value}
               onClick={() => form.setValue("protocol", value, { shouldValidate: form.formState.isSubmitted })}
               className={cn(
-                "rounded-md text-[13px] transition-colors",
+                "rounded-md text-sm transition-colors",
                 protocol === value ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
               )}
             >
@@ -243,20 +243,20 @@ function AlertRuleForm({
       </div>
 
       <div>
-        <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Fire when</span>
+        <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Fire when</span>
         <div className="grid grid-cols-2 gap-3">
           <label className="relative block">
             <span className="sr-only">Latency threshold in milliseconds</span>
             <input id="alert-latency" type="number" className="h-9 w-full pl-3 pr-16" placeholder="200" {...form.register("latency_threshold_ms", { valueAsNumber: true })} />
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-[var(--lp-subtle)]">ms latency</span>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--lp-subtle)]">ms latency</span>
           </label>
           <label className="relative block">
             <span className="sr-only">Loss threshold in percent</span>
             <input id="alert-loss" type="number" className="h-9 w-full pl-3 pr-12" placeholder="25" {...form.register("loss_threshold_percent", { valueAsNumber: true })} />
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-[var(--lp-subtle)]">% loss</span>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--lp-subtle)]">% loss</span>
           </label>
         </div>
-        <span className={cn("mt-1 block text-[12px]", errors.latency_threshold_ms ? "text-[#ff8fb3]" : "text-[var(--lp-subtle)]")}>
+        <span className={cn("mt-1 block text-xs", errors.latency_threshold_ms ? "text-[#ff8fb3]" : "text-[var(--lp-subtle)]")}>
           {fieldErrorText(errors.latency_threshold_ms) ?? "Either one is enough. Leave a field empty to ignore it."}
         </span>
       </div>
@@ -283,7 +283,7 @@ function AlertRuleForm({
         <Toggle label="Rule enabled" {...form.register("enabled")} />
       </div>
 
-      <div className="rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2.5 text-[12px] leading-relaxed text-[var(--lp-muted)]">
+      <div className="rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2.5 text-xs leading-relaxed text-[var(--lp-muted)]">
         {preview ? (
           <>
             Email <span className="text-[var(--lp-text)]">{preview.who}</span> when{" "}
@@ -344,20 +344,20 @@ function RuleRow({
         </span>
         <div className="min-w-0 flex-1 max-sm:basis-[calc(100%-1.25rem)]">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-[14px] font-medium">{rule.name || buildAlertRuleDefaultName(rule.protocol, rule.target, rule.port ?? undefined)}</h3>
-            <span className={cn("rounded-md border px-1.5 py-px text-[11px]", meta.pill)}>{meta.label}</span>
+            <h3 className="truncate text-base font-medium">{rule.name || buildAlertRuleDefaultName(rule.protocol, rule.target, rule.port ?? undefined)}</h3>
+            <span className={cn("rounded-md border px-1.5 py-px text-2xs", meta.pill)}>{meta.label}</span>
             {state === "firing" && rule.current_breach_streak > 0 ? (
-              <span className="text-[12px] text-[#ff8fb3]">{rule.current_breach_streak} breach{rule.current_breach_streak === 1 ? "" : "es"} in a row</span>
+              <span className="text-xs text-[#ff8fb3]">{rule.current_breach_streak} breach{rule.current_breach_streak === 1 ? "" : "es"} in a row</span>
             ) : null}
           </div>
-          <p className="mt-1 text-[13px] text-[var(--lp-muted)]">
+          <p className="mt-1 text-sm text-[var(--lp-muted)]">
             <span className="text-[var(--lp-subtle)]">{rule.protocol === "tcpping" ? "TCP" : "ICMP"}</span>{" "}
             <span className="lp-mono text-[var(--lp-text)]">{ruleTarget(rule)}</span>
             <span className="text-[var(--lp-subtle)]"> · </span>
             {conditionText(rule.latency_threshold_ms, rule.loss_threshold_percent).replace(/^./, (c) => c.toUpperCase())}
             {rule.consecutive_breaches > 1 ? <span className="text-[var(--lp-subtle)]"> · {rule.consecutive_breaches} runs in a row</span> : null}
           </p>
-          <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[12px] text-[var(--lp-subtle)]">
+          <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[var(--lp-subtle)]">
             <span>To {rule.recipient_email}</span>
             <span>{rule.cooldown_minutes}m cooldown</span>
             <span>{rule.notify_on_recovery ? "Recovery email on" : "Recovery email off"}</span>
@@ -530,7 +530,7 @@ export function AlertRulesWorkspace() {
         <p
           role="status"
           className={cn(
-            "flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-[13px]",
+            "flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-sm",
             notice.type === "success"
               ? "border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] text-[#86efac]"
               : "border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] text-[#ff8fb3]",
@@ -558,7 +558,7 @@ export function AlertRulesWorkspace() {
                     aria-selected={filter === f.id}
                     onClick={() => setFilter(f.id)}
                     className={cn(
-                      "rounded-md px-2.5 py-1 text-[12px] transition-colors",
+                      "rounded-md px-2.5 py-1 text-xs transition-colors",
                       filter === f.id ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
                     )}
                   >
@@ -570,19 +570,19 @@ export function AlertRulesWorkspace() {
           }
         >
           {alertRulesQuery.isLoading ? (
-            <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">Loading rules…</p>
+            <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">Loading rules…</p>
           ) : alertRulesQuery.isError ? (
-            <p className="mx-4 mb-4 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-[13px] text-[#ff8fb3]">
+            <p className="mx-4 mb-4 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-sm text-[#ff8fb3]">
               {(alertRulesQuery.error as ApiError).message || "Unable to load alert rules."}
             </p>
           ) : rules.length === 0 ? (
             <div className="mx-4 mb-4 flex flex-col items-center rounded-lg border border-dashed border-[var(--lp-border)] px-6 py-12 text-center">
               <BellRing className="h-5 w-5 text-[var(--lp-subtle)]" />
-              <p className="mt-3 text-[13px] text-[var(--lp-muted)]">No alert rules yet</p>
-              <p className="mt-1 max-w-sm text-[12px] text-[var(--lp-subtle)]">Create one on the right. It is checked after every ping or TCP ping against the same target, including scheduled monitor checks.</p>
+              <p className="mt-3 text-sm text-[var(--lp-muted)]">No alert rules yet</p>
+              <p className="mt-1 max-w-sm text-xs text-[var(--lp-subtle)]">Create one on the right. It is checked after every ping or TCP ping against the same target, including scheduled monitor checks.</p>
             </div>
           ) : visibleRules.length === 0 ? (
-            <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">No {filter} rules.</p>
+            <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">No {filter} rules.</p>
           ) : (
             <ul className="divide-y divide-[var(--lp-border)] border-t border-[var(--lp-border)]">
               {visibleRules.map((rule) => (
@@ -615,7 +615,7 @@ export function AlertRulesWorkspace() {
           title={editingRule ? "Edit rule" : "New rule"}
           aside={
             editingRule ? (
-              <button type="button" className="inline-flex items-center gap-1 text-[12px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setEditingRule(null)}>
+              <button type="button" className="inline-flex items-center gap-1 text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setEditingRule(null)}>
                 <Plus className="h-3.5 w-3.5" /> New instead
               </button>
             ) : null

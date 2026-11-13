@@ -26,7 +26,7 @@ const windowLabel: Record<number, string> = { 24: "24 hours", 72: "3 days", 168:
 /** The signed authorization, as it was signed. */
 export function ConsentBox({ text, className }: { text: string; className?: string }) {
   return (
-    <pre className={cn("max-h-80 overflow-y-auto whitespace-pre-wrap rounded-lg border border-[var(--lp-border)] bg-black/25 p-3.5 font-sans text-[12px] leading-relaxed text-[var(--lp-muted)]", className)}>
+    <pre className={cn("max-h-80 overflow-y-auto whitespace-pre-wrap rounded-lg border border-[var(--lp-border)] bg-black/25 p-3.5 font-sans text-xs leading-relaxed text-[var(--lp-muted)]", className)}>
       {text}
     </pre>
   );
@@ -82,7 +82,7 @@ function RequestForm({ perMonth, onDone }: { perMonth: number; onDone: () => voi
 
   if (domains.isSuccess && verified.length === 0) {
     return (
-      <p className="text-[13px] text-[var(--lp-muted)]">
+      <p className="text-sm text-[var(--lp-muted)]">
         Deep scans run only on domains you&apos;ve verified.{" "}
         <Link href="/assets" className="text-[var(--lp-text)] underline">
           Verify one in Assets
@@ -95,13 +95,13 @@ function RequestForm({ perMonth, onDone }: { perMonth: number; onDone: () => voi
   if (preview) {
     return (
       <div className="grid gap-3">
-        <p className="text-[13px] text-[var(--lp-text)]">Read the authorization. Signing it records your name, the time, your address, and this exact text.</p>
+        <p className="text-sm text-[var(--lp-text)]">Read the authorization. Signing it records your name, the time, your address, and this exact text.</p>
         <ConsentBox text={preview.text} />
-        <label className="flex items-start gap-2.5 text-[13px] text-[var(--lp-muted)]">
+        <label className="flex items-start gap-2.5 text-sm text-[var(--lp-muted)]">
           <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--lp-accent)]" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
           I have read this, the details are correct, and I am authorized to sign it.
         </label>
-        {submit.isError ? <p className="text-[12px] text-[#ff8fb3]">{(submit.error as ApiError).message}</p> : null}
+        {submit.isError ? <p className="text-xs text-[#ff8fb3]">{(submit.error as ApiError).message}</p> : null}
         <div className="flex flex-wrap gap-2">
           <button type="button" className="console-btn console-btn-primary h-9 px-4" disabled={!agree || submit.isPending} onClick={() => submit.mutate()}>
             {submit.isPending ? "Submitting…" : "Sign and submit for review"}
@@ -110,7 +110,7 @@ function RequestForm({ perMonth, onDone }: { perMonth: number; onDone: () => voi
             Change details
           </button>
         </div>
-        <p className="text-[12px] text-[var(--lp-subtle)]">A Qnetward admin reviews every request. Nothing runs until it&apos;s approved, and only inside the window and hosts above.</p>
+        <p className="text-xs text-[var(--lp-subtle)]">A Qnetward admin reviews every request. Nothing runs until it&apos;s approved, and only inside the window and hosts above.</p>
       </div>
     );
   }
@@ -151,19 +151,19 @@ function RequestForm({ perMonth, onDone }: { perMonth: number; onDone: () => voi
         </Field>
       </div>
       <Field label="Hosts in scope" hint="One per line, up to 20, all under the verified domain.">
-        <textarea className="min-h-24 w-full px-3 py-2 font-mono text-[12px]" placeholder={target} value={hostsText} onChange={(e) => setHostsText(e.target.value)} />
+        <textarea className="min-h-24 w-full px-3 py-2 font-mono text-xs" placeholder={target} value={hostsText} onChange={(e) => setHostsText(e.target.value)} />
       </Field>
       {lastScan ? (
-        <button type="button" className="-mt-2 w-fit text-[12px] text-[var(--lp-muted)] underline hover:text-[var(--lp-text)]" disabled={fillFromScan.isPending} onClick={() => fillFromScan.mutate()}>
+        <button type="button" className="-mt-2 w-fit text-xs text-[var(--lp-muted)] underline hover:text-[var(--lp-text)]" disabled={fillFromScan.isPending} onClick={() => fillFromScan.mutate()}>
           Use the web hosts from the last attack surface scan
         </button>
       ) : null}
       <div className="rounded-lg border border-[var(--lp-border)] bg-white/[0.02] p-3">
-        <label className="flex items-start gap-2.5 text-[13px]">
+        <label className="flex items-start gap-2.5 text-sm">
           <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--lp-accent)]" checked disabled readOnly />
           <span>
             <span className="text-[var(--lp-text)]">Exposed files</span>
-            <span className="block text-[12px] leading-relaxed text-[var(--lp-subtle)]">
+            <span className="block text-xs leading-relaxed text-[var(--lp-subtle)]">
               Looks for about 20 files that should never be public, such as .git, .env, backups, and database dumps, at a gentle pace. Contents are never stored.
             </span>
           </span>
@@ -172,12 +172,12 @@ function RequestForm({ perMonth, onDone }: { perMonth: number; onDone: () => voi
       <Field label="Your full name, to sign" hint="The authorization is signed in your name.">
         <input className="h-9 w-full px-3" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />
       </Field>
-      {review.isError ? <p className="text-[12px] text-[#ff8fb3]">{(review.error as ApiError).message}</p> : null}
+      {review.isError ? <p className="text-xs text-[#ff8fb3]">{(review.error as ApiError).message}</p> : null}
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" className="console-btn console-btn-primary h-9 px-4" disabled={!target || name.trim().length < 3 || review.isPending}>
           {review.isPending ? "Preparing…" : "Review authorization"}
         </button>
-        <span className="text-[12px] text-[var(--lp-subtle)]">Your plan allows {perMonth} requests in 30 days.</span>
+        <span className="text-xs text-[var(--lp-subtle)]">Your plan allows {perMonth} requests in 30 days.</span>
       </div>
     </form>
   );
@@ -186,12 +186,12 @@ function RequestForm({ perMonth, onDone }: { perMonth: number; onDone: () => voi
 function DeepReportView({ scanId }: { scanId: number }) {
   const scan = useQuery({ queryKey: ["deep-scan", scanId], queryFn: () => apiRequest<SecurityScan>(`/api/security/passive?id=${scanId}`), staleTime: Infinity });
   const rep = scan.data?.report as unknown as DeepReport | undefined;
-  if (!rep) return <p className="px-1 py-3 text-[12px] text-[var(--lp-subtle)]">Loading results…</p>;
+  if (!rep) return <p className="px-1 py-3 text-xs text-[var(--lp-subtle)]">Loading results…</p>;
   return (
     <div className="grid gap-3">
       <div className="flex items-center gap-3">
         <GradeBadge grade={rep.grade} size="sm" />
-        <p className="text-[12px] text-[var(--lp-muted)]">
+        <p className="text-xs text-[var(--lp-muted)]">
           {rep.findings.length} finding{rep.findings.length === 1 ? "" : "s"} from {rep.requests} requests across {rep.hosts.length} host{rep.hosts.length === 1 ? "" : "s"},{" "}
           {formatDateTime(rep.checked_at)}.
         </p>
@@ -200,19 +200,19 @@ function DeepReportView({ scanId }: { scanId: number }) {
         <ul className="divide-y divide-[var(--lp-border)] rounded-lg border border-[var(--lp-border)]">
           {rep.findings.map((f, i) => (
             <li key={`${f.url}-${i}`} className="grid gap-1 px-3 py-2.5">
-              <p className="flex flex-wrap items-center gap-2 text-[13px] text-[var(--lp-text)]">
-                <span className={cn("rounded-md border px-1.5 py-px text-[11px]", severityMeta[f.severity].pill)}>{severityMeta[f.severity].label}</span>
+              <p className="flex flex-wrap items-center gap-2 text-sm text-[var(--lp-text)]">
+                <span className={cn("rounded-md border px-1.5 py-px text-2xs", severityMeta[f.severity].pill)}>{severityMeta[f.severity].label}</span>
                 {f.title}
               </p>
-              <p className="lp-mono break-all text-[11px] text-[var(--lp-subtle)]">{f.url}</p>
-              <p className="text-[12px] text-[var(--lp-muted)]">{f.fix}</p>
+              <p className="lp-mono break-all text-2xs text-[var(--lp-subtle)]">{f.url}</p>
+              <p className="text-xs text-[var(--lp-muted)]">{f.fix}</p>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-[13px] text-[#86efac]">No exposed files found.</p>
+        <p className="text-sm text-[#86efac]">No exposed files found.</p>
       )}
-      {rep.skipped?.length ? <p className="text-[12px] text-[#fbbf24]">Skipped: {rep.skipped.join("; ")}</p> : null}
+      {rep.skipped?.length ? <p className="text-xs text-[#fbbf24]">Skipped: {rep.skipped.join("; ")}</p> : null}
     </div>
   );
 }
@@ -225,10 +225,10 @@ function RequestRow({ req, onCancel, cancelling }: { req: DeepScanRequest; onCan
       <button type="button" className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-white/[0.015]" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-2">
-            <span className="text-[14px] font-medium">{req.domain}</span>
-            <span className={cn("rounded-md border px-1.5 py-px text-[11px]", meta.pill)}>{meta.label}</span>
+            <span className="text-base font-medium">{req.domain}</span>
+            <span className={cn("rounded-md border px-1.5 py-px text-2xs", meta.pill)}>{meta.label}</span>
           </span>
-          <span className="mt-0.5 block text-[12px] text-[var(--lp-subtle)]">
+          <span className="mt-0.5 block text-xs text-[var(--lp-subtle)]">
             {req.hosts.length} host{req.hosts.length === 1 ? "" : "s"} · {formatDateTime(req.window_start)} to {formatDateTime(req.window_end)} · signed by {req.consent_name}
           </span>
         </span>
@@ -237,11 +237,11 @@ function RequestRow({ req, onCancel, cancelling }: { req: DeepScanRequest; onCan
       {open ? (
         <div className="grid gap-3 px-4 pb-4">
           {req.review_note ? (
-            <p className="rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2 text-[12px] text-[var(--lp-muted)]">Reviewer&apos;s note: {req.review_note}</p>
+            <p className="rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2 text-xs text-[var(--lp-muted)]">Reviewer&apos;s note: {req.review_note}</p>
           ) : null}
           {req.status === "completed" && req.scan_id ? <DeepReportView scanId={req.scan_id} /> : null}
-          <p className="lp-mono break-all text-[11px] text-[var(--lp-subtle)]">Hosts: {req.hosts.join(", ")}</p>
-          <details className="text-[12px] text-[var(--lp-muted)]">
+          <p className="lp-mono break-all text-2xs text-[var(--lp-subtle)]">Hosts: {req.hosts.join(", ")}</p>
+          <details className="text-xs text-[var(--lp-muted)]">
             <summary className="cursor-pointer">Signed authorization (SHA-256 {req.consent_hash.slice(0, 12)}…)</summary>
             <ConsentBox text={req.consent_text} className="mt-2" />
           </details>
@@ -280,8 +280,8 @@ export function DeepScansWorkspace() {
       {list.isSuccess && perMonth <= 0 ? (
         <div className="flex flex-col items-center rounded-xl border border-dashed border-[var(--lp-border)] px-6 py-12 text-center">
           <ScrollText className="h-6 w-6 text-[var(--lp-subtle)]" />
-          <p className="mt-3 text-[14px] text-[var(--lp-muted)]">Deep scans are on the Pro and Enterprise plans</p>
-          <p className="mt-1 max-w-md text-[13px] text-[var(--lp-subtle)]">Passive checks, attack surface scans, and vulnerabilities stay available on every plan.</p>
+          <p className="mt-3 text-base text-[var(--lp-muted)]">Deep scans are on the Pro and Enterprise plans</p>
+          <p className="mt-1 max-w-md text-sm text-[var(--lp-subtle)]">Passive checks, attack surface scans, and vulnerabilities stay available on every plan.</p>
           <Link href="/workspace/billing" className="console-btn console-btn-primary mt-4 h-9 px-4">
             See plans
           </Link>
@@ -300,7 +300,7 @@ export function DeepScansWorkspace() {
             ))}
           </ul>
         ) : (
-          <div className="flex items-center gap-2 border-t border-[var(--lp-border)] px-4 py-4 text-[13px] text-[var(--lp-subtle)]">
+          <div className="flex items-center gap-2 border-t border-[var(--lp-border)] px-4 py-4 text-sm text-[var(--lp-subtle)]">
             <FileText className="h-4 w-4" /> {list.isLoading ? "Loading…" : "No requests yet."}
           </div>
         )}

@@ -49,21 +49,21 @@ export function AuthLayoutCard({
             aria-label="Qnetward home"
           >
             <QnetwardMark size={30} />
-            <span className="text-[18px] font-semibold tracking-[-0.01em]">
+            <span className="text-lg font-semibold tracking-[-0.01em]">
               Qnetward
             </span>
           </Link>
-          <h1 className="text-[22px] font-semibold tracking-[-0.02em] sm:text-[24px]">
+          <h1 className="text-xl font-semibold tracking-[-0.02em] sm:text-xl">
             {title}
           </h1>
-          <div className="mt-1.5 text-[14px] leading-relaxed text-[var(--lp-muted)]">
+          <div className="mt-1.5 text-base leading-relaxed text-[var(--lp-muted)]">
             {subtitle}
           </div>
           <div className={cn("mt-6 flex-1 sm:short:mt-3", contentClassName)}>
             {children}
           </div>
           {headerAction ? (
-            <p className="mt-6 text-center text-[14px] text-[var(--lp-muted)] sm:short:mt-3">
+            <p className="mt-6 text-center text-base text-[var(--lp-muted)] sm:short:mt-3">
               {headerAction.prompt}{" "}
               <Link href={headerAction.href} className="auth-footer-link">
                 {headerAction.label}
@@ -81,7 +81,7 @@ export function AuthLayoutCard({
         {below ? (
           <div className="mt-2 sm:mt-6 sm:short:mt-0">{below}</div>
         ) : null}
-        <p className="mt-5 max-w-[340px] px-5 text-center text-[12px] leading-relaxed text-[var(--lp-subtle)] sm:mt-6 sm:max-w-none sm:short:mt-0 sm:short:px-0">
+        <p className="mt-5 max-w-[340px] px-5 text-center text-xs leading-relaxed text-[var(--lp-subtle)] sm:mt-6 sm:max-w-none sm:short:mt-0 sm:short:px-0">
           By continuing, you agree to our{" "}
           <Link
             href="/terms"

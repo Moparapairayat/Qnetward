@@ -233,7 +233,7 @@ export function PingToolClient({ mode }: { mode: "ping" | "tcpping" }) {
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
             aria-expanded={showAdvanced}
-            className="ml-auto inline-flex items-center gap-1 text-[13px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
+            className="ml-auto inline-flex items-center gap-1 text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
           >
             <SlidersHorizontal className="h-3.5 w-3.5" /> Options
             <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showAdvanced && "rotate-180")} />
@@ -266,12 +266,12 @@ export function PingToolClient({ mode }: { mode: "ping" | "tcpping" }) {
         ) : null}
 
         {formError ? (
-          <p className="mt-4 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-[13px] text-[#ff8fb3]">
+          <p className="mt-4 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-sm text-[#ff8fb3]">
             {formError}
           </p>
         ) : null}
         {isPing ? (
-          <p className="mt-3 text-[12px] text-[var(--lp-subtle)]">
+          <p className="mt-3 text-xs text-[var(--lp-subtle)]">
             ICMP can need elevated privileges on the server. If it fails, TCP ping usually works.
           </p>
         ) : null}
@@ -303,7 +303,7 @@ export function PingToolClient({ mode }: { mode: "ping" | "tcpping" }) {
             windowMs={signalWindow}
             emptyText="Run a probe and each reply streams in here as it arrives."
           />
-          {results.length ? <p className="mt-2 text-[12px] text-[var(--lp-subtle)]">{currentRunLabel(activeContinuous, results.length)} · hover to pause</p> : null}
+          {results.length ? <p className="mt-2 text-xs text-[var(--lp-subtle)]">{currentRunLabel(activeContinuous, results.length)} · hover to pause</p> : null}
         </Panel>
         <Panel title="Run details">
           <DefinitionList
@@ -322,14 +322,14 @@ export function PingToolClient({ mode }: { mode: "ping" | "tcpping" }) {
 
       <Panel
         title="Replies"
-        aside={<span className="text-[12px] text-[var(--lp-subtle)]">{results.length ? `${results.length} total, newest first` : ""}</span>}
+        aside={<span className="text-xs text-[var(--lp-subtle)]">{results.length ? `${results.length} total, newest first` : ""}</span>}
         bodyClassName="p-0"
       >
         {results.length ? (
           <div className="max-h-[360px] overflow-y-auto border-t border-[var(--lp-border)]">
-            <table className="w-full text-[13px]">
+            <table className="w-full text-sm">
               <thead className="sticky top-0 bg-[#1b1b1f]">
-                <tr className="border-b border-[var(--lp-border)] text-left text-[12px] text-[var(--lp-subtle)]">
+                <tr className="border-b border-[var(--lp-border)] text-left text-xs text-[var(--lp-subtle)]">
                   <th className="px-4 py-2 font-medium">Seq</th>
                   <th className="px-4 py-2 font-medium">Address</th>
                   <th className="px-4 py-2 text-right font-medium">Time</th>
@@ -353,7 +353,7 @@ export function PingToolClient({ mode }: { mode: "ping" | "tcpping" }) {
             </table>
           </div>
         ) : (
-          <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">No replies yet.</p>
+          <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">No replies yet.</p>
         )}
       </Panel>
     </div>

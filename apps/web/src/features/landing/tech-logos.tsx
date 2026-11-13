@@ -67,7 +67,7 @@ function LogoRow({ items, dim = false }: { items: { icon: SimpleIcon; note: stri
             <svg role="img" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-label={icon.title}>
               <path d={icon.path} />
             </svg>
-            <span className="pointer-events-none absolute -bottom-7 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap sm:block rounded-md border border-[var(--lp-border)] bg-[var(--lp-bg-raised)] px-2 py-0.5 text-[11px] text-[var(--lp-muted)] opacity-0 transition-opacity group-hover:opacity-100">
+            <span className="pointer-events-none absolute -bottom-7 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap sm:block rounded-md border border-[var(--lp-border)] bg-[var(--lp-bg-raised)] px-2 py-0.5 text-2xs text-[var(--lp-muted)] opacity-0 transition-opacity group-hover:opacity-100">
               {icon.title} · {note}
             </span>
           </span>
@@ -81,11 +81,11 @@ export function TechLogos() {
   return (
     <div className="grid gap-10 lg:grid-cols-[auto_1fr] lg:gap-16">
       <div>
-        <div className="mb-3 text-[12px] text-[var(--lp-muted)]">Runs on today</div>
+        <div className="mb-3 text-xs text-[var(--lp-muted)]">Runs on today</div>
         <LogoRow items={today} />
       </div>
       <div className="lg:border-l lg:border-[var(--lp-border)] lg:pl-16">
-        <div className="mb-3 text-[12px] text-[var(--lp-subtle)]">Integrations in development</div>
+        <div className="mb-3 text-xs text-[var(--lp-subtle)]">Integrations in development</div>
         <LogoRow items={planned} dim />
       </div>
     </div>

@@ -48,29 +48,29 @@ function VulnRow({ vuln, canDecide }: { vuln: VulnView; canDecide: boolean }) {
   return (
     <li className={cn("border-t border-[var(--lp-border)] first:border-t-0", decided && "opacity-60")}>
       <button type="button" className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-white/[0.015]" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
-        <span className={cn("mt-px w-[68px] shrink-0 rounded-md border px-1.5 py-px text-center text-[11px]", meta.pill)}>{meta.label}</span>
+        <span className={cn("mt-px w-[68px] shrink-0 rounded-md border px-1.5 py-px text-center text-2xs", meta.pill)}>{meta.label}</span>
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="lp-mono text-[13px] text-[var(--lp-text)]">{vuln.cve}</span>
-            {vuln.kev ? <span className="rounded border border-[rgba(255,61,127,0.45)] px-1 text-[10px] font-medium text-[#ff8fb3]">Exploited in the wild</span> : null}
-            {decided ? <span className="rounded border border-[var(--lp-border)] px-1 text-[10px] text-[var(--lp-muted)]">{decisionLabel[decided.status]}</span> : null}
+            <span className="lp-mono text-sm text-[var(--lp-text)]">{vuln.cve}</span>
+            {vuln.kev ? <span className="rounded border border-[rgba(255,61,127,0.45)] px-1 text-3xs font-medium text-[#ff8fb3]">Exploited in the wild</span> : null}
+            {decided ? <span className="rounded border border-[var(--lp-border)] px-1 text-3xs text-[var(--lp-muted)]">{decisionLabel[decided.status]}</span> : null}
           </span>
-          <span className="mt-0.5 block truncate text-[12px] text-[var(--lp-muted)]">
+          <span className="mt-0.5 block truncate text-xs text-[var(--lp-muted)]">
             {vuln.product} {vuln.version} on <span className="lp-mono">{vuln.host}:{vuln.port}</span>
           </span>
         </span>
         <span className="hidden shrink-0 text-right sm:block">
-          <span className="lp-mono block text-[13px] text-[var(--lp-text)]">{vuln.cvss ? vuln.cvss.toFixed(1) : "—"}</span>
-          <span className="block text-[11px] text-[var(--lp-subtle)]" title="Chance of exploitation in the next 30 days (EPSS)">
+          <span className="lp-mono block text-sm text-[var(--lp-text)]">{vuln.cvss ? vuln.cvss.toFixed(1) : "—"}</span>
+          <span className="block text-2xs text-[var(--lp-subtle)]" title="Chance of exploitation in the next 30 days (EPSS)">
             {vuln.epss ? `${(vuln.epss * 100).toFixed(vuln.epss < 0.01 ? 2 : 0)}% EPSS` : "—"}
           </span>
         </span>
         <ChevronDown className={cn("mt-1 h-3.5 w-3.5 shrink-0 text-[var(--lp-subtle)] transition-transform", open && "rotate-180")} />
       </button>
       {open ? (
-        <div className="grid gap-3 px-4 pb-4 pl-[5.6rem] text-[13px] leading-relaxed">
+        <div className="grid gap-3 px-4 pb-4 pl-[5.6rem] text-sm leading-relaxed">
           <p className="text-[var(--lp-muted)]">{vuln.summary || "No description published yet."}</p>
-          <p className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[var(--lp-subtle)]">
+          <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--lp-subtle)]">
             {vuln.published ? <span>Published {vuln.published}</span> : null}
             <span>Seen in the scan of {vuln.domain} on {formatDateTime(vuln.scanned_at)}</span>
             <a className="inline-flex items-center gap-1 text-[var(--lp-text)] hover:underline" href={vuln.url} target="_blank" rel="noreferrer">
@@ -78,7 +78,7 @@ function VulnRow({ vuln, canDecide }: { vuln: VulnView; canDecide: boolean }) {
             </a>
           </p>
           {decided ? (
-            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2 text-[12px] text-[var(--lp-muted)]">
+            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2 text-xs text-[var(--lp-muted)]">
               <span>
                 {decisionLabel[decided.status]} on {formatDateTime(decided.created_at)}
                 {decided.reason ? `: ${decided.reason}` : ""}
@@ -99,7 +99,7 @@ function VulnRow({ vuln, canDecide }: { vuln: VulnView; canDecide: boolean }) {
                 }}
               >
                 <input
-                  className="h-8 w-full px-2.5 text-[12px]"
+                  className="h-8 w-full px-2.5 text-xs"
                   placeholder={choosing === "accepted" ? "Why the risk is acceptable" : "Why it doesn't apply, e.g. patched by the distribution"}
                   maxLength={500}
                   autoFocus
@@ -112,7 +112,7 @@ function VulnRow({ vuln, canDecide }: { vuln: VulnView; canDecide: boolean }) {
                 <button type="button" className="console-btn console-btn-secondary h-8 px-3" onClick={() => setChoosing(null)}>
                   Cancel
                 </button>
-                {decide.isError ? <p className="text-[12px] text-[#ff8fb3] sm:col-span-3">{(decide.error as ApiError).message}</p> : null}
+                {decide.isError ? <p className="text-xs text-[#ff8fb3] sm:col-span-3">{(decide.error as ApiError).message}</p> : null}
               </form>
             ) : (
               <div className="flex flex-wrap gap-2">
@@ -169,8 +169,8 @@ export function VulnerabilitiesWorkspace() {
       {list.isSuccess && domains.length === 0 ? (
         <div className="flex flex-col items-center rounded-xl border border-dashed border-[var(--lp-border)] px-6 py-12 text-center">
           <ShieldAlert className="h-6 w-6 text-[var(--lp-subtle)]" />
-          <p className="mt-3 text-[14px] text-[var(--lp-muted)]">No attack surface scans yet</p>
-          <p className="mt-1 max-w-md text-[13px] text-[var(--lp-subtle)]">Vulnerabilities come from the software found on your hosts. Scan a verified domain to see them here.</p>
+          <p className="mt-3 text-base text-[var(--lp-muted)]">No attack surface scans yet</p>
+          <p className="mt-1 max-w-md text-sm text-[var(--lp-subtle)]">Vulnerabilities come from the software found on your hosts. Scan a verified domain to see them here.</p>
           <Link href="/attack-surface" className="console-btn console-btn-primary mt-4 h-9 px-4">
             Go to Attack surface
           </Link>
@@ -187,7 +187,7 @@ export function VulnerabilitiesWorkspace() {
               { label: "Decided", value: String(vulns.length - open.length) },
             ]}
           />
-          <p className="rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2.5 text-[12px] leading-relaxed text-[var(--lp-muted)]">
+          <p className="rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2.5 text-xs leading-relaxed text-[var(--lp-muted)]">
             Matched from the version each service announces. Linux distributions often fix vulnerabilities without changing the version number, so check the package
             before acting, and mark ones that don&apos;t apply as false positives.
             {lookupErrors.length ? <span className="text-[#fbbf24]"> Some lookups failed in the last scan; scan again to complete them.</span> : null}
@@ -198,7 +198,7 @@ export function VulnerabilitiesWorkspace() {
             bodyClassName="p-0"
             aside={
               <div className="flex flex-wrap items-center gap-2">
-                <input className="h-8 w-44 px-2.5 text-[12px]" placeholder="Search CVE, host, product" value={query} onChange={(e) => setQuery(e.target.value)} />
+                <input className="h-8 w-44 px-2.5 text-xs" placeholder="Search CVE, host, product" value={query} onChange={(e) => setQuery(e.target.value)} />
                 <div className="flex rounded-lg border border-[var(--lp-border)] p-0.5" role="tablist" aria-label="Filter by severity">
                   {(["all", ...severities] as const).map((s) => (
                     <button
@@ -207,13 +207,13 @@ export function VulnerabilitiesWorkspace() {
                       role="tab"
                       aria-selected={severity === s}
                       onClick={() => setSeverity(s)}
-                      className={cn("rounded-md px-2.5 py-1 text-[12px]", severity === s ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]")}
+                      className={cn("rounded-md px-2.5 py-1 text-xs", severity === s ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]")}
                     >
                       {s === "all" ? "All" : sevMeta[s].label}
                     </button>
                   ))}
                 </div>
-                <label className="flex items-center gap-1.5 text-[12px] text-[var(--lp-muted)]">
+                <label className="flex items-center gap-1.5 text-xs text-[var(--lp-muted)]">
                   <input type="checkbox" className="h-3.5 w-3.5 accent-[var(--lp-accent)]" checked={showDecided} onChange={(e) => setShowDecided(e.target.checked)} />
                   Show decided
                 </label>
@@ -221,7 +221,7 @@ export function VulnerabilitiesWorkspace() {
             }
           >
             {list.isLoading ? (
-              <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+              <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">Loading…</p>
             ) : shown.length ? (
               <ul className="border-t border-[var(--lp-border)]">
                 {shown.slice(0, 300).map((v) => (
@@ -229,11 +229,11 @@ export function VulnerabilitiesWorkspace() {
                 ))}
               </ul>
             ) : (
-              <p className="border-t border-[var(--lp-border)] px-4 py-8 text-center text-[13px] text-[#86efac]">
+              <p className="border-t border-[var(--lp-border)] px-4 py-8 text-center text-sm text-[#86efac]">
                 {vulns.length ? "Nothing matches these filters." : "No known vulnerabilities in the software found."}
               </p>
             )}
-            {shown.length > 300 ? <p className="border-t border-[var(--lp-border)] px-4 py-2.5 text-[12px] text-[var(--lp-subtle)]">Showing the 300 most serious of {shown.length}.</p> : null}
+            {shown.length > 300 ? <p className="border-t border-[var(--lp-border)] px-4 py-2.5 text-xs text-[var(--lp-subtle)]">Showing the 300 most serious of {shown.length}.</p> : null}
           </Panel>
         </>
       )}

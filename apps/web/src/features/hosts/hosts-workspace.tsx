@@ -83,7 +83,7 @@ function Meter({ value }: { value: number | null }) {
       <span className="h-1.5 w-16 overflow-hidden rounded-full bg-white/[0.08]">
         <span className={cn("block h-full rounded-full", color)} style={{ width: `${Math.min(100, Math.max(2, value))}%` }} />
       </span>
-      <span className="lp-mono w-10 text-right text-[12px]">{value.toFixed(0)}%</span>
+      <span className="lp-mono w-10 text-right text-xs">{value.toFixed(0)}%</span>
     </span>
   );
 }
@@ -126,9 +126,9 @@ export function Chart({
   return (
     <div className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-[12px] text-[var(--lp-muted)]">{title}</span>
+        <span className="text-xs text-[var(--lp-muted)]">{title}</span>
         {series.length > 1 ? (
-          <span className="flex gap-3 text-[11px] text-[var(--lp-subtle)]">
+          <span className="flex gap-3 text-2xs text-[var(--lp-subtle)]">
             {series.map((s) => (
               <span key={s.key} className="flex items-center gap-1">
                 <span className="h-1.5 w-3 rounded-full" style={{ background: s.color }} />
@@ -140,7 +140,7 @@ export function Chart({
       </div>
       <div className="h-40">
         {data.length < 2 ? (
-          <div className="flex h-full items-center justify-center text-[12px] text-[var(--lp-subtle)]">Not enough samples yet.</div>
+          <div className="flex h-full items-center justify-center text-xs text-[var(--lp-subtle)]">Not enough samples yet.</div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <Kind data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
@@ -182,7 +182,7 @@ function HostDetail({ host }: { host: Host }) {
   return (
     <div className="grid gap-4 border-t border-[var(--lp-border)] bg-white/[0.015] px-4 py-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-[12px] text-[var(--lp-subtle)]">{latest ? `Last sample ${formatDateTime(host.latest_at)}` : "Waiting for the first sample"}</span>
+        <span className="text-xs text-[var(--lp-subtle)]">{latest ? `Last sample ${formatDateTime(host.latest_at)}` : "Waiting for the first sample"}</span>
         <div className="flex rounded-lg border border-[var(--lp-border)] p-0.5" role="tablist" aria-label="Time range">
           {ranges.map((r) => (
             <button
@@ -191,14 +191,14 @@ function HostDetail({ host }: { host: Host }) {
               role="tab"
               aria-selected={range === r}
               onClick={() => setRange(r)}
-              className={cn("rounded-md px-2.5 py-1 text-[12px]", range === r ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]")}
+              className={cn("rounded-md px-2.5 py-1 text-xs", range === r ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]")}
             >
               {r}
             </button>
           ))}
         </div>
       </div>
-      {series.isError ? <p className="text-[12px] text-[#ff8fb3]">{(series.error as ApiError).message}</p> : null}
+      {series.isError ? <p className="text-xs text-[#ff8fb3]">{(series.error as ApiError).message}</p> : null}
       <div className="grid gap-3 lg:grid-cols-2">
         <Chart title="CPU" data={data} series={[{ key: "cpu", label: "CPU", color: "#ff3d7f" }]} format={pctFmt} max={100} />
         <Chart title="Memory" data={data} series={[{ key: "mem_pct", label: "Memory", color: "#a78bfa" }]} format={pctFmt} max={100} />
@@ -216,11 +216,11 @@ function HostDetail({ host }: { host: Host }) {
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <div>
-          <p className="mb-2 text-[12px] text-[var(--lp-muted)]">Disks</p>
+          <p className="mb-2 text-xs text-[var(--lp-muted)]">Disks</p>
           {latest?.disks.length ? (
             <ul className="grid gap-1.5">
               {latest.disks.map((d) => (
-                <li key={d.mount} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 text-[12px]">
+                <li key={d.mount} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 text-xs">
                   <span className="lp-mono truncate" title={`${d.mount} (${d.fstype})`}>
                     {d.mount} <span className="text-[var(--lp-subtle)]">{d.fstype}</span>
                   </span>
@@ -234,7 +234,7 @@ function HostDetail({ host }: { host: Host }) {
               ))}
             </ul>
           ) : (
-            <p className="text-[12px] text-[var(--lp-subtle)]">No disks reported.</p>
+            <p className="text-xs text-[var(--lp-subtle)]">No disks reported.</p>
           )}
         </div>
         <DefinitionList
@@ -282,12 +282,12 @@ export function HostsWorkspace() {
       />
 
       {list.isError ? (
-        <p className="text-[13px] text-[#ff8fb3]">{(list.error as ApiError).message}</p>
+        <p className="text-sm text-[#ff8fb3]">{(list.error as ApiError).message}</p>
       ) : list.isSuccess && hosts.length === 0 ? (
         <div className="flex flex-col items-center rounded-xl border border-dashed border-[var(--lp-border)] px-6 py-12 text-center">
           <Server className="h-6 w-6 text-[var(--lp-subtle)]" />
-          <p className="mt-3 text-[14px] text-[var(--lp-muted)]">No hosts yet</p>
-          <p className="mt-1 max-w-md text-[13px] text-[var(--lp-subtle)]">Every machine that runs a Qnetward agent shows up here. Add an agent and run it on a server to start.</p>
+          <p className="mt-3 text-base text-[var(--lp-muted)]">No hosts yet</p>
+          <p className="mt-1 max-w-md text-sm text-[var(--lp-subtle)]">Every machine that runs a Qnetward agent shows up here. Add an agent and run it on a server to start.</p>
           <Link href="/agents" className="console-btn console-btn-primary mt-4 h-9 px-4">
             Add an agent
           </Link>
@@ -305,17 +305,17 @@ export function HostsWorkspace() {
             ]}
           />
           {oldAgents ? (
-            <p className="rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2.5 text-[12px] text-[var(--lp-muted)]">
+            <p className="rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2.5 text-xs text-[var(--lp-muted)]">
               {oldAgents === 1 ? "One agent runs" : `${oldAgents} agents run`} a version without host metrics. Update to 0.2.0 or later to see them here.
             </p>
           ) : null}
           <Panel title="Hosts" bodyClassName="p-0">
             {list.isLoading ? (
-              <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+              <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">Loading…</p>
             ) : (
               <div className="overflow-x-auto border-t border-[var(--lp-border)]">
                 <div className="min-w-[820px]">
-                  <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1.2fr)_repeat(3,7.5rem)_5rem_7rem_1.5rem] gap-3 px-4 py-2 text-[11px] uppercase tracking-wide text-[var(--lp-subtle)]">
+                  <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1.2fr)_repeat(3,7.5rem)_5rem_7rem_1.5rem] gap-3 px-4 py-2 text-2xs uppercase tracking-wide text-[var(--lp-subtle)]">
                     <span>Host</span>
                     <span>OS</span>
                     <span>CPU</span>
@@ -336,18 +336,18 @@ export function HostsWorkspace() {
                             type="button"
                             onClick={() => setOpen(isOpen ? null : h.id)}
                             aria-expanded={isOpen}
-                            className="grid w-full grid-cols-[minmax(0,1.6fr)_minmax(0,1.2fr)_repeat(3,7.5rem)_5rem_7rem_1.5rem] items-center gap-3 px-4 py-3 text-left text-[13px] hover:bg-white/[0.02]"
+                            className="grid w-full grid-cols-[minmax(0,1.6fr)_minmax(0,1.2fr)_repeat(3,7.5rem)_5rem_7rem_1.5rem] items-center gap-3 px-4 py-3 text-left text-sm hover:bg-white/[0.02]"
                           >
                             <span className="min-w-0">
                               <span className="block truncate">{h.name}</span>
-                              <span className="lp-mono block truncate text-[11px] text-[var(--lp-subtle)]">{h.hostname || "–"}</span>
+                              <span className="lp-mono block truncate text-2xs text-[var(--lp-subtle)]">{h.hostname || "–"}</span>
                             </span>
-                            <span className="truncate text-[12px] text-[var(--lp-muted)]">{osLabel(h)}</span>
+                            <span className="truncate text-xs text-[var(--lp-muted)]">{osLabel(h)}</span>
                             <Meter value={h.latest ? h.latest.cpu : null} />
                             <Meter value={h.latest ? pct(h.latest.mem_used, h.latest.mem_total) : null} />
                             <Meter value={disk ? (disk.used / disk.total) * 100 : null} />
-                            <span className="lp-mono text-[12px] text-[var(--lp-muted)]">{formatUptime(h.latest?.uptime)}</span>
-                            <span className={cn("text-[12px]", healthMeta[health].className)}>{healthMeta[health].label}</span>
+                            <span className="lp-mono text-xs text-[var(--lp-muted)]">{formatUptime(h.latest?.uptime)}</span>
+                            <span className={cn("text-xs", healthMeta[health].className)}>{healthMeta[health].label}</span>
                             <ChevronDown className={cn("h-4 w-4 text-[var(--lp-subtle)] transition-transform", isOpen && "rotate-180")} />
                           </button>
                           {isOpen ? <HostDetail host={h} /> : null}

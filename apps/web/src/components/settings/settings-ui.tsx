@@ -83,8 +83,8 @@ export function SettingsPageTitle({ title, description, action }: { title: strin
   return (
     <div className="flex flex-col gap-3 border-b border-[var(--lp-border)] pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
       <div className="min-w-0">
-        <h1 className="text-[22px] font-medium tracking-[-0.02em]">{title}</h1>
-        {description ? <p className="mt-1 text-[13px] leading-relaxed text-[var(--lp-muted)]">{description}</p> : null}
+        <h1 className="text-xl font-medium tracking-[-0.02em]">{title}</h1>
+        {description ? <p className="mt-1 text-sm leading-relaxed text-[var(--lp-muted)]">{description}</p> : null}
       </div>
       {action ? <div className="flex shrink-0 gap-2">{action}</div> : null}
     </div>
@@ -117,10 +117,10 @@ export function SettingsCard({
   const body = (
     <>
       <div className="p-5">
-        <h2 id={id ? `${id}-title` : undefined} className="text-[15px] font-medium">
+        <h2 id={id ? `${id}-title` : undefined} className="text-md font-medium">
           {title}
         </h2>
-        {description ? <p className="mt-1 text-[13px] leading-relaxed text-[var(--lp-muted)]">{description}</p> : null}
+        {description ? <p className="mt-1 text-sm leading-relaxed text-[var(--lp-muted)]">{description}</p> : null}
         {children ? <div className="mt-4">{children}</div> : null}
       </div>
       {hint || action ? (
@@ -130,7 +130,7 @@ export function SettingsCard({
             tone === "danger" ? "border-[rgba(255,61,127,0.25)] bg-[rgba(255,61,127,0.05)]" : "border-[var(--lp-border)] bg-white/[0.015]",
           )}
         >
-          <div className="min-w-0 text-[12px] text-[var(--lp-subtle)]">{hint}</div>
+          <div className="min-w-0 text-xs text-[var(--lp-subtle)]">{hint}</div>
           {action ? <div className="flex shrink-0 gap-2">{action}</div> : null}
         </div>
       ) : null}
@@ -169,7 +169,7 @@ export function Notice({ tone, children }: { tone: "success" | "error" | "info";
     info: "border-[rgba(251,191,36,0.3)] bg-[rgba(251,191,36,0.08)] text-[#fcd34d]",
   };
   return (
-    <p role={tone === "error" ? "alert" : "status"} className={cn("rounded-lg border px-3 py-2.5 text-[13px]", styles[tone])}>
+    <p role={tone === "error" ? "alert" : "status"} className={cn("rounded-lg border px-3 py-2.5 text-sm", styles[tone])}>
       {children}
     </p>
   );

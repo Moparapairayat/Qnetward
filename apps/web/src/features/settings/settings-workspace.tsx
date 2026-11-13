@@ -72,7 +72,7 @@ function RuntimeDependencyCard({ title, dependency }: { title: string; dependenc
           {healthLabel(dependency)}
         </span>
       </div>
-      <p className="mt-4 text-sm leading-7 text-slate-300">{healthCopy(dependency)}</p>
+      <p className="mt-4 text-base leading-7 text-slate-300">{healthCopy(dependency)}</p>
     </article>
   );
 }
@@ -99,8 +99,8 @@ export function SettingsWorkspace() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
         <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Runtime Settings</p>
-        <h2 className="mt-2 font-space text-3xl font-bold text-white">Deployment Status</h2>
-        <p className="mt-3 text-sm leading-7 text-slate-400">
+        <h2 className="mt-2 font-space text-2xl font-bold text-white">Deployment Status</h2>
+        <p className="mt-3 text-base leading-7 text-slate-400">
           Inspect runtime health, session state, and transport posture without leaving the monitoring workspace.
         </p>
           </div>
@@ -116,7 +116,7 @@ export function SettingsWorkspace() {
         </div>
 
         {runtimeHealthQuery.isError && (
-          <p className="mt-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          <p className="mt-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-base text-rose-200">
             {(runtimeHealthQuery.error as ApiError).message || "Unable to load runtime health."}
           </p>
         )}
@@ -124,7 +124,7 @@ export function SettingsWorkspace() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="dashboard-panel-muted rounded-2xl p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Origin</p>
-            <p className="mt-3 break-all text-sm font-semibold text-white">{origin}</p>
+            <p className="mt-3 break-all text-base font-semibold text-white">{origin}</p>
           </div>
           <div className="dashboard-panel-muted rounded-2xl p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Runtime</p>
@@ -146,8 +146,8 @@ export function SettingsWorkspace() {
 
         <div className="dashboard-note-panel mt-6 p-4">
           <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Runtime Summary</p>
-          <p className="mt-3 text-sm leading-7 text-slate-300">{overallRuntimeMessage(runtimeHealth)}</p>
-          <div className="mt-4 grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
+          <p className="mt-3 text-base leading-7 text-slate-300">{overallRuntimeMessage(runtimeHealth)}</p>
+          <div className="mt-4 grid gap-3 text-base text-slate-300 sm:grid-cols-2">
             <div>
               <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Last health check</p>
               <p className="mt-1">{runtimeHealth?.time ? formatDateTime(runtimeHealth.time) : "Waiting for response"}</p>
@@ -163,7 +163,7 @@ export function SettingsWorkspace() {
       <Card>
         <div className="mb-6">
           <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Dependency Health</p>
-          <h3 className="mt-2 font-space text-2xl font-bold text-white">Database, Cache, Object Storage</h3>
+          <h3 className="mt-2 font-space text-xl font-bold text-white">Database, Cache, Object Storage</h3>
         </div>
         <div className="grid gap-4">
           <RuntimeDependencyCard title="Database" dependency={runtimeHealth?.database ?? { enabled: false, healthy: false }} />

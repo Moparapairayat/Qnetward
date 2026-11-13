@@ -57,8 +57,8 @@ function Component({ component, days }: { component: PublicStatusComponent; days
   return (
     <li className="px-5 py-5">
       <div className="flex items-center justify-between gap-4">
-        <p className="min-w-0 truncate text-[15px] font-medium">{component.name}</p>
-        <p className="shrink-0 text-[13px] font-medium" style={{ color: state.color }}>
+        <p className="min-w-0 truncate text-md font-medium">{component.name}</p>
+        <p className="shrink-0 text-sm font-medium" style={{ color: state.color }}>
           {state.text}
         </p>
       </div>
@@ -77,7 +77,7 @@ function Component({ component, days }: { component: PublicStatusComponent; days
           );
         })}
       </div>
-      <div className="mt-2 flex items-center justify-between text-[12px] text-[var(--lp-subtle)]">
+      <div className="mt-2 flex items-center justify-between text-xs text-[var(--lp-subtle)]">
         <span>{days.length} days ago</span>
         <span className="text-[var(--lp-muted)]">{uptime ? `${uptime} uptime` : "No checks yet"}</span>
         <span>Today</span>
@@ -102,14 +102,14 @@ export function PublicStatusPage({ data }: { data: PublicStatusResponse }) {
   return (
     <div className="mx-auto w-full max-w-[760px] px-4 py-12 sm:py-16">
       <header>
-        <h1 className="text-[28px] font-semibold tracking-[-0.02em] sm:text-[32px]">{page.title}</h1>
-        {page.description ? <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-[var(--lp-muted)]">{page.description}</p> : null}
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] sm:text-2xl">{page.title}</h1>
+        {page.description ? <p className="mt-2 max-w-xl text-md leading-relaxed text-[var(--lp-muted)]">{page.description}</p> : null}
       </header>
 
       <div className={cn("mt-8 flex items-center gap-3 rounded-xl border px-5 py-4", verdict.tone)}>
         <verdict.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-        <p className="flex-1 text-[16px] font-medium">{verdict.text}</p>
-        <p className="hidden text-[12px] opacity-80 sm:block">
+        <p className="flex-1 text-md font-medium">{verdict.text}</p>
+        <p className="hidden text-xs opacity-80 sm:block">
           Updated {updated.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC
         </p>
       </div>
@@ -123,10 +123,10 @@ export function PublicStatusPage({ data }: { data: PublicStatusResponse }) {
           </ul>
         </section>
       ) : (
-        <p className="mt-6 rounded-xl border border-dashed border-[var(--lp-border)] px-5 py-8 text-center text-[14px] text-[var(--lp-subtle)]">No services on this page yet.</p>
+        <p className="mt-6 rounded-xl border border-dashed border-[var(--lp-border)] px-5 py-8 text-center text-base text-[var(--lp-subtle)]">No services on this page yet.</p>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[var(--lp-subtle)]">
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--lp-subtle)]">
         {[
           ["#4ade80", "No downtime"],
           ["#a3e635", "Under 1%"],
@@ -142,7 +142,7 @@ export function PublicStatusPage({ data }: { data: PublicStatusResponse }) {
       </div>
 
       <footer className="mt-14 flex items-center justify-center">
-        <Link href="/" className="inline-flex items-center gap-2 text-[12px] text-[var(--lp-subtle)] hover:text-[var(--lp-text)]">
+        <Link href="/" className="inline-flex items-center gap-2 text-xs text-[var(--lp-subtle)] hover:text-[var(--lp-text)]">
           <QnetwardMark size={16} /> Powered by Qnetward
         </Link>
       </footer>

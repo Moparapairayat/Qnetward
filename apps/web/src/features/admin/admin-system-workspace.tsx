@@ -40,7 +40,7 @@ export function AdminSystemWorkspace() {
       />
 
       {systemQuery.isError ? (
-        <p className="rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-[13px] text-[#ff8fb3]">
+        <p className="rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-sm text-[#ff8fb3]">
           {(systemQuery.error as ApiError).message || "Couldn't load system details."}
         </p>
       ) : null}
@@ -68,18 +68,18 @@ export function AdminSystemWorkspace() {
                   <row.icon className="h-4 w-4 text-[var(--lp-muted)]" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 text-[13px]">
+                  <p className="flex items-center gap-2 text-sm">
                     {row.name}
-                    {row.dep?.driver ? <span className="lp-mono text-[11px] text-[var(--lp-subtle)]">{row.dep.driver}</span> : null}
+                    {row.dep?.driver ? <span className="lp-mono text-2xs text-[var(--lp-subtle)]">{row.dep.driver}</span> : null}
                   </p>
-                  <p className="text-[12px] text-[var(--lp-subtle)]">{row.dep?.error ? <span className="text-[#ff8fb3]">{row.dep.error}</span> : row.purpose}</p>
+                  <p className="text-xs text-[var(--lp-subtle)]">{row.dep?.error ? <span className="text-[#ff8fb3]">{row.dep.error}</span> : row.purpose}</p>
                 </div>
                 <Pill tone={state.tone}>{state.label}</Pill>
               </li>
             );
           })}
         </ul>
-        <p className="border-t border-[var(--lp-border)] px-4 py-2.5 text-[12px] text-[var(--lp-subtle)]">
+        <p className="border-t border-[var(--lp-border)] px-4 py-2.5 text-xs text-[var(--lp-subtle)]">
           {health?.time ? `Last checked ${formatDateTime(health.time)}` : "Waiting for the first health check."}
         </p>
       </Panel>

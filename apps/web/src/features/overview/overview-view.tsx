@@ -48,10 +48,10 @@ export function OverviewHeader({ health }: { health?: RuntimeHealthResponse }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 className="text-[24px] font-medium tracking-[-0.02em]">Overview</h1>
-        <p className="mt-1 text-[14px] text-[var(--lp-muted)]">Health of the targets your workspace probes. Refreshes every 20 seconds.</p>
+        <h1 className="text-xl font-medium tracking-[-0.02em]">Overview</h1>
+        <p className="mt-1 text-base text-[var(--lp-muted)]">Health of the targets your workspace probes. Refreshes every 20 seconds.</p>
       </div>
-      <Link href="/status" className="flex items-center gap-2 text-[13px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]">
+      <Link href="/status" className="flex items-center gap-2 text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)]">
         <span className="h-2 w-2 rounded-full" style={{ background: color }} />
         {label}
       </Link>
@@ -93,7 +93,7 @@ export function QuickProbe({
               aria-selected={option.id === tool}
               onClick={() => onToolChange(option.id)}
               className={cn(
-                "whitespace-nowrap rounded-md px-3 py-1.5 text-[13px] transition-colors",
+                "whitespace-nowrap rounded-md px-3 py-1.5 text-sm transition-colors",
                 option.id === tool ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
               )}
             >
@@ -146,13 +146,13 @@ export function StatRow({
             i === 2 && "lg:border-l",
           )}
         >
-          <dt className="text-[13px] text-[var(--lp-muted)]">{stat.label}</dt>
+          <dt className="text-sm text-[var(--lp-muted)]">{stat.label}</dt>
           <dd className="mt-2 flex items-baseline gap-2">
-            <span className="text-[28px] font-medium tracking-[-0.02em]" style={{ color: stat.color }}>
+            <span className="text-2xl font-medium tracking-[-0.02em]" style={{ color: stat.color }}>
               {stat.value}
             </span>
           </dd>
-          <p className="mt-1 text-[12px] text-[var(--lp-subtle)]">{stat.hint}</p>
+          <p className="mt-1 text-xs text-[var(--lp-subtle)]">{stat.hint}</p>
         </div>
       ))}
     </dl>
@@ -172,10 +172,10 @@ export function LatencyCard({ points }: { points: { ts: number; rttMs?: number |
   return (
     <section className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-5" aria-labelledby="latency-title">
       <div className="flex items-baseline justify-between gap-4">
-        <h2 id="latency-title" className="text-[15px] font-medium">
+        <h2 id="latency-title" className="text-md font-medium">
           Latency
         </h2>
-        <span className="text-[12px] text-[var(--lp-subtle)]">last {values.length} samples, all targets</span>
+        <span className="text-xs text-[var(--lp-subtle)]">last {values.length} samples, all targets</span>
       </div>
       {values.length > 1 ? (
         <svg viewBox={`0 0 ${w} ${h}`} className="mt-4 h-40 w-full" preserveAspectRatio="none" role="img" aria-label="Latency over recent samples">
@@ -186,11 +186,11 @@ export function LatencyCard({ points }: { points: { ts: number; rttMs?: number |
           <path d={path} fill="none" stroke="#ff3d7f" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
         </svg>
       ) : (
-        <div className="mt-4 flex h-40 items-center justify-center rounded-lg border border-dashed border-[var(--lp-border)] text-[13px] text-[var(--lp-subtle)]">
+        <div className="mt-4 flex h-40 items-center justify-center rounded-lg border border-dashed border-[var(--lp-border)] text-sm text-[var(--lp-subtle)]">
           Run a probe to start the chart.
         </div>
       )}
-      <dl className="mt-4 grid grid-cols-3 border-t border-[var(--lp-border)] pt-4 text-[13px]">
+      <dl className="mt-4 grid grid-cols-3 border-t border-[var(--lp-border)] pt-4 text-sm">
         {[
           ["Fastest", sorted[0]],
           ["Median", median],
@@ -211,7 +211,7 @@ export function StatusCard({ targets, alertRuleCount }: { targets: OverviewTarge
   const total = targets.length || 1;
   return (
     <section className="flex flex-col rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-5" aria-labelledby="status-title">
-      <h2 id="status-title" className="text-[15px] font-medium">
+      <h2 id="status-title" className="text-md font-medium">
         Status
       </h2>
       <div className="mt-4 flex h-2 overflow-hidden rounded-full bg-white/[0.06]">
@@ -220,7 +220,7 @@ export function StatusCard({ targets, alertRuleCount }: { targets: OverviewTarge
           return count ? <span key={state} style={{ width: `${(count / total) * 100}%`, background: stateMeta[state].color }} /> : null;
         })}
       </div>
-      <ul className="mt-4 space-y-2.5 text-[13px]">
+      <ul className="mt-4 space-y-2.5 text-sm">
         {order.map((state) => (
           <li key={state} className="flex items-center justify-between">
             <span className="flex items-center gap-2 text-[var(--lp-muted)]">
@@ -233,7 +233,7 @@ export function StatusCard({ targets, alertRuleCount }: { targets: OverviewTarge
       </ul>
       <Link
         href="/alerts"
-        className="mt-auto flex items-center justify-between border-t border-[var(--lp-border)] pt-4 text-[13px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
+        className="mt-auto flex items-center justify-between border-t border-[var(--lp-border)] pt-4 text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
         style={{ marginTop: "auto" }}
       >
         <span className="flex items-center gap-2">
@@ -249,17 +249,17 @@ export function TargetsTable({ targets }: { targets: OverviewTargetSnapshot[] })
   return (
     <section className="overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]" aria-labelledby="targets-title">
       <div className="flex items-center justify-between px-5 py-4">
-        <h2 id="targets-title" className="text-[15px] font-medium">
+        <h2 id="targets-title" className="text-md font-medium">
           Targets
         </h2>
-        <Link href="/history" className="flex items-center gap-1 text-[13px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]">
+        <Link href="/history" className="flex items-center gap-1 text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)]">
           History <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-[13px]">
+        <table className="w-full text-sm">
           <thead>
-            <tr className="border-y border-[var(--lp-border)] text-left text-[12px] text-[var(--lp-subtle)]">
+            <tr className="border-y border-[var(--lp-border)] text-left text-xs text-[var(--lp-subtle)]">
               <th className="px-5 py-2.5 font-medium">Target</th>
               <th className="px-3 py-2.5 font-medium">Type</th>
               <th className="px-3 py-2.5 font-medium">Status</th>
@@ -275,9 +275,9 @@ export function TargetsTable({ targets }: { targets: OverviewTargetSnapshot[] })
                     {t.host}
                     {t.port ? <span className="text-[var(--lp-subtle)]">:{t.port}</span> : null}
                   </Link>
-                  {t.ruleName ? <span className="text-[12px] text-[var(--lp-subtle)]">{t.ruleName}</span> : null}
+                  {t.ruleName ? <span className="text-xs text-[var(--lp-subtle)]">{t.ruleName}</span> : null}
                 </td>
-                <td className="lp-mono px-3 py-3 text-[12px] text-[var(--lp-muted)]">{t.protocol === "tcpping" ? "TCP" : "ICMP"}</td>
+                <td className="lp-mono px-3 py-3 text-xs text-[var(--lp-muted)]">{t.protocol === "tcpping" ? "TCP" : "ICMP"}</td>
                 <td className="px-3 py-3">
                   <span className="inline-flex items-center gap-1.5 text-[var(--lp-muted)]">
                     <span className="h-1.5 w-1.5 rounded-full" style={{ background: stateMeta[t.healthState].color }} />
@@ -325,10 +325,10 @@ export function GettingStarted({ hasAlertRules }: { hasAlertRules: boolean }) {
   return (
     <section className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]" aria-labelledby="start-title">
       <div className="border-b border-[var(--lp-border)] px-5 py-4">
-        <h2 id="start-title" className="text-[15px] font-medium">
+        <h2 id="start-title" className="text-md font-medium">
           Get started
         </h2>
-        <p className="mt-1 text-[13px] text-[var(--lp-muted)]">Nothing to show yet. These three steps fill this page in.</p>
+        <p className="mt-1 text-sm text-[var(--lp-muted)]">Nothing to show yet. These three steps fill this page in.</p>
       </div>
       <ol className="grid md:grid-cols-3">
         {steps.map((step, i) => (
@@ -336,12 +336,12 @@ export function GettingStarted({ hasAlertRules }: { hasAlertRules: boolean }) {
             <span className="grid h-8 w-8 place-items-center rounded-lg border border-[var(--lp-border-strong)] bg-white/[0.03]">
               <step.icon className="h-4 w-4 text-[var(--lp-accent)]" />
             </span>
-            <h3 className="mt-4 text-[14px] font-medium">
+            <h3 className="mt-4 text-base font-medium">
               {step.title}
-              {step.done ? <span className="ml-2 text-[12px] font-normal text-[var(--lp-green)]">Done</span> : null}
+              {step.done ? <span className="ml-2 text-xs font-normal text-[var(--lp-green)]">Done</span> : null}
             </h3>
-            <p className="mt-1.5 flex-1 text-[13px] leading-relaxed text-[var(--lp-muted)]">{step.body}</p>
-            <Link href={step.href} className="mt-4 inline-flex items-center gap-1 text-[13px] text-[var(--lp-accent)] hover:text-[#ff7aa6]">
+            <p className="mt-1.5 flex-1 text-sm leading-relaxed text-[var(--lp-muted)]">{step.body}</p>
+            <Link href={step.href} className="mt-4 inline-flex items-center gap-1 text-sm text-[var(--lp-accent)] hover:text-[#ff7aa6]">
               {step.cta} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </li>

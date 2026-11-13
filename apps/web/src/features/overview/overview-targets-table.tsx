@@ -52,10 +52,10 @@ export function OverviewTargetsTable({ targets }: OverviewTargetsTableProps) {
     <div className="dashboard-panel rounded-[1.5rem] p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[0.68rem] uppercase tracking-[0.24em] text-slate-500">Target Table</p>
-          <h3 className="mt-1.5 font-space text-[1.65rem] font-bold text-white">Top Targets</h3>
+          <p className="text-2xs uppercase tracking-[0.24em] text-slate-500">Target Table</p>
+          <h3 className="mt-1.5 font-space text-2xl font-bold text-white">Top Targets</h3>
         </div>
-        <Link href="/history" className="dashboard-text-link text-sm">
+        <Link href="/history" className="dashboard-text-link text-base">
           Open history
         </Link>
       </div>
@@ -74,7 +74,7 @@ export function OverviewTargetsTable({ targets }: OverviewTargetsTableProps) {
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-sm text-slate-400">
+                  <td colSpan={4} className="text-base text-slate-400">
                     No tracked targets yet. Add alert rules to populate the overview table.
                   </td>
                 </tr>
@@ -95,7 +95,7 @@ export function OverviewTargetsTable({ targets }: OverviewTargetsTableProps) {
                       <td data-label="Mode">{target.protocol === "tcpping" ? "TCP Ping" : "ICMP Ping"}</td>
                       <td data-label="State">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className={`inline-flex rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] ${targetStatusTone(target.healthState)}`}>
+                          <span className={`inline-flex rounded-full border px-2.5 py-1 text-2xs font-semibold uppercase tracking-[0.18em] ${targetStatusTone(target.healthState)}`}>
                             {target.healthState}
                           </span>
                           {isStreaming ? <span className="dashboard-live-badge">Live</span> : null}

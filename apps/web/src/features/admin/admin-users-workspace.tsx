@@ -66,11 +66,11 @@ export function AdminUsersWorkspace() {
         }
       >
         {usersQuery.isError ? (
-          <p className="px-4 pb-4 text-[13px] text-[#ff8fb3]">{(usersQuery.error as ApiError).message || "Couldn't load users."}</p>
+          <p className="px-4 pb-4 text-sm text-[#ff8fb3]">{(usersQuery.error as ApiError).message || "Couldn't load users."}</p>
         ) : usersQuery.isLoading ? (
-          <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">Loading users…</p>
+          <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">Loading users…</p>
         ) : rows.length === 0 ? (
-          <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">No users match.</p>
+          <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">No users match.</p>
         ) : (
           <TableShell minWidth={820}>
             <HeadRow>
@@ -88,7 +88,7 @@ export function AdminUsersWorkspace() {
                       <Avatar name={u.name} email={u.email} size={28} />
                       <div className="min-w-0">
                         <p className="truncate">{u.name || "—"}</p>
-                        <p className="lp-mono truncate text-[12px] text-[var(--lp-subtle)]">{u.email}</p>
+                        <p className="lp-mono truncate text-xs text-[var(--lp-subtle)]">{u.email}</p>
                       </div>
                     </div>
                   </Td>

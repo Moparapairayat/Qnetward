@@ -32,8 +32,8 @@ export function OverviewLatencyPanel({ points }: OverviewLatencyPanelProps) {
     <div className="dashboard-panel rounded-[1.55rem] p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[0.68rem] uppercase tracking-[0.24em] text-slate-500">Overview Pulse</p>
-          <h3 className="mt-1.5 font-space text-[1.65rem] font-bold text-white">Network Response Timeline</h3>
+          <p className="text-2xs uppercase tracking-[0.24em] text-slate-500">Overview Pulse</p>
+          <h3 className="mt-1.5 font-space text-2xl font-bold text-white">Network Response Timeline</h3>
         </div>
         <span className={healthy ? "dashboard-chip dashboard-chip-success" : "dashboard-chip dashboard-chip-muted"}>
           {healthy ? "Healthy" : "Monitoring"}
@@ -42,7 +42,7 @@ export function OverviewLatencyPanel({ points }: OverviewLatencyPanelProps) {
 
       <div className="mt-4 h-56 sm:h-60 xl:h-64">
         {chartData.length === 0 ? (
-          <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-800 text-sm text-slate-400">
+          <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-800 text-base text-slate-400">
             No recent RTT samples yet.
           </div>
         ) : (
@@ -100,16 +100,16 @@ export function OverviewLatencyPanel({ points }: OverviewLatencyPanelProps) {
 
       <div className="mt-3 grid gap-3 border-t border-white/6 pt-3 sm:grid-cols-3">
         <div>
-          <p className="text-[0.68rem] uppercase tracking-[0.22em] text-slate-500">Peak</p>
-          <p className="mt-1.5 text-base font-semibold text-fuchsia-300">{formatMs(peak)}</p>
+          <p className="text-2xs uppercase tracking-[0.22em] text-slate-500">Peak</p>
+          <p className="mt-1.5 text-md font-semibold text-fuchsia-300">{formatMs(peak)}</p>
         </div>
         <div>
-          <p className="text-[0.68rem] uppercase tracking-[0.22em] text-slate-500">Floor</p>
-          <p className="mt-1.5 text-base font-semibold text-cyan-200">{formatMs(floor)}</p>
+          <p className="text-2xs uppercase tracking-[0.22em] text-slate-500">Floor</p>
+          <p className="mt-1.5 text-md font-semibold text-cyan-200">{formatMs(floor)}</p>
         </div>
         <div>
-          <p className="text-[0.68rem] uppercase tracking-[0.22em] text-slate-500">Median</p>
-          <p className="mt-1.5 text-base font-semibold text-blue-300">{formatMs(medianValue)}</p>
+          <p className="text-2xs uppercase tracking-[0.22em] text-slate-500">Median</p>
+          <p className="mt-1.5 text-md font-semibold text-blue-300">{formatMs(medianValue)}</p>
         </div>
       </div>
     </div>

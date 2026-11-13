@@ -71,7 +71,7 @@ function PageDialog({ editing, monitors, isDemo, onClose }: { editing: StatusPag
       className="max-w-[640px]"
       footer={
         <>
-          {save.isError ? <span className="mr-auto text-[12px] text-[#ff8fb3]">{(save.error as ApiError).message}</span> : null}
+          {save.isError ? <span className="mr-auto text-xs text-[#ff8fb3]">{(save.error as ApiError).message}</span> : null}
           <button type="button" className="console-btn console-btn-secondary" onClick={onClose}>
             Cancel
           </button>
@@ -94,9 +94,9 @@ function PageDialog({ editing, monitors, isDemo, onClose }: { editing: StatusPag
         </Field>
         <Field label="Address" error={effectiveSlug && !slugOK ? "3 to 40 lowercase letters, numbers, or single hyphens" : undefined}>
           <div className="flex h-9 items-center overflow-hidden rounded-md border border-[var(--lp-border-strong)] bg-black/20 focus-within:border-[rgba(255,61,127,0.5)]">
-            <span className="lp-mono shrink-0 border-r border-[var(--lp-border)] px-3 text-[12px] text-[var(--lp-subtle)]">/status/</span>
+            <span className="lp-mono shrink-0 border-r border-[var(--lp-border)] px-3 text-xs text-[var(--lp-subtle)]">/status/</span>
             <input
-              className="lp-mono h-full min-w-0 flex-1 border-0 bg-transparent px-2 text-[13px] outline-none"
+              className="lp-mono h-full min-w-0 flex-1 border-0 bg-transparent px-2 text-sm outline-none"
               placeholder="acme"
               value={effectiveSlug}
               onChange={(e) => {
@@ -111,9 +111,9 @@ function PageDialog({ editing, monitors, isDemo, onClose }: { editing: StatusPag
         </Field>
 
         <div>
-          <p className="mb-2 text-[13px] text-[var(--lp-muted)]">Monitors on this page</p>
+          <p className="mb-2 text-sm text-[var(--lp-muted)]">Monitors on this page</p>
           {monitors.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-[13px] text-[var(--lp-subtle)]">
+            <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-sm text-[var(--lp-subtle)]">
               No monitors yet. <Link href="/monitors" className="text-[var(--lp-text)] underline underline-offset-4">Add one</Link> first.
             </p>
           ) : (
@@ -134,12 +134,12 @@ function PageDialog({ editing, monitors, isDemo, onClose }: { editing: StatusPag
                         </span>
                         <input
                           aria-label="Display name"
-                          className="h-8 min-w-0 flex-1 px-2 text-[13px]"
+                          className="h-8 min-w-0 flex-1 px-2 text-sm"
                           maxLength={60}
                           value={c.label}
                           onChange={(e) => setChosen((cur) => cur.map((x) => (x.monitor_id === c.monitor_id ? { ...x, label: e.target.value } : x)))}
                         />
-                        <span className="hidden max-w-[160px] truncate text-[11px] text-[var(--lp-subtle)] sm:block" title={m?.name}>
+                        <span className="hidden max-w-[160px] truncate text-2xs text-[var(--lp-subtle)] sm:block" title={m?.name}>
                           {m?.name ?? "Removed monitor"}
                         </span>
                         <button type="button" className="console-btn console-btn-secondary h-8 w-8 px-0" aria-label="Remove from page" onClick={() => m && toggle(m)}>
@@ -158,7 +158,7 @@ function PageDialog({ editing, monitors, isDemo, onClose }: { editing: StatusPag
                       key={m.id}
                       type="button"
                       onClick={() => toggle(m)}
-                      className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-[var(--lp-border)] px-2 py-1 text-[12px] text-[var(--lp-muted)] hover:border-[var(--lp-border-strong)] hover:text-white"
+                      className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-[var(--lp-border)] px-2 py-1 text-xs text-[var(--lp-muted)] hover:border-[var(--lp-border-strong)] hover:text-white"
                     >
                       <Plus className="h-3 w-3 shrink-0" />
                       <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: statusDot[m.status] }} />
@@ -195,16 +195,16 @@ function PageCard({ page, monitors, onEdit }: { page: StatusPage; monitors: Map<
   return (
     <li className="flex flex-col gap-4 rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4 sm:flex-row sm:items-center">
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 text-[15px] font-medium">
+        <p className="flex items-center gap-2 text-md font-medium">
           <span className="truncate">{page.title}</span>
           {page.published ? (
-            <span className="rounded border border-[rgba(74,222,128,0.3)] bg-[rgba(74,222,128,0.08)] px-1.5 text-[11px] font-normal text-[#86efac]">Public</span>
+            <span className="rounded border border-[rgba(74,222,128,0.3)] bg-[rgba(74,222,128,0.08)] px-1.5 text-2xs font-normal text-[#86efac]">Public</span>
           ) : (
-            <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-[11px] font-normal text-[var(--lp-subtle)]">Draft</span>
+            <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-2xs font-normal text-[var(--lp-subtle)]">Draft</span>
           )}
         </p>
-        <p className="lp-mono mt-0.5 truncate text-[12px] text-[var(--lp-subtle)]">/status/{page.slug}</p>
-        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[var(--lp-muted)]">
+        <p className="lp-mono mt-0.5 truncate text-xs text-[var(--lp-subtle)]">/status/{page.slug}</p>
+        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--lp-muted)]">
           <span>
             {page.monitors.length} {page.monitors.length === 1 ? "monitor" : "monitors"}
           </span>
@@ -289,7 +289,7 @@ export function StatusPagesWorkspace() {
       </div>
 
       {atLimit ? (
-        <p className="text-[12px] text-[var(--lp-subtle)]">
+        <p className="text-xs text-[var(--lp-subtle)]">
           Your plan includes {limit} status {limit === 1 ? "page" : "pages"}.{" "}
           <Link href="/workspace/billing" className="text-[var(--lp-text)] underline underline-offset-4">
             Upgrade for more
@@ -301,15 +301,15 @@ export function StatusPagesWorkspace() {
       {dialog ? <PageDialog key={dialog.key} editing={dialog.editing} monitors={monitors} isDemo={isDemo} onClose={() => setDialog(null)} /> : null}
 
       {pagesQuery.isLoading ? (
-        <p className="text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+        <p className="text-sm text-[var(--lp-subtle)]">Loading…</p>
       ) : pagesQuery.isError ? (
-        <p className="text-[13px] text-[#ff8fb3]">{(pagesQuery.error as ApiError).message}</p>
+        <p className="text-sm text-[#ff8fb3]">{(pagesQuery.error as ApiError).message}</p>
       ) : pages.length === 0 ? (
         <Panel>
           <div className="flex flex-col items-center px-6 py-10 text-center">
             <BadgeCheck className="h-6 w-6 text-[var(--lp-subtle)]" aria-hidden="true" />
-            <p className="mt-3 text-[15px] font-medium">No status page yet</p>
-            <p className="mt-1 max-w-md text-[13px] text-[var(--lp-subtle)]">
+            <p className="mt-3 text-md font-medium">No status page yet</p>
+            <p className="mt-1 max-w-md text-sm text-[var(--lp-subtle)]">
               Pick the monitors your customers care about, give them friendly names, and share one link during an incident instead of answering the same question all day.
             </p>
             <button type="button" className="console-btn console-btn-primary mt-5" onClick={() => setDialog({ key: Date.now(), editing: null })}>

@@ -47,7 +47,7 @@ export function ForgotPasswordForm() {
         }}
       />
       {notice && (
-        <p className={notice.tone === "success" ? "auth-notice-success text-sm" : "auth-notice-error text-sm"}>
+        <p className={notice.tone === "success" ? "auth-notice-success text-base" : "auth-notice-error text-base"}>
           {notice.message}
         </p>
       )}

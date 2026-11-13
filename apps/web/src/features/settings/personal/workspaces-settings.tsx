@@ -70,13 +70,13 @@ export function WorkspacesSettings() {
                 <li key={w.id} className="flex items-center gap-3 px-4 py-3">
                   <WorkspaceAvatar name={w.name} id={w.id} size={32} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px]">{w.name}</p>
-                    <p className="text-[12px] text-[var(--lp-subtle)]">
+                    <p className="truncate text-sm">{w.name}</p>
+                    <p className="text-xs text-[var(--lp-subtle)]">
                       {roleLabel(w.role)} · {w.member_count} {w.member_count === 1 ? "member" : "members"} · {planLabel(w.plan)}
                     </p>
                   </div>
                   {active ? (
-                    <span className="shrink-0 rounded-md border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] px-2 py-0.5 text-[12px] text-[#86efac]">Active</span>
+                    <span className="shrink-0 rounded-md border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] px-2 py-0.5 text-xs text-[#86efac]">Active</span>
                   ) : (
                     <button
                       type="button"
@@ -92,7 +92,7 @@ export function WorkspacesSettings() {
             })}
           </ul>
         ) : (
-          <p className="text-[13px] text-[var(--lp-subtle)]">{listQuery.isLoading ? "Loading…" : "You don't belong to any workspace."}</p>
+          <p className="text-sm text-[var(--lp-subtle)]">{listQuery.isLoading ? "Loading…" : "You don't belong to any workspace."}</p>
         )}
       </SettingsCard>
 
@@ -104,7 +104,7 @@ export function WorkspacesSettings() {
         {invitationsQuery.isError ? (
           <Notice tone="error">{(invitationsQuery.error as ApiError).message || "Couldn't load invitations."}</Notice>
         ) : invitations.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-[13px] text-[var(--lp-subtle)]">No invitations right now.</p>
+          <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-sm text-[var(--lp-subtle)]">No invitations right now.</p>
         ) : (
           <ul className="divide-y divide-[var(--lp-border)] rounded-lg border border-[var(--lp-border)]">
             {invitations.map((invitation) => {
@@ -112,8 +112,8 @@ export function WorkspacesSettings() {
               return (
                 <li key={invitation.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                   <div className="min-w-0">
-                    <p className="truncate text-[13px]">{invitation.workspace_name || "Workspace"}</p>
-                    <p className="text-[12px] text-[var(--lp-subtle)]">
+                    <p className="truncate text-sm">{invitation.workspace_name || "Workspace"}</p>
+                    <p className="text-xs text-[var(--lp-subtle)]">
                       {roleLabel(invitation.role)} · invited by {invitation.inviter_name} · {pending ? `expires ${formatDate(invitation.expires_at)}` : invitation.status}
                     </p>
                   </div>

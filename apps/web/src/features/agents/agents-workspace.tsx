@@ -37,7 +37,7 @@ function CopyBlock({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="flex min-w-0 gap-2">
-      <code className="lp-mono min-w-0 flex-1 overflow-x-auto whitespace-pre rounded-md border border-[var(--lp-border-strong)] bg-black/30 px-3 py-2.5 text-[12px] leading-relaxed">{text}</code>
+      <code className="lp-mono min-w-0 flex-1 overflow-x-auto whitespace-pre rounded-md border border-[var(--lp-border-strong)] bg-black/30 px-3 py-2.5 text-xs leading-relaxed">{text}</code>
       <button
         type="button"
         className="console-btn console-btn-secondary shrink-0 self-start"
@@ -91,7 +91,7 @@ function AddAgentDialog({ onClose }: { onClose: () => void }) {
       footer={
         !created ? (
           <>
-            {create.isError ? <span className="mr-auto text-[12px] text-[#ff8fb3]">{(create.error as ApiError).message}</span> : null}
+            {create.isError ? <span className="mr-auto text-xs text-[#ff8fb3]">{(create.error as ApiError).message}</span> : null}
             <button type="button" className="console-btn console-btn-secondary" onClick={onClose}>
               Cancel
             </button>
@@ -122,16 +122,16 @@ function AddAgentDialog({ onClose }: { onClose: () => void }) {
       ) : (
         <div className="grid min-w-0 grid-cols-1 gap-4 [&>*]:min-w-0">
           <div>
-            <p className="mb-2 text-[13px] text-[var(--lp-muted)]">Run this on the machine. The token works once and expires in an hour.</p>
+            <p className="mb-2 text-sm text-[var(--lp-muted)]">Run this on the machine. The token works once and expires in an hour.</p>
             <CopyBlock text={command} />
-            <p className="mt-2 text-[12px] leading-relaxed text-[var(--lp-subtle)]">
+            <p className="mt-2 text-xs leading-relaxed text-[var(--lp-subtle)]">
               Run it as root, or give the binary <code className="lp-mono">CAP_NET_RAW</code>, so ping and traceroute work. After this first run the agent remembers its
               credentials; start it again with just <code className="lp-mono">qnetward agent</code>.
             </p>
           </div>
           <div
             className={cn(
-              "flex items-center gap-3 rounded-lg border px-4 py-3 text-[13px]",
+              "flex items-center gap-3 rounded-lg border px-4 py-3 text-sm",
               connected ? "border-[rgba(74,222,128,0.3)] bg-[rgba(74,222,128,0.08)] text-[#86efac]" : "border-[var(--lp-border)] bg-white/[0.02] text-[var(--lp-muted)]",
             )}
             role="status"
@@ -158,13 +158,13 @@ function AgentRow({ agent, canManage }: { agent: ProbeAgent; canManage: boolean 
       <div className="flex min-w-0 flex-1 items-start gap-3">
         <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: style.dot, boxShadow: state === "online" ? `0 0 0 3px ${style.dot}22` : undefined }} />
         <div className="min-w-0">
-          <p className="flex flex-wrap items-center gap-x-2 text-[14px] font-medium">
+          <p className="flex flex-wrap items-center gap-x-2 text-base font-medium">
             <span className="truncate">{agent.name}</span>
-            <span className="text-[12px] font-normal" style={{ color: style.text }}>
+            <span className="text-xs font-normal" style={{ color: style.text }}>
               {style.label}
             </span>
           </p>
-          <p className="mt-0.5 truncate text-[12px] text-[var(--lp-subtle)]">
+          <p className="mt-0.5 truncate text-xs text-[var(--lp-subtle)]">
             {agent.enrolled
               ? [agent.hostname, agent.platform, agent.version && `v${agent.version}`, agent.remote_ip].filter(Boolean).join(" · ")
               : state === "expired"
@@ -174,7 +174,7 @@ function AgentRow({ agent, canManage }: { agent: ProbeAgent; canManage: boolean 
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-3 pl-5 sm:pl-0">
-        {agent.last_seen_at ? <span className="text-[12px] text-[var(--lp-subtle)]">Seen {ago(agent.last_seen_at)}</span> : null}
+        {agent.last_seen_at ? <span className="text-xs text-[var(--lp-subtle)]">Seen {ago(agent.last_seen_at)}</span> : null}
         {canManage ? (
           <button
             type="button"
@@ -238,15 +238,15 @@ export function AgentsWorkspace() {
       ) : null}
 
       {agentsQuery.isLoading ? (
-        <p className="text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+        <p className="text-sm text-[var(--lp-subtle)]">Loading…</p>
       ) : agentsQuery.isError ? (
-        <p className="text-[13px] text-[#ff8fb3]">{(agentsQuery.error as ApiError).message}</p>
+        <p className="text-sm text-[#ff8fb3]">{(agentsQuery.error as ApiError).message}</p>
       ) : agents.length === 0 ? (
         <Panel>
           <div className="flex flex-col items-center px-6 py-10 text-center">
             <RadioTower className="h-6 w-6 text-[var(--lp-subtle)]" aria-hidden="true" />
-            <p className="mt-3 text-[15px] font-medium">No agents yet</p>
-            <p className="mt-1 max-w-md text-[13px] text-[var(--lp-subtle)]">
+            <p className="mt-3 text-md font-medium">No agents yet</p>
+            <p className="mt-1 max-w-md text-sm text-[var(--lp-subtle)]">
               Install one on a server, VM, or Raspberry Pi in the network you want to watch. Running checks through agents arrives next; for now agents connect and
               report their health.
             </p>

@@ -29,10 +29,10 @@ export function PasswordStrengthMeter({ password }: PasswordStrengthMeterProps) 
             />
           ))}
         </div>
-        <span className={cn("shrink-0 text-[12px] font-medium", strength.accentClassName)}>{strength.label}</span>
+        <span className={cn("shrink-0 text-xs font-medium", strength.accentClassName)}>{strength.label}</span>
       </div>
       {missing.length ? (
-        <p className="text-[12px] text-[var(--lp-subtle)]">
+        <p className="text-xs text-[var(--lp-subtle)]">
           Add {missing.map((rule) => rule.label.charAt(0).toLowerCase() + rule.label.slice(1)).join(", ").replace(/, ([^,]*)$/, " and $1")}.
         </p>
       ) : null}

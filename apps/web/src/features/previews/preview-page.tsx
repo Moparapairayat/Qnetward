@@ -28,9 +28,9 @@ const toneText: Record<Tone, string> = {
 function CellView({ cell }: { cell: Cell }) {
   if (typeof cell === "string") return <>{cell}</>;
   if (cell.tone) {
-    return <span className={cn("inline-flex whitespace-nowrap rounded-md border px-2 py-0.5 text-[12px]", toneClass[cell.tone])}>{cell.text}</span>;
+    return <span className={cn("inline-flex whitespace-nowrap rounded-md border px-2 py-0.5 text-xs", toneClass[cell.tone])}>{cell.text}</span>;
   }
-  return <span className={cn(cell.mono && "lp-mono text-[12px]")}>{cell.text}</span>;
+  return <span className={cn(cell.mono && "lp-mono text-xs")}>{cell.text}</span>;
 }
 
 function Visual({ kind }: { kind: NonNullable<FeaturePreview["visual"]> }) {
@@ -55,7 +55,7 @@ function Visual({ kind }: { kind: NonNullable<FeaturePreview["visual"]> }) {
 export function PreviewPage({ feature }: { feature: FeaturePreview }) {
   return (
     <div className="grid grid-cols-1 gap-5 [&>*]:min-w-0">
-      <div className="flex items-center gap-3 rounded-lg border border-[rgba(167,139,250,0.3)] bg-[rgba(167,139,250,0.06)] px-4 py-2.5 text-[13px] text-[#c4b5fd]">
+      <div className="flex items-center gap-3 rounded-lg border border-[rgba(167,139,250,0.3)] bg-[rgba(167,139,250,0.06)] px-4 py-2.5 text-sm text-[#c4b5fd]">
         <Eye className="h-4 w-4 shrink-0" />
         <span>
           <span className="font-medium">Preview.</span> Everything on this screen is sample data. {feature.title} is planned for Phase {feature.phase}{" "}
@@ -66,12 +66,12 @@ export function PreviewPage({ feature }: { feature: FeaturePreview }) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-2xl">
           <div className="flex items-center gap-2">
-            <h1 className="text-[24px] font-medium tracking-[-0.02em]">{feature.title}</h1>
-            <span className="rounded-md border border-[var(--lp-border)] px-1.5 py-0.5 text-[11px] text-[var(--lp-subtle)]">
+            <h1 className="text-xl font-medium tracking-[-0.02em]">{feature.title}</h1>
+            <span className="rounded-md border border-[var(--lp-border)] px-1.5 py-0.5 text-2xs text-[var(--lp-subtle)]">
               Phase {feature.phase}
             </span>
           </div>
-          <p className="mt-1 text-[14px] leading-relaxed text-[var(--lp-muted)]">{feature.description}</p>
+          <p className="mt-1 text-base leading-relaxed text-[var(--lp-muted)]">{feature.description}</p>
         </div>
         <button type="button" disabled title={`Available in Phase ${feature.phase}`} className="console-btn console-btn-primary shrink-0">
           <Lock className="h-3.5 w-3.5" /> {feature.primaryAction}
@@ -81,11 +81,11 @@ export function PreviewPage({ feature }: { feature: FeaturePreview }) {
       <dl className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {feature.stats.map((stat) => (
           <div key={stat.label} className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4">
-            <dt className="text-[13px] text-[var(--lp-muted)]">{stat.label}</dt>
-            <dd className="mt-2 truncate text-[24px] font-medium tracking-[-0.02em]" style={{ color: stat.tone ? toneText[stat.tone] : undefined }}>
+            <dt className="text-sm text-[var(--lp-muted)]">{stat.label}</dt>
+            <dd className="mt-2 truncate text-xl font-medium tracking-[-0.02em]" style={{ color: stat.tone ? toneText[stat.tone] : undefined }}>
               {stat.value}
             </dd>
-            <p className="mt-1 truncate text-[12px] text-[var(--lp-subtle)]">{stat.hint}</p>
+            <p className="mt-1 truncate text-xs text-[var(--lp-subtle)]">{stat.hint}</p>
           </div>
         ))}
       </dl>
@@ -95,8 +95,8 @@ export function PreviewPage({ feature }: { feature: FeaturePreview }) {
           {feature.visual ? <Visual kind={feature.visual} /> : null}
           {feature.side ? (
             <section className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-5">
-              <h2 className="text-[14px] font-medium">{feature.side.title}</h2>
-              <ul className="mt-4 divide-y divide-[var(--lp-border)] text-[13px]">
+              <h2 className="text-base font-medium">{feature.side.title}</h2>
+              <ul className="mt-4 divide-y divide-[var(--lp-border)] text-sm">
                 {feature.side.items.map((item) => (
                   <li key={item.label} className="flex items-center justify-between py-3">
                     <span>{item.label}</span>
@@ -113,11 +113,11 @@ export function PreviewPage({ feature }: { feature: FeaturePreview }) {
 
       {feature.table ? (
         <section className="overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]">
-          <div className="px-4 py-3 text-[14px] font-medium">{feature.table.title}</div>
+          <div className="px-4 py-3 text-base font-medium">{feature.table.title}</div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-[13px]">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
-                <tr className="border-y border-[var(--lp-border)] bg-white/[0.015] text-left text-[12px] text-[var(--lp-subtle)]">
+                <tr className="border-y border-[var(--lp-border)] bg-white/[0.015] text-left text-xs text-[var(--lp-subtle)]">
                   {feature.table.columns.map((col) => (
                     <th key={col} className="px-4 py-2.5 font-medium">
                       {col}
@@ -142,8 +142,8 @@ export function PreviewPage({ feature }: { feature: FeaturePreview }) {
       ) : null}
 
       <section className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-5">
-        <h2 className="text-[14px] font-medium">What this will do</h2>
-        <ul className="mt-3 grid gap-x-8 gap-y-2 text-[13px] text-[var(--lp-muted)] sm:grid-cols-2">
+        <h2 className="text-base font-medium">What this will do</h2>
+        <ul className="mt-3 grid gap-x-8 gap-y-2 text-sm text-[var(--lp-muted)] sm:grid-cols-2">
           {feature.capabilities.map((cap) => (
             <li key={cap} className="flex gap-2.5">
               <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--lp-accent)]" />

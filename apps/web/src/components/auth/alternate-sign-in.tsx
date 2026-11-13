@@ -94,7 +94,7 @@ export function AlternateSignIn({ mode }: { mode: "signin" | "signup" }) {
       </div>
 
       {notice ? (
-        <p role="status" className="rounded-lg border border-[var(--lp-border)] bg-white/[0.03] px-3 py-2 text-center text-[12px] text-[var(--lp-muted)]">
+        <p role="status" className="rounded-lg border border-[var(--lp-border)] bg-white/[0.03] px-3 py-2 text-center text-xs text-[var(--lp-muted)]">
           {notice}
         </p>
       ) : null}

@@ -94,7 +94,7 @@ export function CodeTabs() {
                   setActive(t.id);
                   setCopied(false);
                 }}
-                className="relative px-4 py-3 text-[13px] transition-colors"
+                className="relative px-4 py-3 text-sm transition-colors"
                 style={{ color: selected ? "var(--lp-text)" : "var(--lp-subtle)" }}
               >
                 {t.label}
@@ -106,14 +106,14 @@ export function CodeTabs() {
         <button
           type="button"
           onClick={copyText}
-          className="ml-auto mr-2 inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[12px] text-[var(--lp-subtle)] transition-colors hover:bg-white/[0.05] hover:text-[var(--lp-text)]"
+          className="ml-auto mr-2 inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-xs text-[var(--lp-subtle)] transition-colors hover:bg-white/[0.05] hover:text-[var(--lp-text)]"
           aria-label={copied ? "Copied" : `Copy ${tab.label} example`}
         >
           {copied ? <Check className="h-3.5 w-3.5 text-[var(--lp-green)]" /> : <Copy className="h-3.5 w-3.5" />}
           <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
         </button>
       </div>
-      <pre role="tabpanel" className="lp-mono min-h-[300px] flex-1 overflow-x-auto p-5 text-[12.5px] leading-6">
+      <pre role="tabpanel" className="lp-mono min-h-[300px] flex-1 overflow-x-auto p-5 text-sm leading-6">
         {tab.lines.map((line, i) => (
           <div key={i} style={{ color: line.tone ? toneColor[line.tone] : "#c9c9d1" }}>
             {line.text || " "}

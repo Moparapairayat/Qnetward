@@ -97,9 +97,9 @@ function PaletteDialog({ isAdmin, onClose }: { isAdmin: boolean; onClose: () => 
             role="combobox"
             aria-expanded="true"
             aria-controls="palette-results"
-            className="h-12 flex-1 !border-0 !bg-transparent px-0 text-[15px] !shadow-none outline-none"
+            className="h-12 flex-1 !border-0 !bg-transparent px-0 text-md !shadow-none outline-none"
           />
-          <kbd className="rounded border border-[var(--lp-border)] px-1.5 py-0.5 text-[11px] text-[var(--lp-subtle)]">Esc</kbd>
+          <kbd className="rounded border border-[var(--lp-border)] px-1.5 py-0.5 text-2xs text-[var(--lp-subtle)]">Esc</kbd>
         </div>
         <ul ref={listRef} id="palette-results" role="listbox" className="max-h-[50vh] overflow-y-auto p-1.5">
           {results.length ? (
@@ -112,18 +112,18 @@ function PaletteDialog({ isAdmin, onClose }: { isAdmin: boolean; onClose: () => 
                 onMouseMove={() => setIndex(i)}
                 onClick={() => open(entry)}
                 className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-[13px]",
+                  "flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm",
                   i === index ? "bg-white/[0.06] text-[var(--lp-text)]" : "text-[var(--lp-muted)]",
                 )}
               >
                 <entry.icon className={cn("h-4 w-4", i === index ? "text-[var(--lp-accent)]" : "text-[var(--lp-subtle)]")} />
                 <span className="flex-1">{entry.label}</span>
-                <span className="text-[12px] text-[var(--lp-subtle)]">{entry.section}</span>
+                <span className="text-xs text-[var(--lp-subtle)]">{entry.section}</span>
                 {i === index ? <CornerDownLeft className="h-3.5 w-3.5 text-[var(--lp-subtle)]" /> : null}
               </li>
             ))
           ) : (
-            <li className="px-3 py-8 text-center text-[13px] text-[var(--lp-subtle)]">No pages match “{query}”.</li>
+            <li className="px-3 py-8 text-center text-sm text-[var(--lp-subtle)]">No pages match “{query}”.</li>
           )}
         </ul>
       </div>

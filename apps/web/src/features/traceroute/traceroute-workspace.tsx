@@ -33,26 +33,26 @@ function HopRow({ hop, scale }: { hop: TracerouteHop; scale: number }) {
   const silent = !hop.addr;
   return (
     <tr className={cn("border-t border-[var(--lp-border)] align-middle", hop.reached && "bg-[rgba(74,222,128,0.04)]")}>
-      <td className="lp-mono w-10 px-4 py-2.5 text-right text-[12px] text-[var(--lp-subtle)]">{hop.ttl}</td>
+      <td className="lp-mono w-10 px-4 py-2.5 text-right text-xs text-[var(--lp-subtle)]">{hop.ttl}</td>
       <td className="min-w-0 px-3 py-2.5">
         {silent ? (
-          <span className="text-[13px] text-[var(--lp-subtle)]">No reply</span>
+          <span className="text-sm text-[var(--lp-subtle)]">No reply</span>
         ) : (
           <div className="min-w-0">
-            <p className="truncate text-[13px] text-[var(--lp-text)]" title={hop.name || hop.addr}>
+            <p className="truncate text-sm text-[var(--lp-text)]" title={hop.name || hop.addr}>
               {hop.name || hop.addr}
-              {hop.reached ? <span className="ml-2 rounded border border-[rgba(74,222,128,0.3)] px-1.5 text-[10px] text-[#86efac]">Destination</span> : null}
+              {hop.reached ? <span className="ml-2 rounded border border-[rgba(74,222,128,0.3)] px-1.5 text-3xs text-[#86efac]">Destination</span> : null}
             </p>
-            {hop.name ? <p className="lp-mono truncate text-[11px] text-[var(--lp-subtle)]">{hop.addr}</p> : null}
+            {hop.name ? <p className="lp-mono truncate text-2xs text-[var(--lp-subtle)]">{hop.addr}</p> : null}
           </div>
         )}
       </td>
-      <td className="lp-mono px-3 py-2.5 text-right text-[12px]" style={{ color: hop.loss_percent === 0 ? "var(--lp-muted)" : hop.loss_percent >= 100 ? "var(--lp-subtle)" : "#fbbf24" }}>
+      <td className="lp-mono px-3 py-2.5 text-right text-xs" style={{ color: hop.loss_percent === 0 ? "var(--lp-muted)" : hop.loss_percent >= 100 ? "var(--lp-subtle)" : "#fbbf24" }}>
         {hop.loss_percent}%
       </td>
-      <td className="lp-mono hidden px-3 py-2.5 text-right text-[12px] text-[var(--lp-muted)] sm:table-cell">{ms(hop.best_ms)}</td>
-      <td className="lp-mono px-3 py-2.5 text-right text-[12px] text-[var(--lp-text)]">{ms(hop.avg_ms)}</td>
-      <td className="lp-mono hidden px-3 py-2.5 text-right text-[12px] text-[var(--lp-muted)] sm:table-cell">{ms(hop.worst_ms)}</td>
+      <td className="lp-mono hidden px-3 py-2.5 text-right text-xs text-[var(--lp-muted)] sm:table-cell">{ms(hop.best_ms)}</td>
+      <td className="lp-mono px-3 py-2.5 text-right text-xs text-[var(--lp-text)]">{ms(hop.avg_ms)}</td>
+      <td className="lp-mono hidden px-3 py-2.5 text-right text-xs text-[var(--lp-muted)] sm:table-cell">{ms(hop.worst_ms)}</td>
       <td className="hidden w-[28%] px-4 py-2.5 md:table-cell">
         {hop.avg_ms ? (
           <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.05]">
@@ -139,11 +139,11 @@ export function TracerouteWorkspace() {
             <Route className="h-3.5 w-3.5" /> {trace.isPending ? "Tracing…" : "Trace"}
           </button>
         </div>
-        <label className="mt-3 inline-flex cursor-pointer items-center gap-2 text-[12px] text-[var(--lp-muted)]">
+        <label className="mt-3 inline-flex cursor-pointer items-center gap-2 text-xs text-[var(--lp-muted)]">
           <input type="checkbox" className="accent-[var(--lp-accent)]" checked={ipv6} onChange={(e) => setIPv6(e.target.checked)} /> Use IPv6
         </label>
         {trace.isError ? (
-          <p className="mt-4 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-[13px] text-[#ff8fb3]">
+          <p className="mt-4 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-sm text-[#ff8fb3]">
             {(trace.error as ApiError).message}
           </p>
         ) : null}
@@ -152,14 +152,14 @@ export function TracerouteWorkspace() {
       {trace.isPending ? (
         <div className="rounded-xl border border-dashed border-[var(--lp-border)] px-6 py-14 text-center">
           <Waypoints className="mx-auto h-5 w-5 animate-pulse text-[var(--lp-accent)]" />
-          <p className="mt-3 text-[13px] text-[var(--lp-muted)]">Sending probes to every hop at once</p>
-          <p className="mt-1 text-[12px] text-[var(--lp-subtle)]">A trace usually takes 3 to 8 seconds.</p>
+          <p className="mt-3 text-sm text-[var(--lp-muted)]">Sending probes to every hop at once</p>
+          <p className="mt-1 text-xs text-[var(--lp-subtle)]">A trace usually takes 3 to 8 seconds.</p>
         </div>
       ) : !res ? (
         <div className="rounded-xl border border-dashed border-[var(--lp-border)] px-6 py-14 text-center">
           <Waypoints className="mx-auto h-5 w-5 text-[var(--lp-subtle)]" />
-          <p className="mt-3 text-[13px] text-[var(--lp-muted)]">Trace a host to see the route to it</p>
-          <p className="mt-1 text-[12px] text-[var(--lp-subtle)]">Some routers never answer traceroute; a hop with no reply is normal when the hops after it answer.</p>
+          <p className="mt-3 text-sm text-[var(--lp-muted)]">Trace a host to see the route to it</p>
+          <p className="mt-1 text-xs text-[var(--lp-subtle)]">Some routers never answer traceroute; a hop with no reply is normal when the hops after it answer.</p>
         </div>
       ) : (
         <>
@@ -194,7 +194,7 @@ export function TracerouteWorkspace() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[480px] table-fixed text-left">
                 <thead>
-                  <tr className="text-[11px] text-[var(--lp-subtle)]">
+                  <tr className="text-2xs text-[var(--lp-subtle)]">
                     <th className="w-10 px-4 pb-2 text-right font-normal">#</th>
                     <th className="px-3 pb-2 font-normal">Host</th>
                     <th className="w-16 px-3 pb-2 text-right font-normal">Loss</th>

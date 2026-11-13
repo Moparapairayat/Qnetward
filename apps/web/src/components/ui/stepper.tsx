@@ -12,7 +12,7 @@ export function Stepper({ steps, step, className = "mb-5" }: { steps: readonly s
           <li key={label} className="flex min-w-0 flex-1 items-center gap-2" aria-current={current ? "step" : undefined}>
             <span
               className={cn(
-                "grid h-6 w-6 shrink-0 place-items-center rounded-full border text-[12px]",
+                "grid h-6 w-6 shrink-0 place-items-center rounded-full border text-xs",
                 done
                   ? "border-[rgba(74,222,128,0.45)] bg-[rgba(74,222,128,0.12)] text-[#86efac]"
                   : current
@@ -22,7 +22,7 @@ export function Stepper({ steps, step, className = "mb-5" }: { steps: readonly s
             >
               {done ? <Check className="h-3.5 w-3.5" /> : i + 1}
             </span>
-            <span className={cn("hidden truncate text-[12px] sm:block", current ? "text-[var(--lp-text)]" : "text-[var(--lp-subtle)]")}>{label}</span>
+            <span className={cn("hidden truncate text-xs sm:block", current ? "text-[var(--lp-text)]" : "text-[var(--lp-subtle)]")}>{label}</span>
             {i < steps.length - 1 ? <span className="h-px min-w-3 flex-1 bg-[var(--lp-border-strong)]" aria-hidden="true" /> : null}
           </li>
         );

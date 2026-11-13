@@ -95,6 +95,9 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
   const yTicks = [0, 1, 2, 3, 4].map((k) => (yMax / 4) * k);
   const xTicks: number[] = [];
   for (let t = Math.ceil(start / windowMeta.tick) * windowMeta.tick; t <= now; t += windowMeta.tick) xTicks.push(t);
+  // Label only every nth tick, so "09:51 AM"-sized labels never run into each other.
+  const tickGap = (windowMeta.tick / span) * plotW;
+  const labelEvery = Math.max(1, Math.ceil(72 / Math.max(tickGap, 1)));
 
   // Split a line where checks stopped or failed, so silence and outages show as gaps.
   const runsOf = (line: Line) => {
@@ -137,7 +140,7 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
         <span className="grid h-7 w-7 place-items-center rounded-md border border-[var(--lp-border-strong)] bg-white/[0.03]">
           <Clock className="h-3.5 w-3.5 text-[var(--lp-muted)]" />
         </span>
-        <h2 id="rt-title" className="text-[14px] font-medium">
+        <h2 id="rt-title" className="text-base font-medium">
           Response time
         </h2>
         <span className="ml-auto flex items-center gap-3">
@@ -151,7 +154,7 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
                 aria-checked={win === w.id}
                 onClick={() => setWin(w.id)}
                 className={cn(
-                  "rounded px-2 py-0.5 text-[12px] transition-colors",
+                  "rounded px-2 py-0.5 text-xs transition-colors",
                   win === w.id ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
                 )}
               >
@@ -162,7 +165,7 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
         </span>
       </div>
 
-      <ul className="flex flex-wrap gap-1.5 px-4 pt-3 text-[12px]" aria-label="Monitors">
+      <ul className="flex flex-wrap gap-1.5 px-4 pt-3 text-xs" aria-label="Monitors">
         {lines.map((l) => {
           const off = hidden.includes(l.id);
           const last = l.points[l.points.length - 1];
@@ -184,15 +187,15 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
                 <span className="h-2.5 w-[3px] rounded-full" style={{ background: off ? "rgba(255,255,255,0.15)" : l.color }} />
                 <span className="max-w-[180px] truncate">{l.label}</span>
                 {off ? null : !l.enabled ? (
-                  <span className="text-[11px] text-[var(--lp-subtle)]">paused</span>
+                  <span className="text-2xs text-[var(--lp-subtle)]">paused</span>
                 ) : down ? (
-                  <span className="text-[11px] font-medium" style={{ color: DOWN }}>
+                  <span className="text-2xs font-medium" style={{ color: DOWN }}>
                     down
                   </span>
                 ) : last?.rtt != null ? (
-                  <span className="lp-mono text-[11px] text-[var(--lp-subtle)]">{formatMs(last.rtt)}ms</span>
+                  <span className="lp-mono text-2xs text-[var(--lp-subtle)]">{formatMs(last.rtt)}ms</span>
                 ) : (
-                  <span className="text-[11px] text-[var(--lp-subtle)]">waiting</span>
+                  <span className="text-2xs text-[var(--lp-subtle)]">waiting</span>
                 )}
               </button>
             </li>
@@ -238,12 +241,15 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
               const px = x(t);
               // Keep labels clear of the plot edges as the axis slides.
               if (px < PAD.l + 18 || px > W - PAD.r - 18) return null;
+              const labelled = Math.round(t / windowMeta.tick) % labelEvery === 0;
               return (
                 <g key={t}>
                   <line x1={px} x2={px} y1={PAD.t} y2={H - PAD.b} stroke="rgba(255,255,255,0.035)" />
-                  <text x={px} y={H - 8} textAnchor="middle" fontSize="11" fill="#85858e">
-                    {timeFmt(t)}
-                  </text>
+                  {labelled ? (
+                    <text x={px} y={H - 8} textAnchor="middle" fontSize="11" fill="#85858e">
+                      {timeFmt(t)}
+                    </text>
+                  ) : null}
                 </g>
               );
             })}
@@ -312,8 +318,8 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
         {box.width > 0 && data && !visible.some((l) => l.points.length) ? (
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
             <Activity className="h-5 w-5 text-[var(--lp-subtle)]" />
-            <p className="mt-3 text-[13px] text-[var(--lp-muted)]">{visible.length ? "Waiting for the first checks" : "All monitors are hidden"}</p>
-            <p className="mt-1 text-[12px] text-[var(--lp-subtle)]">
+            <p className="mt-3 text-sm text-[var(--lp-muted)]">{visible.length ? "Waiting for the first checks" : "All monitors are hidden"}</p>
+            <p className="mt-1 text-xs text-[var(--lp-subtle)]">
               {visible.length ? "Each monitor draws its line here as soon as it checks in." : "Pick one above to show its line."}
             </p>
           </div>
@@ -321,7 +327,7 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
 
         {hoverTs !== null && hovered.length ? (
           <div
-            className="console-popover pointer-events-none absolute top-4 z-10 w-60 p-3 text-[12px]"
+            className="console-popover pointer-events-none absolute top-4 z-10 w-60 p-3 text-xs"
             style={{ left: Math.min(Math.max(8, x(hoverTs) + 12), Math.max(8, W - 248)) }}
           >
             <div className="mb-2 text-[var(--lp-subtle)]">{clockTime(hoverTs)}</div>

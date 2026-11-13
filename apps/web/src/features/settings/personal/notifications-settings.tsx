@@ -14,13 +14,13 @@ function ChannelRow({ icon: Icon, title, detail, status }: { icon: typeof Mail; 
         <Icon className="h-3.5 w-3.5 text-[var(--lp-muted)]" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px]">{title}</p>
-        <p className="truncate text-[12px] text-[var(--lp-subtle)]">{detail}</p>
+        <p className="text-sm">{title}</p>
+        <p className="truncate text-xs text-[var(--lp-subtle)]">{detail}</p>
       </div>
       {status === "on" ? (
-        <span className="shrink-0 rounded-md border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] px-2 py-0.5 text-[12px] text-[#86efac]">On</span>
+        <span className="shrink-0 rounded-md border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] px-2 py-0.5 text-xs text-[#86efac]">On</span>
       ) : (
-        <span className="shrink-0 rounded-md border border-[var(--lp-border)] px-2 py-0.5 text-[12px] text-[var(--lp-subtle)]">Soon</span>
+        <span className="shrink-0 rounded-md border border-[var(--lp-border)] px-2 py-0.5 text-xs text-[var(--lp-subtle)]">Soon</span>
       )}
     </li>
   );
@@ -62,16 +62,16 @@ export function NotificationsSettings() {
         {mine.length ? (
           <ul className="divide-y divide-[var(--lp-border)] rounded-lg border border-[var(--lp-border)]">
             {mine.map((rule) => (
-              <li key={rule.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-[13px]">
+              <li key={rule.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
                 <span className="min-w-0 truncate">{rule.name}</span>
-                <span className="lp-mono shrink-0 text-[12px] text-[var(--lp-subtle)]">
+                <span className="lp-mono shrink-0 text-xs text-[var(--lp-subtle)]">
                   {rule.protocol === "tcpping" && rule.port ? `${rule.target}:${rule.port}` : rule.target}
                 </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-[13px] text-[var(--lp-subtle)]">
+          <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-sm text-[var(--lp-subtle)]">
             {rulesQuery.isLoading ? "Loading…" : <>No active rules send to <span className="lp-mono">{email}</span>.</>}
           </p>
         )}

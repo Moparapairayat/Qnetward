@@ -43,7 +43,7 @@ function MFAStep({ token, onBack, onDone }: { token: string; onBack: () => void;
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[var(--lp-border-strong)] bg-white/[0.03]">
           <ShieldCheck className="h-4 w-4 text-[var(--lp-accent)]" aria-hidden="true" />
         </span>
-        <p className="text-[13px] leading-relaxed text-[var(--lp-muted)]">
+        <p className="text-sm leading-relaxed text-[var(--lp-muted)]">
           {useRecovery ? "Enter one of the recovery codes you saved when you turned on two-factor sign-in. Each works once." : "Enter the 6-digit code from your authenticator app."}
         </p>
       </div>
@@ -69,7 +69,7 @@ function MFAStep({ token, onBack, onDone }: { token: string; onBack: () => void;
       <button className="auth-primary-button mt-1" type="submit" disabled={!ready || verify.isPending}>
         {verify.isPending ? "Checking…" : "Verify and sign in"}
       </button>
-      <div className="flex items-center justify-between text-[13px]">
+      <div className="flex items-center justify-between text-sm">
         <button
           type="button"
           className="auth-inline-link"

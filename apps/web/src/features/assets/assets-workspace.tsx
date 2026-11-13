@@ -43,11 +43,11 @@ function CopyValue({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="min-w-0">
-      <p className="mb-1 text-[11px] uppercase tracking-[0.06em] text-[var(--lp-subtle)]">
+      <p className="mb-1 text-2xs uppercase tracking-[0.06em] text-[var(--lp-subtle)]">
         {label}
       </p>
       <div className="flex items-center gap-2 rounded-lg border border-[var(--lp-border)] bg-black/20 px-3 py-2">
-        <code className="lp-mono min-w-0 flex-1 break-all text-[12px] text-[var(--lp-text)]">
+        <code className="lp-mono min-w-0 flex-1 break-all text-xs text-[var(--lp-text)]">
           {value}
         </code>
         <button
@@ -77,7 +77,7 @@ function ProofSteps({ domain }: { domain: VerifiedDomain }) {
   return (
     <div className="grid gap-3 rounded-lg border border-[var(--lp-border)] bg-white/[0.015] p-3.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[13px] text-[var(--lp-text)]">
+        <p className="text-sm text-[var(--lp-text)]">
           Prove you control {domain.domain}, one of two ways:
         </p>
         <div
@@ -93,7 +93,7 @@ function ProofSteps({ domain }: { domain: VerifiedDomain }) {
               aria-selected={method === m}
               onClick={() => setMethod(m)}
               className={cn(
-                "rounded-md px-2.5 py-1 text-[12px]",
+                "rounded-md px-2.5 py-1 text-xs",
                 method === m
                   ? "bg-white/[0.08] text-[var(--lp-text)]"
                   : "text-[var(--lp-muted)]",
@@ -106,7 +106,7 @@ function ProofSteps({ domain }: { domain: VerifiedDomain }) {
       </div>
       {method === "dns" ? (
         <>
-          <p className="text-[12px] leading-relaxed text-[var(--lp-muted)]">
+          <p className="text-xs leading-relaxed text-[var(--lp-muted)]">
             At your DNS provider, add a TXT record. It can take a few minutes to
             appear.
           </p>
@@ -117,7 +117,7 @@ function ProofSteps({ domain }: { domain: VerifiedDomain }) {
         </>
       ) : (
         <>
-          <p className="text-[12px] leading-relaxed text-[var(--lp-muted)]">
+          <p className="text-xs leading-relaxed text-[var(--lp-muted)]">
             Serve a plain-text file at this address that contains only the
             token.
           </p>
@@ -127,7 +127,7 @@ function ProofSteps({ domain }: { domain: VerifiedDomain }) {
           </div>
         </>
       )}
-      <p className="text-[12px] text-[var(--lp-subtle)]">
+      <p className="text-xs text-[var(--lp-subtle)]">
         We also look for it every hour for a week. Keep it in place: we re-check
         daily, and a domain without it for a week lapses.
       </p>
@@ -161,19 +161,19 @@ function DomainRow({
         )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-[14px] font-medium">
+            <h3 className="truncate text-base font-medium">
               {domain.domain}
             </h3>
             <span
               className={cn(
-                "rounded-md border px-1.5 py-px text-[11px]",
+                "rounded-md border px-1.5 py-px text-2xs",
                 meta.pill,
               )}
             >
               {meta.label}
             </span>
           </div>
-          <p className="mt-0.5 text-[12px] text-[var(--lp-subtle)]">
+          <p className="mt-0.5 text-xs text-[var(--lp-subtle)]">
             {verified ? (
               <>
                 Verified by {domain.method === "dns" ? "DNS record" : "file"}
@@ -253,7 +253,7 @@ function DomainRow({
         </div>
       </div>
       {!verified && domain.last_error ? (
-        <p className="rounded-lg border border-[rgba(251,191,36,0.25)] bg-[rgba(251,191,36,0.06)] px-3 py-2 text-[12px] leading-relaxed text-[#fcd34d]">
+        <p className="rounded-lg border border-[rgba(251,191,36,0.25)] bg-[rgba(251,191,36,0.06)] px-3 py-2 text-xs leading-relaxed text-[#fcd34d]">
           Not found yet: {domain.last_error}
         </p>
       ) : null}
@@ -386,7 +386,7 @@ export function AssetsWorkspace() {
                 : "Add domain"}
           </button>
         </div>
-        <p className="mt-2 text-[12px] text-[var(--lp-subtle)]">
+        <p className="mt-2 text-xs text-[var(--lp-subtle)]">
           Add the top domain you own, like example.com; proving it covers every
           name under it.
         </p>
@@ -396,7 +396,7 @@ export function AssetsWorkspace() {
         <p
           role="status"
           className={cn(
-            "rounded-lg border px-3 py-2.5 text-[13px]",
+            "rounded-lg border px-3 py-2.5 text-sm",
             notice.tone === "ok"
               ? "border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] text-[#86efac]"
               : "border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] text-[#ff8fb3]",
@@ -411,14 +411,14 @@ export function AssetsWorkspace() {
         bodyClassName="p-0"
         aside={
           limit ? (
-            <span className="text-[12px] text-[var(--lp-subtle)]">
+            <span className="text-xs text-[var(--lp-subtle)]">
               {domains.length} of {limit}
             </span>
           ) : null
         }
       >
         {list.isLoading ? (
-          <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">
+          <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">
             Loading…
           </p>
         ) : domains.length ? (
@@ -440,10 +440,10 @@ export function AssetsWorkspace() {
         ) : (
           <div className="mx-4 mb-4 flex flex-col items-center rounded-lg border border-dashed border-[var(--lp-border)] px-6 py-12 text-center">
             <Boxes className="h-5 w-5 text-[var(--lp-subtle)]" />
-            <p className="mt-3 text-[13px] text-[var(--lp-muted)]">
+            <p className="mt-3 text-sm text-[var(--lp-muted)]">
               No domains yet
             </p>
-            <p className="mt-1 max-w-md text-[12px] text-[var(--lp-subtle)]">
+            <p className="mt-1 max-w-md text-xs text-[var(--lp-subtle)]">
               Add a domain above, then prove it&apos;s yours with a DNS record
               or a small file on the site.
             </p>

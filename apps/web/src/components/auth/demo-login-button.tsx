@@ -31,7 +31,7 @@ export function DemoLoginButton() {
         <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
       {demoLogin.isError ? (
-        <p role="alert" className="text-[12px] text-[#ff8fb3]">
+        <p role="alert" className="text-xs text-[#ff8fb3]">
           {(demoLogin.error as ApiError).message || "Couldn't open the demo."}
         </p>
       ) : null}

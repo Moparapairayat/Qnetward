@@ -59,13 +59,13 @@ export function OverviewLiveMonitorGrid({ targets }: OverviewLiveMonitorGridProp
     <section className="dashboard-panel rounded-[1.5rem] p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <h3 className="font-space text-[1.45rem] font-bold text-white">Live Monitor Grid</h3>
-          <p className="mt-0.5 text-[0.72rem] text-slate-400">Recent target activity with last state and latency.</p>
+          <h3 className="font-space text-xl font-bold text-white">Live Monitor Grid</h3>
+          <p className="mt-0.5 text-2xs text-slate-400">Recent target activity with last state and latency.</p>
         </div>
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/10 px-4 py-8 text-sm text-slate-400">
+        <div className="rounded-xl border border-dashed border-white/10 px-4 py-8 text-base text-slate-400">
           No recent target activity yet.
         </div>
       ) : (
@@ -80,7 +80,7 @@ export function OverviewLiveMonitorGrid({ targets }: OverviewLiveMonitorGridProp
                 className={`dashboard-live-card rounded-xl border bg-white/[0.03] p-3.5 transition hover:bg-white/[0.05] ${borderTone(target.healthState)} ${isStreaming ? "dashboard-live-card-active" : ""}`}
               >
                 <div className="mb-1.5 flex items-center justify-between gap-3">
-                  <span className="font-mono text-[0.82rem] font-medium text-white">{target.name}</span>
+                  <span className="font-mono text-sm font-medium text-white">{target.name}</span>
                   <span className={`dashboard-live-dot ${dotTone(target.healthState)} ${isStreaming ? "dashboard-live-dot-active" : ""}`} />
                 </div>
                 <div className="mb-2 flex items-center justify-between gap-3">

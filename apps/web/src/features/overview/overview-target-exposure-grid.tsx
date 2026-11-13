@@ -31,13 +31,13 @@ export function OverviewTargetExposureGrid({ targets }: OverviewTargetExposureGr
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Exposure Grid</p>
-          <h3 className="mt-2 font-space text-2xl font-bold text-white">Live Targets</h3>
+          <h3 className="mt-2 font-space text-xl font-bold text-white">Live Targets</h3>
         </div>
-        <span className="text-sm text-slate-400">{rows.length} visible cells</span>
+        <span className="text-base text-slate-400">{rows.length} visible cells</span>
       </div>
 
       {rows.length === 0 ? (
-        <div className="mt-5 flex min-h-56 items-center justify-center rounded-2xl border border-dashed border-slate-800 text-sm text-slate-400">
+        <div className="mt-5 flex min-h-56 items-center justify-center rounded-2xl border border-dashed border-slate-800 text-base text-slate-400">
           No monitored targets yet.
         </div>
       ) : (
@@ -55,11 +55,11 @@ export function OverviewTargetExposureGrid({ targets }: OverviewTargetExposureGr
                     <p className="text-xs uppercase tracking-[0.16em] opacity-75">
                       {target.protocol === "tcpping" ? "TCP Ping" : "ICMP Ping"}
                     </p>
-                    <h4 className="mt-2 text-base font-semibold text-white">{target.name}</h4>
+                    <h4 className="mt-2 text-md font-semibold text-white">{target.name}</h4>
                   </div>
                   <span className="mt-1 h-2.5 w-2.5 rounded-full bg-current opacity-90" />
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div className="mt-4 grid grid-cols-2 gap-3 text-base">
                   <div>
                     <p className="text-xs uppercase tracking-[0.16em] opacity-70">State</p>
                     <p className="mt-1 font-medium capitalize text-white">{target.healthState}</p>

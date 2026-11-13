@@ -63,17 +63,17 @@ function DeleteAccountCard({ email, disabled }: { email?: string; disabled: bool
     >
       {open ? (
         <div className="grid max-w-sm gap-3">
-          <p className="flex items-start gap-2 text-[12px] leading-relaxed text-[#ff8fb3]">
+          <p className="flex items-start gap-2 text-xs leading-relaxed text-[#ff8fb3]">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> You&apos;ll be signed out and your data will be erased.
           </p>
           <label className="block">
-            <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">
+            <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">
               Type <span className="lp-mono text-[var(--lp-text)]">{email}</span> to confirm
             </span>
             <input aria-label="Confirm email" className="h-9 w-full px-3" autoComplete="off" value={typed} onChange={(e) => setTyped(e.target.value)} />
           </label>
           <label className="block">
-            <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Password</span>
+            <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Password</span>
             <input aria-label="Password" type="password" className="h-9 w-full px-3" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </label>
         </div>
@@ -172,8 +172,8 @@ export function AccountSettings() {
             {verified ? <Check className="h-4 w-4 text-[#4ade80]" /> : <Mail className="h-4 w-4 text-[#fbbf24]" />}
           </span>
           <div className="min-w-0">
-            <p className="lp-mono truncate text-[13px]">{user?.email}</p>
-            <p className="text-[12px] text-[var(--lp-subtle)]">{verified ? `Verified ${formatDateTime(user?.email_verified_at ?? "")}` : "Not verified yet"}</p>
+            <p className="lp-mono truncate text-sm">{user?.email}</p>
+            <p className="text-xs text-[var(--lp-subtle)]">{verified ? `Verified ${formatDateTime(user?.email_verified_at ?? "")}` : "Not verified yet"}</p>
           </div>
         </div>
       </SettingsCard>

@@ -57,10 +57,10 @@ export function Modal({
         <div className="flex max-h-[85vh] flex-col">
           <div className="flex items-start justify-between gap-4 border-b border-[var(--lp-border)] px-5 py-4">
             <div className="min-w-0">
-              <h2 id="modal-title" className="text-[15px] font-medium">
+              <h2 id="modal-title" className="text-md font-medium">
                 {title}
               </h2>
-              {description ? <div className="mt-1 text-[13px] leading-relaxed text-[var(--lp-muted)]">{description}</div> : null}
+              {description ? <div className="mt-1 text-sm leading-relaxed text-[var(--lp-muted)]">{description}</div> : null}
             </div>
             {dismissible ? (
               <button type="button" aria-label="Close" className="console-btn h-8 w-8 shrink-0 px-0 text-[var(--lp-muted)] hover:bg-white/[0.05]" onClick={onClose}>

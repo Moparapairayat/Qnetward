@@ -140,7 +140,7 @@ export function LiveSignalChart({
 
   if (!geometry) {
     return (
-      <div className="flex items-center justify-center rounded-lg border border-dashed border-[var(--lp-border)] text-[13px] text-[var(--lp-subtle)]" style={{ height }}>
+      <div className="flex items-center justify-center rounded-lg border border-dashed border-[var(--lp-border)] text-sm text-[var(--lp-subtle)]" style={{ height }}>
         {emptyText}
       </div>
     );
@@ -236,7 +236,7 @@ export function LiveSignalChart({
             {live && !reduced ? <circle cx={x(lastOk.t)} cy={y(lastOk.v)} r="9" fill={headColor} opacity="0.25" className="lp-map-ping" /> : null}
             <circle cx={x(lastOk.t)} cy={y(lastOk.v)} r="4" fill={headColor} stroke="#1b1b1f" strokeWidth="2" vectorEffect="non-scaling-stroke" />
             <line x1={x(lastOk.t)} x2={W - PAD.r + 6} y1={y(lastOk.v)} y2={y(lastOk.v)} stroke={headColor} strokeOpacity="0.35" strokeDasharray="2 3" vectorEffect="non-scaling-stroke" />
-            <text x={W - PAD.r + 10} y={y(lastOk.v) + 4} fontSize="12" fill={headColor} fontFamily="var(--font-jetbrains), monospace">
+            <text x={W - PAD.r + 10} y={y(lastOk.v) + 4} fontSize="12" fill={headColor} fontFamily="var(--font-geist-mono), monospace">
               {lastOk.v >= 100 ? Math.round(lastOk.v) : lastOk.v.toFixed(1)}
             </text>
           </g>
@@ -249,7 +249,7 @@ export function LiveSignalChart({
 
       {hovered && hoverX !== null ? (
         <div
-          className="console-popover pointer-events-none absolute top-2 px-2.5 py-1.5 text-[12px]"
+          className="console-popover pointer-events-none absolute top-2 px-2.5 py-1.5 text-xs"
           style={{ left: `clamp(8px, calc(${(x(hovered.t) / W) * 100}% + 10px), calc(100% - 160px))` }}
         >
           <span className="text-[var(--lp-subtle)]">{hovered.label ?? new Date(hovered.t).toLocaleTimeString()} · </span>
@@ -258,7 +258,7 @@ export function LiveSignalChart({
           </span>
         </div>
       ) : null}
-      {live && paused ? <span className="absolute right-2 top-2 rounded bg-black/40 px-1.5 py-0.5 text-[11px] text-[var(--lp-muted)]">Paused</span> : null}
+      {live && paused ? <span className="absolute right-2 top-2 rounded bg-black/40 px-1.5 py-0.5 text-2xs text-[var(--lp-muted)]">Paused</span> : null}
     </div>
   );
 }
@@ -275,7 +275,7 @@ export function LivePill({ live, updatedAt }: { live: boolean; updatedAt?: numbe
   // eslint-disable-next-line react-hooks/purity
   const ago = updatedAt ? Math.max(0, Math.round((Date.now() - updatedAt) / 1000)) : null;
   return (
-    <span className="flex items-center gap-2 text-[12px]">
+    <span className="flex items-center gap-2 text-xs">
       {live ? (
         <span className="inline-flex items-center gap-1.5 rounded border border-[rgba(255,61,127,0.35)] bg-[rgba(255,61,127,0.08)] px-1.5 py-px font-medium text-[#ff8fb3]">
           <span className="lp-pulse h-1.5 w-1.5 rounded-full bg-[var(--lp-accent)]" /> LIVE

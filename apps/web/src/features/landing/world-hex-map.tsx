@@ -112,7 +112,7 @@ export function WorldHexMap() {
             }}
           >
             <div
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-md border px-2 py-1 text-[11px] shadow-lg backdrop-blur"
+              className="flex items-center gap-1.5 whitespace-nowrap rounded-md border px-2 py-1 text-2xs shadow-lg backdrop-blur"
               style={{
                 background: "rgba(22, 22, 30, 0.82)",
                 borderColor: m.primary ? "rgba(255, 61, 127, 0.5)" : "var(--lp-border-strong)",
@@ -120,7 +120,7 @@ export function WorldHexMap() {
             >
               <span className={`fi fi-${m.id} rounded-[2px]`} style={{ width: 16, height: 12, backgroundSize: "cover" }} />
               <span className="font-medium text-[var(--lp-text)]">{m.name}</span>
-              <span className="lp-mono text-[10px]" style={{ color: m.primary ? "var(--lp-accent)" : "var(--lp-subtle)" }}>
+              <span className="lp-mono text-3xs" style={{ color: m.primary ? "var(--lp-accent)" : "var(--lp-subtle)" }}>
                 {m.primary ? "primary" : "planned"}
               </span>
             </div>

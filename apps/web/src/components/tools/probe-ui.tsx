@@ -12,8 +12,8 @@ export function PageHeader({ title, description, status }: { title: string; desc
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-2xl">
-        <h1 className="text-[24px] font-medium tracking-[-0.02em]">{title}</h1>
-        <p className="mt-1 text-[14px] leading-relaxed text-[var(--lp-muted)]">{description}</p>
+        <h1 className="text-xl font-medium tracking-[-0.02em]">{title}</h1>
+        <p className="mt-1 text-base leading-relaxed text-[var(--lp-muted)]">{description}</p>
       </div>
       {status}
     </div>
@@ -31,7 +31,7 @@ export function RunStatus({ tone, label }: { tone: RunTone; label: string }) {
   const s = toneStyle[tone];
   return (
     <span
-      className="inline-flex h-7 items-center gap-2 self-start rounded-md border px-2.5 text-[12px] sm:self-auto"
+      className="inline-flex h-7 items-center gap-2 self-start rounded-md border px-2.5 text-xs sm:self-auto"
       style={{ borderColor: s.border, color: s.text }}
       role="status"
     >
@@ -46,7 +46,7 @@ export function Panel({ title, aside, children, className, bodyClassName }: { ti
     <section className={cn("rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]", className)}>
       {title ? (
         <div className="flex items-center justify-between gap-3 px-4 pt-4">
-          <h2 className="text-[14px] font-medium">{title}</h2>
+          <h2 className="text-base font-medium">{title}</h2>
           {aside}
         </div>
       ) : null}
@@ -58,16 +58,16 @@ export function Panel({ title, aside, children, className, bodyClassName }: { ti
 export function Field({ label, hint, error, children, className }: { label: string; hint?: string; error?: string; children: ReactNode; className?: string }) {
   return (
     <label className={cn("block", className)}>
-      <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">{label}</span>
+      <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">{label}</span>
       {children}
-      {error ? <span className="mt-1 block text-[12px] text-[#ff8fb3]">{error}</span> : hint ? <span className="mt-1 block text-[12px] text-[var(--lp-subtle)]">{hint}</span> : null}
+      {error ? <span className="mt-1 block text-xs text-[#ff8fb3]">{error}</span> : hint ? <span className="mt-1 block text-xs text-[var(--lp-subtle)]">{hint}</span> : null}
     </label>
   );
 }
 
 export function Toggle({ label, description, ...input }: { label: string; description?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <label className="flex cursor-pointer items-start gap-2.5 text-[13px]">
+    <label className="flex cursor-pointer items-start gap-2.5 text-sm">
       <span className="relative mt-0.5 inline-flex">
         <input type="checkbox" className="peer sr-only" {...input} />
         <span className="h-4 w-7 rounded-full bg-white/[0.12] transition-colors peer-checked:bg-[var(--lp-accent)] peer-focus-visible:ring-2 peer-focus-visible:ring-[rgba(255,61,127,0.45)]" />
@@ -75,7 +75,7 @@ export function Toggle({ label, description, ...input }: { label: string; descri
       </span>
       <span>
         <span className="text-[var(--lp-text)]">{label}</span>
-        {description ? <span className="block text-[12px] text-[var(--lp-subtle)]">{description}</span> : null}
+        {description ? <span className="block text-xs text-[var(--lp-subtle)]">{description}</span> : null}
       </span>
     </label>
   );
@@ -87,8 +87,8 @@ export function StatStrip({ items }: { items: { label: string; value: string; to
     <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[var(--lp-border)] sm:grid-cols-3 xl:grid-cols-6">
       {items.map((item) => (
         <div key={item.label} className="bg-[#1b1b1f] px-4 py-3.5">
-          <dt className="text-[12px] text-[var(--lp-subtle)]">{item.label}</dt>
-          <dd className="lp-mono mt-1 truncate text-[18px]" style={{ color: item.tone ? color[item.tone] : undefined }}>
+          <dt className="text-xs text-[var(--lp-subtle)]">{item.label}</dt>
+          <dd className="lp-mono mt-1 truncate text-lg" style={{ color: item.tone ? color[item.tone] : undefined }}>
             <AnimatedValue value={item.value} better={item.better} />
           </dd>
         </div>
@@ -115,7 +115,7 @@ export function LatencyChart({ points, emptyText }: { points: { seq: number; rtt
   }, [points]);
 
   if (points.length === 0) {
-    return <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-[var(--lp-border)] text-[13px] text-[var(--lp-subtle)]">{emptyText}</div>;
+    return <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-[var(--lp-border)] text-sm text-[var(--lp-subtle)]">{emptyText}</div>;
   }
 
   const n = Math.max(1, points.length - 1);
@@ -170,7 +170,7 @@ export function LatencyChart({ points, emptyText }: { points: { seq: number; rtt
       </svg>
       {hp && hover !== null ? (
         <div
-          className="console-popover pointer-events-none absolute top-2 px-2.5 py-1.5 text-[12px]"
+          className="console-popover pointer-events-none absolute top-2 px-2.5 py-1.5 text-xs"
           style={{ left: `clamp(8px, calc(${(x(hover) / W) * 100}% + 10px), calc(100% - 130px))` }}
         >
           <span className="text-[var(--lp-subtle)]">seq {hp.seq} · </span>
@@ -185,7 +185,7 @@ export function LatencyChart({ points, emptyText }: { points: { seq: number; rtt
 
 export function DefinitionList({ items }: { items: { label: string; value: ReactNode }[] }) {
   return (
-    <dl className="divide-y divide-[var(--lp-border)] text-[13px]">
+    <dl className="divide-y divide-[var(--lp-border)] text-sm">
       {items.map((item) => (
         <div key={item.label} className="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
           <dt className="text-[var(--lp-subtle)]">{item.label}</dt>

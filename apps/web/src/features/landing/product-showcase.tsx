@@ -113,11 +113,11 @@ export function ProductShowcase() {
                 {selected ? <span className="absolute bottom-3 left-0 top-3 hidden w-[2px] rounded-full bg-[var(--lp-accent)] lg:block" aria-hidden="true" /> : null}
                 <span className="flex items-center gap-2.5">
                   <tool.icon className={cn("h-4 w-4 shrink-0", selected ? "text-[var(--lp-accent)]" : "text-[var(--lp-subtle)] group-hover:text-[var(--lp-muted)]")} aria-hidden="true" />
-                  <span className={cn("whitespace-nowrap text-[14px] lg:text-[15px]", selected ? "text-[var(--lp-text)]" : "text-[var(--lp-muted)]")}>{tool.name}</span>
+                  <span className={cn("whitespace-nowrap text-base lg:text-md", selected ? "text-[var(--lp-text)]" : "text-[var(--lp-muted)]")}>{tool.name}</span>
                 </span>
                 <span
                   className={cn(
-                    "hidden overflow-hidden pl-[26px] text-[14px] leading-relaxed text-[var(--lp-muted)] transition-[max-height,opacity,margin] duration-300 lg:block",
+                    "hidden overflow-hidden pl-[26px] text-base leading-relaxed text-[var(--lp-muted)] transition-[max-height,opacity,margin] duration-300 lg:block",
                     selected ? "mt-1.5 max-h-40 opacity-100" : "max-h-0 opacity-0",
                   )}
                 >
@@ -128,7 +128,7 @@ export function ProductShowcase() {
           })}
         </div>
         {/* On small screens the description sits under the tabs instead of inside them. */}
-        <p className="mt-4 text-[14px] leading-relaxed text-[var(--lp-muted)] lg:hidden">{active.body}</p>
+        <p className="mt-4 text-base leading-relaxed text-[var(--lp-muted)] lg:hidden">{active.body}</p>
       </div>
 
       <div id="tool-panel" role="tabpanel" aria-labelledby={`tool-tab-${active.id}`} className="min-w-0">
@@ -137,7 +137,7 @@ export function ProductShowcase() {
             <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
             <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
             <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-            <span className="lp-mono ml-4 truncate text-[11px] text-[var(--lp-subtle)]">console.qnetward.com/{active.path}</span>
+            <span className="lp-mono ml-4 truncate text-2xs text-[var(--lp-subtle)]">console.qnetward.com/{active.path}</span>
           </div>
           {/* All screens stay mounted and cross-fade, so switching tools never shifts the layout. */}
           <div className="relative aspect-[1184/800]">

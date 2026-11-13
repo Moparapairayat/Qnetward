@@ -30,7 +30,7 @@ export function Faq() {
     <div className="divide-y divide-[var(--lp-border)] rounded-xl border border-[var(--lp-border)] bg-[var(--lp-bg-raised)]">
       {items.map((item) => (
         <details key={item.q} className="lp-faq group px-5 sm:px-6">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-[15px] font-medium">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-md font-medium">
             {item.q}
             <span
               aria-hidden="true"
@@ -39,7 +39,7 @@ export function Faq() {
               +
             </span>
           </summary>
-          <p className="pb-5 pr-10 text-sm leading-relaxed text-[var(--lp-muted)]">{item.a}</p>
+          <p className="pb-5 pr-10 text-base leading-relaxed text-[var(--lp-muted)]">{item.a}</p>
         </details>
       ))}
     </div>

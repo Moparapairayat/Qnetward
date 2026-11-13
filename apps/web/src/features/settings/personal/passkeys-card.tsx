@@ -29,8 +29,8 @@ function PasskeyRow({ passkey, disabled }: { passkey: Passkey; disabled: boolean
         <Fingerprint className="h-3.5 w-3.5 text-[var(--lp-muted)]" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px]">{passkey.name}</p>
-        <p className="text-[12px] text-[var(--lp-subtle)]">
+        <p className="truncate text-sm">{passkey.name}</p>
+        <p className="text-xs text-[var(--lp-subtle)]">
           Added {formatDate(passkey.created_at)} · {passkey.last_used_at ? `last used ${formatDate(passkey.last_used_at)}` : "not used yet"}
         </p>
       </div>
@@ -90,7 +90,7 @@ export function PasskeysCard({ disabled }: { disabled: boolean }) {
       hint={error ? <span className="text-[#ff8fb3]">{error}</span> : null}
     >
       {list.isLoading ? (
-        <p className="text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+        <p className="text-sm text-[var(--lp-subtle)]">Loading…</p>
       ) : (
         <div className="grid gap-3">
           {!available ? (
@@ -103,7 +103,7 @@ export function PasskeysCard({ disabled }: { disabled: boolean }) {
               ))}
             </ul>
           ) : available ? (
-            <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-[13px] text-[var(--lp-subtle)]">No passkeys yet.</p>
+            <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-sm text-[var(--lp-subtle)]">No passkeys yet.</p>
           ) : null}
 
           {available && !disabled ? (
@@ -120,11 +120,11 @@ export function PasskeysCard({ disabled }: { disabled: boolean }) {
                 }}
               >
                 <label className="block">
-                  <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Name</span>
+                  <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Name</span>
                   <input className="h-9 w-full px-3" maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
                 </label>
                 <label className="block">
-                  <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Confirm your password</span>
+                  <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Confirm your password</span>
                   <input type="password" className="h-9 w-full px-3" autoComplete="current-password" autoFocus value={password} onChange={(e) => setPassword(e.target.value)} />
                 </label>
                 <div className="flex gap-2">

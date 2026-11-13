@@ -287,7 +287,7 @@ export function VerifyStep({
       />
 
       {previewCode ? (
-        <p className="text-[12px] text-[var(--lp-subtle)]">
+        <p className="text-xs text-[var(--lp-subtle)]">
           Email isn&apos;t set up here, so the code is <span className="lp-mono text-[var(--lp-text)]">{previewCode}</span>.
         </p>
       ) : null}
@@ -311,7 +311,7 @@ export function VerifyStep({
         </a>
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-2 text-[13px] text-[var(--lp-muted)]">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--lp-muted)]">
         <span>
           No code?{" "}
           {wait > 0 ? (
@@ -488,7 +488,7 @@ function PlainField({
           {error}
         </p>
       ) : hint ? (
-        <p className="text-[12px] text-[var(--lp-subtle)]">{hint}</p>
+        <p className="text-xs text-[var(--lp-subtle)]">{hint}</p>
       ) : null}
     </div>
   );

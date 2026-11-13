@@ -32,10 +32,10 @@ function Section({ title, meta, items }: { title: string; meta: string; items: s
       </div>
       <div className="grid gap-2">
         {items.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-slate-800 px-4 py-4 text-sm text-slate-400">No records returned.</p>
+          <p className="rounded-2xl border border-dashed border-slate-800 px-4 py-4 text-base text-slate-400">No records returned.</p>
         ) : (
           items.map((item) => (
-            <div key={item} className="rounded-2xl border border-teal-400/12 bg-slate-950/70 px-4 py-3 text-sm text-slate-100">{item}</div>
+            <div key={item} className="rounded-2xl border border-teal-400/12 bg-slate-950/70 px-4 py-3 text-base text-slate-100">{item}</div>
           ))
         )}
       </div>
@@ -67,8 +67,8 @@ export function DNSLookupClient() {
     <div className="grid gap-6 xl:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)]">
       <Card>
         <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Resolver Intelligence</p>
-        <h2 className="mt-2 font-space text-3xl font-bold text-white">DNS Lookup / Reverse DNS</h2>
-        <p className="mt-3 text-sm leading-7 text-slate-400">Inspect forward and reverse records from one dedicated resolver workspace.</p>
+        <h2 className="mt-2 font-space text-2xl font-bold text-white">DNS Lookup / Reverse DNS</h2>
+        <p className="mt-3 text-base leading-7 text-slate-400">Inspect forward and reverse records from one dedicated resolver workspace.</p>
         <form className="mt-8 grid gap-4" onSubmit={form.handleSubmit((values) => lookup.mutate(values))}>
           <div>
             <label className="field-label" htmlFor="dns-target">Target</label>
@@ -78,7 +78,7 @@ export function DNSLookupClient() {
             <label className="field-label" htmlFor="dns-timeout">Timeout (ms)</label>
             <Input id="dns-timeout" type="number" {...form.register("timeout_ms", { valueAsNumber: true })} />
           </div>
-          {formError && <p className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{formError}</p>}
+          {formError && <p className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-base text-rose-200">{formError}</p>}
           <Button type="submit" disabled={lookup.isPending}>{lookup.isPending ? "Resolving..." : "Run Lookup"}</Button>
         </form>
       </Card>
@@ -86,12 +86,12 @@ export function DNSLookupClient() {
         <div className="mb-6 flex items-center justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Lookup Summary</p>
-            <h3 className="mt-2 font-space text-2xl font-bold text-white">Forward + Reverse Records</h3>
+            <h3 className="mt-2 font-space text-xl font-bold text-white">Forward + Reverse Records</h3>
           </div>
           <span className="rounded-full border border-cyan-900/60 bg-slate-950/70 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-300">{report ? report.kind : "Idle"}</span>
         </div>
         {!report ? (
-          <p className="rounded-2xl border border-dashed border-slate-800 px-4 py-6 text-sm text-slate-400">Run a lookup to inspect A, AAAA, CNAME, NS, MX, TXT, and PTR data.</p>
+          <p className="rounded-2xl border border-dashed border-slate-800 px-4 py-6 text-base text-slate-400">Run a lookup to inspect A, AAAA, CNAME, NS, MX, TXT, and PTR data.</p>
         ) : (
           <div className="grid gap-6">
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

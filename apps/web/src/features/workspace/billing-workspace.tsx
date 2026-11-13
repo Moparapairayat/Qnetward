@@ -60,15 +60,15 @@ function UsageMeter({ label, used, limit, detail, href }: { label: string; used:
   const body = (
     <>
       <div className="flex items-baseline justify-between gap-3">
-        <p className="text-[13px]">{label}</p>
-        <p className="lp-mono text-[13px]">
+        <p className="text-sm">{label}</p>
+        <p className="lp-mono text-sm">
           {used.toLocaleString()} <span className="text-[var(--lp-subtle)]">/ {limit.toLocaleString()}</span>
         </p>
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]" role="meter" aria-valuemin={0} aria-valuemax={limit} aria-valuenow={used} aria-label={label}>
         <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${Math.max(share * 100, used > 0 ? 2 : 0)}%`, background: tone }} />
       </div>
-      <p className="mt-1.5 text-[12px] text-[var(--lp-subtle)]">{detail}</p>
+      <p className="mt-1.5 text-xs text-[var(--lp-subtle)]">{detail}</p>
     </>
   );
   return (
@@ -194,10 +194,10 @@ function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; pla
     <section aria-labelledby="plans-title" className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-5">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <h2 id="plans-title" className="text-[15px] font-medium">
+          <h2 id="plans-title" className="text-md font-medium">
             Plans
           </h2>
-          <p className="mt-1 max-w-xl text-[13px] leading-relaxed text-[var(--lp-muted)]">
+          <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--lp-muted)]">
             Pro is paid ahead, a month or a year at a time. When it ends, the workspace goes back to Free and keeps everything.
           </p>
         </div>
@@ -212,7 +212,7 @@ function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; pla
                   aria-checked={period === m}
                   onClick={() => setPeriod(m)}
                   className={cn(
-                    "rounded-md px-3 py-1 text-[12px] font-medium transition-colors",
+                    "rounded-md px-3 py-1 text-xs font-medium transition-colors",
                     period === m ? "bg-white/[0.1] text-white" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
                   )}
                 >
@@ -220,7 +220,7 @@ function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; pla
                 </button>
               ))}
             </div>
-            {saving > 0 ? <span className="rounded-md bg-[rgba(74,222,128,0.1)] px-2 py-1 text-[11px] font-medium text-[#86efac]">Save {taka(saving)}</span> : null}
+            {saving > 0 ? <span className="rounded-md bg-[rgba(74,222,128,0.1)] px-2 py-1 text-2xs font-medium text-[#86efac]">Save {taka(saving)}</span> : null}
           </div>
         ) : null}
       </div>
@@ -240,29 +240,29 @@ function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; pla
               )}
             >
               <div className="flex h-6 items-center justify-between gap-2">
-                <p className="text-[15px] font-semibold">{p.name}</p>
+                <p className="text-md font-semibold">{p.name}</p>
                 {isCurrent ? (
-                  <span className="rounded-full border border-[var(--lp-border-strong)] px-2 text-[11px] leading-5 text-[var(--lp-text)]">Current</span>
+                  <span className="rounded-full border border-[var(--lp-border-strong)] px-2 text-2xs leading-5 text-[var(--lp-text)]">Current</span>
                 ) : featured ? (
-                  <span className="rounded-full bg-[var(--lp-accent)] px-2 text-[11px] font-medium leading-5 text-white">Recommended</span>
+                  <span className="rounded-full bg-[var(--lp-accent)] px-2 text-2xs font-medium leading-5 text-white">Recommended</span>
                 ) : null}
               </div>
 
               <p className="mt-4 flex h-8 items-baseline gap-1.5">
-                <span className="text-[28px] font-semibold leading-none tracking-[-0.02em]">{pr.amount}</span>
-                {pr.unit ? <span className="text-[13px] text-[var(--lp-subtle)]">{pr.unit}</span> : null}
+                <span className="text-2xl font-semibold leading-none tracking-[-0.02em]">{pr.amount}</span>
+                {pr.unit ? <span className="text-sm text-[var(--lp-subtle)]">{pr.unit}</span> : null}
               </p>
-              <p className="mt-1.5 truncate text-[12px] leading-4 text-[var(--lp-subtle)]">{pr.note}</p>
-              <p className="mt-3 min-h-[36px] text-[13px] leading-snug text-[var(--lp-muted)]">{p.blurb}</p>
+              <p className="mt-1.5 truncate text-xs leading-4 text-[var(--lp-subtle)]">{pr.note}</p>
+              <p className="mt-3 min-h-[36px] text-sm leading-snug text-[var(--lp-muted)]">{p.blurb}</p>
 
               <div className="mt-4">{action(p.id)}</div>
               {/* Same height on every card, so the limits below line up. */}
-              <p className="mt-2 h-4 truncate text-center text-[11px] leading-4 text-[var(--lp-subtle)]">
+              <p className="mt-2 h-4 truncate text-center text-2xs leading-4 text-[var(--lp-subtle)]">
                 {featured && canBuy && current !== "enterprise" ? "bKash · Nagad · Rocket · Card" : ""}
               </p>
-              {featured && checkout.isError ? <p className="mt-1 text-center text-[12px] text-[#ff8fb3]">{(checkout.error as ApiError).message}</p> : null}
+              {featured && checkout.isError ? <p className="mt-1 text-center text-xs text-[#ff8fb3]">{(checkout.error as ApiError).message}</p> : null}
 
-              <dl className="mt-5 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-[var(--lp-border)] pt-4 text-[12px]">
+              <dl className="mt-5 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-[var(--lp-border)] pt-4 text-xs">
                 {LIMIT_ROWS.map((row) => (
                   <div key={row.key} className="contents">
                     <dt className="text-[var(--lp-subtle)]">{row.label}</dt>
@@ -274,7 +274,7 @@ function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; pla
                 ))}
               </dl>
 
-              <ul className="mt-4 grid gap-2 border-t border-[var(--lp-border)] pt-4 text-[13px] text-[var(--lp-muted)]">
+              <ul className="mt-4 grid gap-2 border-t border-[var(--lp-border)] pt-4 text-sm text-[var(--lp-muted)]">
                 {p.features.map((f) => (
                   <li key={f} className="flex items-start gap-2">
                     <Check className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", featured ? "text-[var(--lp-accent)]" : "text-[var(--lp-green)]")} />
@@ -298,15 +298,15 @@ function PaymentRow({ payment }: { payment: BillingPayment }) {
         ? "border-[rgba(251,191,36,0.3)] bg-[rgba(251,191,36,0.08)] text-[#fcd34d]"
         : "border-[var(--lp-border)] bg-white/[0.03] text-[var(--lp-subtle)]";
   return (
-    <li className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-[13px]">
+    <li className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm">
       <span className="w-28 shrink-0 text-[var(--lp-muted)]">{formatDate(payment.paid_at ?? payment.created_at)}</span>
       <span className="min-w-0 flex-1">
         Pro · {payment.months === 12 ? "12 months" : `${payment.months} month${payment.months === 1 ? "" : "s"}`}
         {payment.payment_method ? <span className="text-[var(--lp-subtle)]"> · {methodName(payment.payment_method)}</span> : null}
-        {payment.transaction_id ? <span className="lp-mono ml-2 text-[11px] text-[var(--lp-subtle)]">{payment.transaction_id}</span> : null}
+        {payment.transaction_id ? <span className="lp-mono ml-2 text-2xs text-[var(--lp-subtle)]">{payment.transaction_id}</span> : null}
       </span>
       <span className="lp-mono">{taka(payment.amount)}</span>
-      <span className={cn("rounded border px-1.5 text-[11px] leading-5 capitalize", tone)}>{payment.status}</span>
+      <span className={cn("rounded border px-1.5 text-2xs leading-5 capitalize", tone)}>{payment.status}</span>
     </li>
   );
 }
@@ -352,22 +352,22 @@ export function BillingWorkspace() {
       <SettingsCard id="plan" title="Current plan">
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-[var(--lp-border)] bg-white/[0.02] p-4">
           <div>
-            <p className="flex items-center gap-2 text-[18px] font-medium tracking-[-0.01em]">
+            <p className="flex items-center gap-2 text-lg font-medium tracking-[-0.01em]">
               {plan.name}
               {current !== "free" ? (
-                <span className="rounded-md border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] px-1.5 py-px text-[11px] font-normal text-[#86efac]">Active</span>
+                <span className="rounded-md border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] px-1.5 py-px text-2xs font-normal text-[#86efac]">Active</span>
               ) : null}
             </p>
-            <p className="mt-0.5 text-[13px] text-[var(--lp-muted)]">
+            <p className="mt-0.5 text-sm text-[var(--lp-muted)]">
               {current === "free" ? "Free for every workspace" : expires ? `Paid through ${formatDate(expires)}` : "Set up by Qnetward, no renewal needed"}
             </p>
           </div>
-          <p className="max-w-xs text-[12px] leading-relaxed text-[var(--lp-subtle)]">
+          <p className="max-w-xs text-xs leading-relaxed text-[var(--lp-subtle)]">
             {current === "pro" && expires ? "Add more time from the Pro card below before it ends; it's added after the current period." : plan.blurb}
           </p>
         </div>
         {usage?.data_region ? (
-          <p className="mt-3 text-[12px] text-[var(--lp-subtle)]">
+          <p className="mt-3 text-xs text-[var(--lp-subtle)]">
             Data stored in <span className="text-[var(--lp-muted)]">{REGION_NAMES[usage.data_region] ?? usage.data_region}</span>{" "}
             <span className="lp-mono">({usage.data_region})</span>
           </p>
@@ -382,7 +382,7 @@ export function BillingWorkspace() {
         {usageQuery.isError ? (
           <Notice tone="error">{(usageQuery.error as ApiError).message || "Couldn't load usage."}</Notice>
         ) : !usage || !limits ? (
-          <p className="text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+          <p className="text-sm text-[var(--lp-subtle)]">Loading…</p>
         ) : (
           <ul className="grid divide-y divide-[var(--lp-border)] rounded-lg border border-[var(--lp-border)] sm:grid-cols-2 sm:divide-y-0 [&>li]:border-[var(--lp-border)] sm:[&>li:nth-child(n+3)]:border-t sm:[&>li:nth-child(even)]:border-l">
             <UsageMeter
@@ -410,7 +410,7 @@ export function BillingWorkspace() {
             ))}
           </ul>
         ) : (
-          <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-[13px] text-[var(--lp-subtle)]">No payments yet.</p>
+          <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-sm text-[var(--lp-subtle)]">No payments yet.</p>
         )}
       </SettingsCard>
     </div>

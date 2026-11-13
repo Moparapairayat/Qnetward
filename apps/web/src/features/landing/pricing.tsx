@@ -117,11 +117,11 @@ function CellValue({ value }: { value: Cell }) {
   if (value === false) return <Minus className="mx-auto h-4 w-4 text-[var(--lp-subtle)] opacity-50" aria-label="Not included" />;
   if (value === "planned")
     return (
-      <span className="inline-flex items-center gap-1 text-[12px] text-[var(--lp-subtle)]">
+      <span className="inline-flex items-center gap-1 text-xs text-[var(--lp-subtle)]">
         <Clock3 className="h-3 w-3" aria-hidden="true" /> Planned
       </span>
     );
-  return <span className="text-[13px] text-[var(--lp-text)]">{value}</span>;
+  return <span className="text-sm text-[var(--lp-text)]">{value}</span>;
 }
 
 function priceFor(id: Plan["id"], period: Period) {
@@ -147,13 +147,13 @@ export function Pricing() {
               role="radio"
               aria-checked={period === p}
               onClick={() => setPeriod(p)}
-              className={`rounded-full px-5 py-1.5 text-[14px] transition-colors ${period === p ? "bg-white/[0.1] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]"}`}
+              className={`rounded-full px-5 py-1.5 text-base transition-colors ${period === p ? "bg-white/[0.1] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]"}`}
             >
               {p === "yearly" ? "Yearly" : "Monthly"}
             </button>
           ))}
         </div>
-        <span className="rounded-full bg-[rgba(74,222,128,0.1)] px-3 py-1 text-[13px] text-[#86efac]">Yearly saves {bdt(saving)}</span>
+        <span className="rounded-full bg-[rgba(74,222,128,0.1)] px-3 py-1 text-sm text-[#86efac]">Yearly saves {bdt(saving)}</span>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -167,38 +167,38 @@ export function Pricing() {
               style={featured ? { background: "linear-gradient(180deg, rgba(255,61,127,0.09), rgba(255,61,127,0.02) 40%, var(--lp-bg-raised) 75%)" } : undefined}
             >
               <div className="flex h-7 items-center justify-between gap-3">
-                <h3 className="text-[17px] font-semibold">{plan.name}</h3>
+                <h3 className="text-lg font-semibold">{plan.name}</h3>
                 {featured ? (
-                  <span className="rounded-full bg-[var(--lp-accent)] px-2.5 py-0.5 text-[12px] font-medium text-white">Recommended</span>
+                  <span className="rounded-full bg-[var(--lp-accent)] px-2.5 py-0.5 text-xs font-medium text-white">Recommended</span>
                 ) : null}
               </div>
-              <p className="mt-2 min-h-[48px] text-[14px] leading-relaxed text-[var(--lp-muted)]">{plan.audience}</p>
+              <p className="mt-2 min-h-[48px] text-base leading-relaxed text-[var(--lp-muted)]">{plan.audience}</p>
 
               <div className="mt-6 flex h-11 items-baseline gap-2">
-                <span className="text-[38px] font-semibold leading-none tracking-[-0.03em]">{price.amount}</span>
-                {price.unit ? <span className="text-[14px] text-[var(--lp-muted)]">{price.unit}</span> : null}
+                <span className="text-3xl font-semibold leading-none tracking-[-0.03em]">{price.amount}</span>
+                {price.unit ? <span className="text-base text-[var(--lp-muted)]">{price.unit}</span> : null}
               </div>
-              <p className="mt-1 text-[13px] text-[var(--lp-subtle)]">{price.note}</p>
+              <p className="mt-1 text-sm text-[var(--lp-subtle)]">{price.note}</p>
 
               <Link href={plan.cta.href} className={`lp-btn mt-6 w-full ${featured ? "lp-btn-primary" : "lp-btn-secondary"}`}>
                 {plan.cta.label}
               </Link>
-              <p className="mt-2.5 h-4 text-center text-[12px] text-[var(--lp-subtle)]">{featured ? "bKash · Nagad · Rocket · Card" : ""}</p>
+              <p className="mt-2.5 h-4 text-center text-xs text-[var(--lp-subtle)]">{featured ? "bKash · Nagad · Rocket · Card" : ""}</p>
 
               <dl className="mt-6 grid grid-cols-3 gap-2 rounded-xl border border-[var(--lp-border)] bg-black/20 p-3 text-center">
                 {plan.limits.map(([label, value]) => (
                   <div key={label}>
-                    <dd className="text-[15px] font-medium text-[var(--lp-text)]">{value}</dd>
-                    <dt className="mt-0.5 text-[11px] text-[var(--lp-subtle)]">{label}</dt>
+                    <dd className="text-md font-medium text-[var(--lp-text)]">{value}</dd>
+                    <dt className="mt-0.5 text-2xs text-[var(--lp-subtle)]">{label}</dt>
                   </div>
                 ))}
               </dl>
 
               <div className="mt-6">
-                <p className="text-[13px] font-medium text-[var(--lp-text)]">{plan.inherits ?? "Includes"}</p>
+                <p className="text-sm font-medium text-[var(--lp-text)]">{plan.inherits ?? "Includes"}</p>
                 <ul className="mt-4 space-y-3">
                   {plan.features.map((feature) => (
-                    <li key={feature.label} className="flex gap-3 text-[14px] leading-snug">
+                    <li key={feature.label} className="flex gap-3 text-base leading-snug">
                       {feature.planned ? (
                         <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--lp-subtle)]" aria-hidden="true" />
                       ) : (
@@ -217,7 +217,7 @@ export function Pricing() {
         })}
       </div>
 
-      <p className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[13px] text-[var(--lp-subtle)]">
+      <p className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-sm text-[var(--lp-subtle)]">
         <span className="inline-flex items-center gap-1.5">
           <Check className="h-3.5 w-3.5 text-[var(--lp-green)]" aria-hidden="true" /> Works today
         </span>
@@ -228,7 +228,7 @@ export function Pricing() {
       </p>
 
       <div className="mt-10 flex flex-col items-center gap-4">
-        <p className="text-[13px] font-medium text-[var(--lp-muted)]">Pay with</p>
+        <p className="text-sm font-medium text-[var(--lp-muted)]">Pay with</p>
         <Image
           src="/payments/payment-methods.webp"
           alt="Accepted payment methods: bKash, Nagad, Rocket, City Bank, Dutch-Bangla Bank, BRAC Bank, Visa, PayPal, Maestro, American Express, Discover, Mastercard, JCB, UnionPay, and Stripe"
@@ -239,15 +239,15 @@ export function Pricing() {
       </div>
 
       <details className="group mt-12 rounded-2xl border border-[var(--lp-border)]">
-        <summary className="flex cursor-pointer list-none items-center justify-between px-6 py-4 text-[15px] font-medium [&::-webkit-details-marker]:hidden">
+        <summary className="flex cursor-pointer list-none items-center justify-between px-6 py-4 text-md font-medium [&::-webkit-details-marker]:hidden">
           Compare plans
-          <span className="text-[13px] font-normal text-[var(--lp-subtle)] group-open:hidden">Show the full table</span>
-          <span className="hidden text-[13px] font-normal text-[var(--lp-subtle)] group-open:inline">Hide</span>
+          <span className="text-sm font-normal text-[var(--lp-subtle)] group-open:hidden">Show the full table</span>
+          <span className="hidden text-sm font-normal text-[var(--lp-subtle)] group-open:inline">Hide</span>
         </summary>
         <div className="overflow-x-auto border-t border-[var(--lp-border)]">
-          <table className="w-full min-w-[540px] text-left text-[14px]">
+          <table className="w-full min-w-[540px] text-left text-base">
             <thead>
-              <tr className="text-[13px] text-[var(--lp-muted)]">
+              <tr className="text-sm text-[var(--lp-muted)]">
                 <th className="w-[36%] px-6 py-3 font-normal">
                   <span className="sr-only">Feature</span>
                 </th>
@@ -261,7 +261,7 @@ export function Pricing() {
             {comparison.map((section) => (
               <tbody key={section.group}>
                 <tr>
-                  <th colSpan={4} className="border-t border-[var(--lp-border)] bg-white/[0.015] px-6 py-2 text-[12px] font-medium text-[var(--lp-subtle)]">
+                  <th colSpan={4} className="border-t border-[var(--lp-border)] bg-white/[0.015] px-6 py-2 text-xs font-medium text-[var(--lp-subtle)]">
                     {section.group}
                   </th>
                 </tr>

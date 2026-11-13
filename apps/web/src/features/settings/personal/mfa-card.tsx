@@ -30,7 +30,7 @@ function RecoveryCodes({ codes, onDone }: { codes: string[]; onDone: () => void 
   return (
     <div className="grid gap-3">
       <Notice tone="success">Save these recovery codes. They are shown once, and each one signs you in once if you lose your phone.</Notice>
-      <ol className="lp-mono grid grid-cols-2 gap-x-6 gap-y-1.5 rounded-lg border border-[var(--lp-border)] bg-black/20 p-4 text-[13px] sm:grid-cols-5">
+      <ol className="lp-mono grid grid-cols-2 gap-x-6 gap-y-1.5 rounded-lg border border-[var(--lp-border)] bg-black/20 p-4 text-sm sm:grid-cols-5">
         {codes.map((c) => (
           <li key={c}>{c}</li>
         ))}
@@ -118,7 +118,7 @@ export function MFACard({ disabled }: { disabled: boolean }) {
       hint={error ? <span className="text-[#ff8fb3]">{error.message}</span> : null}
     >
       {status.isLoading ? (
-        <p className="text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+        <p className="text-sm text-[var(--lp-subtle)]">Loading…</p>
       ) : step === "codes" && codes ? (
         <RecoveryCodes
           codes={codes}
@@ -129,7 +129,7 @@ export function MFACard({ disabled }: { disabled: boolean }) {
         />
       ) : !enabled && step === "idle" ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--lp-border)] px-4 py-3">
-          <p className="text-[13px] text-[var(--lp-muted)]">Off. Anyone with your password can sign in.</p>
+          <p className="text-sm text-[var(--lp-muted)]">Off. Anyone with your password can sign in.</p>
           <button type="button" className="console-btn console-btn-primary" disabled={disabled} onClick={() => setStep("password")}>
             <ShieldCheck className="h-3.5 w-3.5" /> Turn on
           </button>
@@ -143,7 +143,7 @@ export function MFACard({ disabled }: { disabled: boolean }) {
           }}
         >
           <label className="block">
-            <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Confirm your password</span>
+            <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Confirm your password</span>
             <input type="password" className="h-9 w-full px-3" autoComplete="current-password" autoFocus value={password} onChange={(e) => setPassword(e.target.value)} />
           </label>
           <div className="flex gap-2">
@@ -166,17 +166,17 @@ export function MFACard({ disabled }: { disabled: boolean }) {
           {/* eslint-disable-next-line @next/next/no-img-element -- a data URL from the API, nothing to optimise */}
           <img src={setup.qr_code} alt="QR code to add Qnetward to your authenticator app" width={176} height={176} className="rounded-lg bg-white p-2" />
           <div className="grid min-w-0 gap-3">
-            <p className="text-[13px] leading-relaxed text-[var(--lp-muted)]">
+            <p className="text-sm leading-relaxed text-[var(--lp-muted)]">
               Scan the code with your authenticator app. If you can&apos;t scan it, enter this key instead:
             </p>
             <div className="flex min-w-0 gap-2">
-              <code className="lp-mono flex h-9 min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap rounded-md border border-[var(--lp-border-strong)] bg-black/20 px-3 text-[12.5px] tracking-wider">
+              <code className="lp-mono flex h-9 min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap rounded-md border border-[var(--lp-border-strong)] bg-black/20 px-3 text-sm tracking-wider">
                 {setup.secret.match(/.{1,4}/g)?.join(" ")}
               </code>
               <CopyButton text={setup.secret} />
             </div>
             <label className="block">
-              <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Then enter the 6-digit code it shows</span>
+              <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Then enter the 6-digit code it shows</span>
               <input
                 className="lp-mono h-9 w-40 px-3 tracking-[0.3em]"
                 inputMode="numeric"
@@ -199,7 +199,7 @@ export function MFACard({ disabled }: { disabled: boolean }) {
         </form>
       ) : enabled && step !== "manage" ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.05)] px-4 py-3">
-          <p className="text-[13px]">
+          <p className="text-sm">
             <span className="text-[#86efac]">On</span>
             <span className="text-[var(--lp-muted)]">
               {status.data?.enabled_at ? ` since ${formatDate(status.data.enabled_at)}` : ""} · {status.data?.recovery_codes_left ?? 0} recovery codes left
@@ -238,15 +238,15 @@ export function MFACard({ disabled }: { disabled: boolean }) {
             if (password && code) manage.mutate();
           }}
         >
-          <p className="text-[13px] text-[var(--lp-muted)]">
+          <p className="text-sm text-[var(--lp-muted)]">
             {manageAction === "disable" ? "To turn two-factor sign-in off, confirm it's you." : "New codes replace the old ones, which stop working."}
           </p>
           <label className="block">
-            <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Password</span>
+            <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Password</span>
             <input type="password" className="h-9 w-full px-3" autoComplete="current-password" autoFocus value={password} onChange={(e) => setPassword(e.target.value)} />
           </label>
           <label className="block">
-            <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">Code from your app, or a recovery code</span>
+            <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Code from your app, or a recovery code</span>
             <input className="lp-mono h-9 w-full px-3" autoComplete="one-time-code" maxLength={11} value={code} onChange={(e) => setCode(e.target.value)} />
           </label>
           <div className="flex gap-2">

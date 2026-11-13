@@ -43,8 +43,8 @@ export function TopologyVisual() {
   return (
     <section className={`${card} p-5`}>
       <div className="flex items-baseline justify-between">
-        <h2 className="text-[14px] font-medium">Headquarters · layer 2/3</h2>
-        <span className="flex gap-4 text-[12px] text-[var(--lp-subtle)]">
+        <h2 className="text-base font-medium">Headquarters · layer 2/3</h2>
+        <span className="flex gap-4 text-xs text-[var(--lp-subtle)]">
           <span className="flex items-center gap-1.5">
             <span className="h-0.5 w-4 bg-[#fbbf24]" /> errors
           </span>
@@ -87,10 +87,10 @@ export function TopologyVisual() {
 export function AssistantVisual() {
   return (
     <section className={`${card} flex flex-col`}>
-      <div className="flex items-center gap-2 border-b border-[var(--lp-border)] px-5 py-3 text-[13px]">
+      <div className="flex items-center gap-2 border-b border-[var(--lp-border)] px-5 py-3 text-sm">
         <Sparkles className="h-4 w-4 text-[var(--lp-accent)]" /> Ask Qnetward
       </div>
-      <div className="space-y-5 p-5 text-[14px]">
+      <div className="space-y-5 p-5 text-base">
         <div className="flex justify-end">
           <p className="max-w-[80%] rounded-xl rounded-br-sm bg-white/[0.06] px-4 py-2.5">
             Which target had the most packet loss in the last 3 days, and why?
@@ -110,7 +110,7 @@ export function AssistantVisual() {
               traceroutes from FRA shifted to a longer path through AS3356. Probes from Singapore and Dhaka were unaffected, so the likely cause is a
               routing change upstream of Frankfurt rather than the mail server.
             </p>
-            <div className="flex flex-wrap gap-2 text-[12px]">
+            <div className="flex flex-wrap gap-2 text-xs">
               {["History · Mail MX", "Logs · edge-rtr-dac", "Traceroute · FRA"].map((s) => (
                 <span key={s} className="rounded-md border border-[var(--lp-border)] px-2 py-1">
                   {s}
@@ -120,7 +120,7 @@ export function AssistantVisual() {
           </div>
         </div>
       </div>
-      <div className="m-4 mt-auto flex items-center gap-2 rounded-lg border border-[var(--lp-border-strong)] px-3 py-2.5 text-[13px] text-[var(--lp-subtle)]">
+      <div className="m-4 mt-auto flex items-center gap-2 rounded-lg border border-[var(--lp-border-strong)] px-3 py-2.5 text-sm text-[var(--lp-subtle)]">
         <MessageSquare className="h-4 w-4" />
         <span className="flex-1">Ask about latency, outages, devices, or findings…</span>
         <Send className="h-4 w-4" />
@@ -140,8 +140,8 @@ export function FlowsVisual() {
   const max = talkers[0].gbps;
   return (
     <section className={`${card} p-5`}>
-      <h2 className="text-[14px] font-medium">Top conversations, last hour</h2>
-      <ul className="mt-4 space-y-3 text-[13px]">
+      <h2 className="text-base font-medium">Top conversations, last hour</h2>
+      <ul className="mt-4 space-y-3 text-sm">
         {talkers.map((t, idx) => (
           <li key={t.name}>
             <div className="mb-1.5 flex justify-between gap-4">
@@ -173,10 +173,10 @@ export function TimelineVisual() {
   ];
   return (
     <section className={`${card} p-5`}>
-      <h2 className="text-[14px] font-medium">Timeline · Mail MX unreachable from FRA</h2>
+      <h2 className="text-base font-medium">Timeline · Mail MX unreachable from FRA</h2>
       <ol className="mt-4 space-y-4 border-l border-[var(--lp-border)] pl-5">
         {events.map(([time, kind, text, color]) => (
-          <li key={time + kind} className="relative text-[13px]">
+          <li key={time + kind} className="relative text-sm">
             <span className="absolute -left-[25px] top-1 h-2.5 w-2.5 rounded-full ring-4 ring-[#1b1b1f]" style={{ background: color }} />
             <span className="lp-mono mr-2 text-[var(--lp-subtle)]">{time}</span>
             <span className="mr-2 text-[var(--lp-text)]">{kind}</span>
@@ -198,10 +198,10 @@ export function ScheduleVisual() {
   return (
     <section className={`${card} p-5`}>
       <div className="flex items-baseline justify-between">
-        <h2 className="text-[14px] font-medium">NOC primary · this week</h2>
-        <span className="text-[12px] text-[var(--lp-subtle)]">handoff Mon 09:00</span>
+        <h2 className="text-base font-medium">NOC primary · this week</h2>
+        <span className="text-xs text-[var(--lp-subtle)]">handoff Mon 09:00</span>
       </div>
-      <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[12px] text-[var(--lp-subtle)]">
+      <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs text-[var(--lp-subtle)]">
         {days.map((d) => (
           <span key={d}>{d}</span>
         ))}
@@ -212,7 +212,7 @@ export function ScheduleVisual() {
             {days.map((_, idx) => (
               <span
                 key={idx}
-                className="flex h-8 items-center justify-center truncate rounded-md px-1 text-[11px]"
+                className="flex h-8 items-center justify-center truncate rounded-md px-1 text-2xs"
                 style={{
                   background: p.days.includes(idx) ? `${p.color}26` : "rgba(255,255,255,0.03)",
                   color: p.days.includes(idx) ? p.color : "transparent",

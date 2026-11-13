@@ -4,8 +4,26 @@
 @custom-variant short (@media (max-height: 820px));
 
 @theme {
-  --font-display: var(--font-sora), sans-serif;
-  --font-body: var(--font-space-grotesk), sans-serif;
+  --font-display: var(--font-geist), sans-serif;
+  --font-body: var(--font-geist), sans-serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* One type scale for the whole app. 3xs is for badges and counters only.
+     No line-heights here: text keeps the line height around it, as before. */
+  --text-*: initial;
+  --text-3xs: 10px;
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 40px;
+  --text-4xl: 52px;
+  --text-5xl: 72px;
 
   --color-background: hsl(215 28% 7%);
   --color-foreground: hsl(213 50% 93%);
@@ -68,11 +86,11 @@ body {
     radial-gradient(circle at top left, rgba(68, 212, 200, 0.14), transparent 24%),
     radial-gradient(circle at top right, rgba(245, 158, 11, 0.12), transparent 22%),
     linear-gradient(180deg, #071019 0%, #09111c 100%);
-  font-family: var(--font-sora), sans-serif;
+  font-family: var(--font-geist), sans-serif;
 }
 
 .font-space {
-  font-family: var(--font-space-grotesk), sans-serif;
+  font-family: var(--font-geist), sans-serif;
 }
 
 @layer base {
@@ -690,7 +708,7 @@ body {
 
 .auth-heading-title {
   margin-top: 0.95rem;
-  font-family: var(--font-space-grotesk), sans-serif;
+  font-family: var(--font-geist), sans-serif;
   font-size: clamp(1.78rem, 3.6vw, 2.08rem);
   font-weight: 700;
   letter-spacing: -0.045em;
@@ -1466,5 +1484,22 @@ body {
   .auth-muted-button,
   .auth-provider-button {
     min-height: 2.5rem;
+  }
+}
+
+/* Figures line up in tables, stats, and lists. */
+td,
+th,
+dd,
+.lp-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Phones zoom into any field under 16px when it's tapped; keep fields at 16px there. */
+@media (max-width: 639px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important;
   }
 }

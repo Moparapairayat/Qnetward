@@ -36,7 +36,7 @@ export function AdminOverviewWorkspace() {
       />
 
       {overviewQuery.isError ? (
-        <p className="rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-[13px] text-[#ff8fb3]">
+        <p className="rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-sm text-[#ff8fb3]">
           {(overviewQuery.error as ApiError).message || "Couldn't load the overview."}
         </p>
       ) : null}
@@ -67,8 +67,8 @@ export function AdminOverviewWorkspace() {
               <item.icon className="h-4 w-4 text-[var(--lp-muted)]" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[14px] font-medium">{item.title}</span>
-              <span className="block text-[12px] text-[var(--lp-subtle)]">{item.body}</span>
+              <span className="block text-base font-medium">{item.title}</span>
+              <span className="block text-xs text-[var(--lp-subtle)]">{item.body}</span>
             </span>
             <ArrowUpRight className="h-4 w-4 text-[var(--lp-subtle)] group-hover:text-[var(--lp-text)]" />
           </Link>
@@ -76,43 +76,43 @@ export function AdminOverviewWorkspace() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
-        <Panel title="Newest accounts" aside={<Link href="/admin/users" className="text-[12px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]">View all</Link>} bodyClassName="p-0">
+        <Panel title="Newest accounts" aside={<Link href="/admin/users" className="text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)]">View all</Link>} bodyClassName="p-0">
           {newestUsers.length ? (
             <ul className="divide-y divide-[var(--lp-border)] border-t border-[var(--lp-border)]">
               {newestUsers.map((u) => (
                 <li key={u.id} className="flex items-center gap-3 px-4 py-2.5">
                   <Avatar name={u.name} email={u.email} size={28} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px]">{u.name || u.email}</p>
-                    <p className="truncate text-[12px] text-[var(--lp-subtle)]">{u.email}</p>
+                    <p className="truncate text-sm">{u.name || u.email}</p>
+                    <p className="truncate text-xs text-[var(--lp-subtle)]">{u.email}</p>
                   </div>
                   {u.email_verified_at ? null : <Pill tone="warn">Unverified</Pill>}
-                  <span className="w-20 shrink-0 text-right text-[12px] text-[var(--lp-subtle)]">{timeAgo(u.created_at)}</span>
+                  <span className="w-20 shrink-0 text-right text-xs text-[var(--lp-subtle)]">{timeAgo(u.created_at)}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">{usersQuery.isLoading ? "Loading…" : "No accounts yet."}</p>
+            <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">{usersQuery.isLoading ? "Loading…" : "No accounts yet."}</p>
           )}
         </Panel>
 
-        <Panel title="Largest workspaces" aside={<Link href="/admin/workspaces" className="text-[12px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]">View all</Link>} bodyClassName="p-0">
+        <Panel title="Largest workspaces" aside={<Link href="/admin/workspaces" className="text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)]">View all</Link>} bodyClassName="p-0">
           {largest.length ? (
             <ul className="divide-y divide-[var(--lp-border)] border-t border-[var(--lp-border)]">
               {largest.map((w) => (
                 <li key={w.id} className="flex items-center gap-3 px-4 py-2.5">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px]">{w.name}</p>
-                    <p className="truncate text-[12px] text-[var(--lp-subtle)]">Owner {w.owner_name || w.owner_email}</p>
+                    <p className="truncate text-sm">{w.name}</p>
+                    <p className="truncate text-xs text-[var(--lp-subtle)]">Owner {w.owner_name || w.owner_email}</p>
                   </div>
-                  <span className="lp-mono shrink-0 text-[12px] text-[var(--lp-muted)]">
+                  <span className="lp-mono shrink-0 text-xs text-[var(--lp-muted)]">
                     {w.member_count} {w.member_count === 1 ? "member" : "members"}
                   </span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="px-4 pb-4 text-[13px] text-[var(--lp-subtle)]">{workspacesQuery.isLoading ? "Loading…" : "No workspaces yet."}</p>
+            <p className="px-4 pb-4 text-sm text-[var(--lp-subtle)]">{workspacesQuery.isLoading ? "Loading…" : "No workspaces yet."}</p>
           )}
         </Panel>
       </div>

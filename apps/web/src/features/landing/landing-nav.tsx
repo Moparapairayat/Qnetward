@@ -109,7 +109,7 @@ function NavMenu({ label, items, footer }: NavMenuEntry) {
         aria-expanded={open}
         aria-haspopup="true"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 text-sm text-[color:var(--lp-muted)] transition-colors hover:text-[color:var(--lp-text)] aria-expanded:text-[color:var(--lp-text)]"
+        className="flex items-center gap-1 text-base text-[color:var(--lp-muted)] transition-colors hover:text-[color:var(--lp-text)] aria-expanded:text-[color:var(--lp-text)]"
       >
         {label}
         <CaretDown size={12} weight="bold" className={`transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
@@ -129,11 +129,11 @@ function NavMenu({ label, items, footer }: NavMenuEntry) {
                       <item.icon size={16} weight="bold" aria-hidden />
                     </span>
                     <span>
-                      <span className="block text-[14px] text-[var(--lp-text)]">
+                      <span className="block text-base text-[var(--lp-text)]">
                         {item.label}
                         {item.external ? <span className="ml-1 text-[var(--lp-subtle)]">↗</span> : null}
                       </span>
-                      <span className="block text-[12.5px] text-[var(--lp-subtle)]">{item.hint}</span>
+                      <span className="block text-sm text-[var(--lp-subtle)]">{item.hint}</span>
                     </span>
                   </MenuLink>
                 </li>
@@ -143,7 +143,7 @@ function NavMenu({ label, items, footer }: NavMenuEntry) {
               <Link
                 href={footer.href}
                 onClick={close}
-                className="flex items-center justify-between border-t border-[var(--lp-border)] bg-white/[0.02] px-4 py-3 text-[13px] text-[var(--lp-muted)] transition-colors hover:text-[var(--lp-text)]"
+                className="flex items-center justify-between border-t border-[var(--lp-border)] bg-white/[0.02] px-4 py-3 text-sm text-[var(--lp-muted)] transition-colors hover:text-[var(--lp-text)]"
               >
                 {footer.label}
                 <span aria-hidden>→</span>
@@ -177,7 +177,7 @@ function MobileMenu({ top, container, onClose }: { top: number; container: HTMLE
     };
   }, [onClose]);
 
-  const row = "flex w-full items-center justify-between rounded-xl px-3 py-3.5 text-[16px] text-[var(--lp-text)] transition-colors active:bg-white/[0.06] hover:bg-white/[0.04]";
+  const row = "flex w-full items-center justify-between rounded-xl px-3 py-3.5 text-md text-[var(--lp-text)] transition-colors active:bg-white/[0.06] hover:bg-white/[0.04]";
 
   return createPortal(
     <div
@@ -219,18 +219,18 @@ function MobileMenu({ top, container, onClose }: { top: number; container: HTMLE
                             <item.icon size={17} weight="bold" aria-hidden />
                           </span>
                           <span className="min-w-0">
-                            <span className="block text-[15px] text-[var(--lp-text)]">
+                            <span className="block text-md text-[var(--lp-text)]">
                               {item.label}
                               {item.external ? <span className="ml-1 text-[var(--lp-subtle)]">↗</span> : null}
                             </span>
-                            <span className="block truncate text-[13px] text-[var(--lp-subtle)]">{item.hint}</span>
+                            <span className="block truncate text-sm text-[var(--lp-subtle)]">{item.hint}</span>
                           </span>
                         </MenuLink>
                       </li>
                     ))}
                     {entry.footer ? (
                       <li>
-                        <Link href={entry.footer.href} onClick={onClose} className="flex items-center justify-between rounded-xl px-3 py-2.5 text-[14px] text-[var(--lp-muted)]">
+                        <Link href={entry.footer.href} onClick={onClose} className="flex items-center justify-between rounded-xl px-3 py-2.5 text-base text-[var(--lp-muted)]">
                           {entry.footer.label}
                           <span aria-hidden>→</span>
                         </Link>
@@ -313,7 +313,7 @@ export function LandingNav() {
       <nav className="lp-container flex h-16 items-center gap-8">
         <Link href="/" className="flex items-center gap-2.5" aria-label="Qnetward home">
           <QnetwardMark size={26} />
-          <span className="text-[17px] font-semibold tracking-tight">Qnetward</span>
+          <span className="text-lg font-semibold tracking-tight">Qnetward</span>
         </Link>
 
         <ul className="hidden items-center gap-6 lg:flex">
@@ -322,7 +322,7 @@ export function LandingNav() {
               {"items" in entry ? (
                 <NavMenu label={entry.label} items={entry.items} footer={entry.footer} />
               ) : (
-                <a href={entry.href} className="text-sm text-[color:var(--lp-muted)] transition-colors hover:text-[color:var(--lp-text)]">
+                <a href={entry.href} className="text-base text-[color:var(--lp-muted)] transition-colors hover:text-[color:var(--lp-text)]">
                   {entry.label}
                 </a>
               )}
@@ -335,7 +335,7 @@ export function LandingNav() {
             href="https://github.com/Quantum-Axis/Qnetward"
             target="_blank"
             rel="noreferrer"
-            className="flex h-9 items-center gap-2 rounded-lg border border-[var(--lp-border)] px-3 text-sm text-[color:var(--lp-muted)] transition-colors hover:text-[color:var(--lp-text)]"
+            className="flex h-9 items-center gap-2 rounded-lg border border-[var(--lp-border)] px-3 text-base text-[color:var(--lp-muted)] transition-colors hover:text-[color:var(--lp-text)]"
           >
             <GitHubIcon />
             GitHub

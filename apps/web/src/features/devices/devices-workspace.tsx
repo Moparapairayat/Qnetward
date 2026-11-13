@@ -106,8 +106,8 @@ function DeviceForm({ device, onDone }: { device?: NetworkDevice; onDone: () => 
     },
   });
 
-  const field = "grid gap-1 text-[12px] text-[var(--lp-subtle)]";
-  const input = "h-9 px-2 text-[13px]";
+  const field = "grid gap-1 text-xs text-[var(--lp-subtle)]";
+  const input = "h-9 px-2 text-sm";
   return (
     <form
       className="grid gap-3 border-t border-[var(--lp-border)] px-4 py-4"
@@ -217,7 +217,7 @@ function DeviceForm({ device, onDone }: { device?: NetworkDevice; onDone: () => 
         <button type="button" className="console-btn console-btn-secondary h-9 px-4" onClick={onDone}>
           Cancel
         </button>
-        <span className="text-[12px] text-[var(--lp-subtle)]">
+        <span className="text-xs text-[var(--lp-subtle)]">
           {agents.isSuccess && !enrolled.length ? (
             <>
               Devices are polled by an agent on the same network.{" "}
@@ -230,7 +230,7 @@ function DeviceForm({ device, onDone }: { device?: NetworkDevice; onDone: () => 
             "Read-only access is enough. Credentials are encrypted and only sent to the agent that polls the device."
           )}
         </span>
-        {save.isError ? <span className="w-full text-[12px] text-[#ff8fb3]">{(save.error as ApiError).message}</span> : null}
+        {save.isError ? <span className="w-full text-xs text-[#ff8fb3]">{(save.error as ApiError).message}</span> : null}
       </div>
     </form>
   );
@@ -259,14 +259,14 @@ function DeviceDetail({ device, canEdit }: { device: NetworkDevice; canEdit: boo
   if (editing) return <DeviceForm device={device} onDone={() => setEditing(false)} />;
   return (
     <div className="grid gap-4 border-t border-[var(--lp-border)] bg-white/[0.015] px-4 py-4">
-      {device.last_error ? <p className="rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.06)] px-3 py-2 text-[12px] text-[#ff8fb3]">{device.last_error}</p> : null}
+      {device.last_error ? <p className="rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.06)] px-3 py-2 text-xs text-[#ff8fb3]">{device.last_error}</p> : null}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-[12px] text-[var(--lp-subtle)]">
+        <span className="text-xs text-[var(--lp-subtle)]">
           {chosen ? `Interface ${chosen.name}` : "All interfaces"} · {device.last_polled_at ? `last poll ${formatDateTime(device.last_polled_at)}` : "not polled yet"}
         </span>
         <div className="flex flex-wrap items-center gap-2">
           {iface ? (
-            <button type="button" className="text-[12px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setIface(0)}>
+            <button type="button" className="text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setIface(0)}>
               Show all interfaces
             </button>
           ) : null}
@@ -278,7 +278,7 @@ function DeviceDetail({ device, canEdit }: { device: NetworkDevice; canEdit: boo
                 role="tab"
                 aria-selected={range === r}
                 onClick={() => setRange(r)}
-                className={cn("rounded-md px-2.5 py-1 text-[12px]", range === r ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]")}
+                className={cn("rounded-md px-2.5 py-1 text-xs", range === r ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]")}
               >
                 {r}
               </button>
@@ -301,8 +301,8 @@ function DeviceDetail({ device, canEdit }: { device: NetworkDevice; canEdit: boo
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-[var(--lp-border)]">
-        <table className="w-full min-w-[760px] text-[12px]">
-          <thead className="text-left text-[11px] uppercase tracking-wide text-[var(--lp-subtle)]">
+        <table className="w-full min-w-[760px] text-xs">
+          <thead className="text-left text-2xs uppercase tracking-wide text-[var(--lp-subtle)]">
             <tr>
               <th className="px-3 py-2 font-normal">Interface</th>
               <th className="px-3 py-2 font-normal">Status</th>
@@ -363,12 +363,12 @@ function DeviceDetail({ device, canEdit }: { device: NetworkDevice; canEdit: boo
         />
         {canEdit ? (
           <div className="flex items-start gap-2">
-            <button type="button" className="console-btn console-btn-secondary h-8 px-3 text-[12px]" onClick={() => setEditing(true)}>
+            <button type="button" className="console-btn console-btn-secondary h-8 px-3 text-xs" onClick={() => setEditing(true)}>
               Edit
             </button>
             <button
               type="button"
-              className="console-btn h-8 gap-1.5 bg-[rgba(255,61,127,0.12)] px-3 text-[12px] text-[#ff8fb3] hover:bg-[rgba(255,61,127,0.22)]"
+              className="console-btn h-8 gap-1.5 bg-[rgba(255,61,127,0.12)] px-3 text-xs text-[#ff8fb3] hover:bg-[rgba(255,61,127,0.22)]"
               disabled={remove.isPending}
               onClick={() => {
                 if (window.confirm(`Remove ${device.name} and its history?`)) remove.mutate();
@@ -405,12 +405,12 @@ export function DevicesWorkspace() {
         status={devices.length ? <RunStatus tone={unreachable ? "error" : "done"} label={unreachable ? `${unreachable} unreachable` : `${up} up`} /> : null}
       />
 
-      {list.isError ? <p className="text-[13px] text-[#ff8fb3]">{(list.error as ApiError).message}</p> : null}
+      {list.isError ? <p className="text-sm text-[#ff8fb3]">{(list.error as ApiError).message}</p> : null}
       {list.isSuccess && devices.length === 0 && !adding ? (
         <div className="flex flex-col items-center rounded-xl border border-dashed border-[var(--lp-border)] px-6 py-12 text-center">
           <HardDrive className="h-6 w-6 text-[var(--lp-subtle)]" />
-          <p className="mt-3 text-[14px] text-[var(--lp-muted)]">No network devices yet</p>
-          <p className="mt-1 max-w-md text-[13px] text-[var(--lp-subtle)]">
+          <p className="mt-3 text-base text-[var(--lp-muted)]">No network devices yet</p>
+          <p className="mt-1 max-w-md text-sm text-[var(--lp-subtle)]">
             Turn on SNMP (v3 if you can) on a router or switch, run an agent on a machine that can reach it, then add the device here.
           </p>
           <div className="mt-4 flex gap-2">
@@ -441,7 +441,7 @@ export function DevicesWorkspace() {
             bodyClassName="p-0"
             aside={
               canEdit && !adding ? (
-                <button type="button" className="console-btn console-btn-secondary h-8 px-3 text-[12px]" disabled={atLimit} title={atLimit ? "Your plan's device limit is reached" : undefined} onClick={() => setAdding(true)}>
+                <button type="button" className="console-btn console-btn-secondary h-8 px-3 text-xs" disabled={atLimit} title={atLimit ? "Your plan's device limit is reached" : undefined} onClick={() => setAdding(true)}>
                   Add device
                 </button>
               ) : null
@@ -451,7 +451,7 @@ export function DevicesWorkspace() {
             {devices.length ? (
               <div className="overflow-x-auto border-t border-[var(--lp-border)]">
                 <div className="min-w-[820px]">
-                  <div className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_7rem_7rem_8rem_7rem_1.5rem] gap-3 px-4 py-2 text-[11px] uppercase tracking-wide text-[var(--lp-subtle)]">
+                  <div className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_7rem_7rem_8rem_7rem_1.5rem] gap-3 px-4 py-2 text-2xs uppercase tracking-wide text-[var(--lp-subtle)]">
                     <span>Device</span>
                     <span>System</span>
                     <span>Interfaces</span>
@@ -471,16 +471,16 @@ export function DevicesWorkspace() {
                             type="button"
                             onClick={() => setOpen(isOpen ? null : d.id)}
                             aria-expanded={isOpen}
-                            className="grid w-full grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_7rem_7rem_8rem_7rem_1.5rem] items-center gap-3 px-4 py-3 text-left text-[13px] hover:bg-white/[0.02]"
+                            className="grid w-full grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_7rem_7rem_8rem_7rem_1.5rem] items-center gap-3 px-4 py-3 text-left text-sm hover:bg-white/[0.02]"
                           >
                             <span className="min-w-0">
                               <span className="block truncate">{d.name}</span>
-                              <span className="lp-mono block truncate text-[11px] text-[var(--lp-subtle)]">{d.address}</span>
+                              <span className="lp-mono block truncate text-2xs text-[var(--lp-subtle)]">{d.address}</span>
                             </span>
-                            <span className="truncate text-[12px] text-[var(--lp-muted)]" title={d.sys?.descr}>
+                            <span className="truncate text-xs text-[var(--lp-muted)]" title={d.sys?.descr}>
                               {d.sys?.name || d.sys?.descr || "–"}
                             </span>
-                            <span className="text-[12px]">
+                            <span className="text-xs">
                               {c.total ? (
                                 <>
                                   <span className="text-[#86efac]">{c.up} up</span>
@@ -490,9 +490,9 @@ export function DevicesWorkspace() {
                                 "–"
                               )}
                             </span>
-                            <span className="lp-mono text-[12px] text-[var(--lp-muted)]">{formatUptime(d.sys?.uptime_s)}</span>
-                            <span className="lp-mono text-[12px] text-[var(--lp-muted)]">{c.total ? formatBits(c.in + c.out) : "–"}</span>
-                            <span className={cn("text-[12px]", state.className)}>{state.label}</span>
+                            <span className="lp-mono text-xs text-[var(--lp-muted)]">{formatUptime(d.sys?.uptime_s)}</span>
+                            <span className="lp-mono text-xs text-[var(--lp-muted)]">{c.total ? formatBits(c.in + c.out) : "–"}</span>
+                            <span className={cn("text-xs", state.className)}>{state.label}</span>
                             <ChevronDown className={cn("h-4 w-4 text-[var(--lp-subtle)] transition-transform", isOpen && "rotate-180")} />
                           </button>
                           {isOpen ? <DeviceDetail device={d} canEdit={canEdit} /> : null}
@@ -506,7 +506,7 @@ export function DevicesWorkspace() {
           </Panel>
         </>
       ) : list.isLoading ? (
-        <p className="text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+        <p className="text-sm text-[var(--lp-subtle)]">Loading…</p>
       ) : null}
     </div>
   );

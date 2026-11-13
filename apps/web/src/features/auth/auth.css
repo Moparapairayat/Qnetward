@@ -48,8 +48,8 @@
   border-radius: 10px;
   background: transparent;
   padding: 0 14px;
-  font-family: var(--font-inter), system-ui, sans-serif;
-  font-size: 15px;
+  font-family: var(--font-geist), system-ui, sans-serif;
+  font-size: 16px;
   color: var(--lp-text);
   box-shadow: none;
   outline: none;
@@ -94,8 +94,8 @@
   justify-content: center;
   gap: 10px;
   border-radius: 10px;
-  font-family: var(--font-inter), system-ui, sans-serif;
-  font-size: 15px;
+  font-family: var(--font-geist), system-ui, sans-serif;
+  font-size: 16px;
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
@@ -243,7 +243,7 @@
   width: 22px;
   border: 1px solid var(--lp-border-strong);
   background: transparent;
-  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0;
@@ -307,7 +307,7 @@
 }
 
 .lp-auth .auth-otp-input {
-  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 22px;
   font-weight: 500;
   color: var(--lp-text);
@@ -644,7 +644,7 @@
   .lp-auth .auth-muted-button,
   .lp-auth .auth-provider-button {
     height: 46px;
-    font-size: 15px;
+    font-size: 16px;
   }
 
   .lp-auth .auth-input-shell {
@@ -661,7 +661,7 @@
   border: 1px solid var(--lp-border-strong);
   background: var(--lp-input-bg);
   color: var(--lp-text);
-  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 22px;
   font-weight: 500;
   text-align: center;

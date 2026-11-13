@@ -89,11 +89,11 @@ export function WelcomeHeader({
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <h1 className="text-[24px] font-medium tracking-[-0.02em]">
+        <h1 className="text-xl font-medium tracking-[-0.02em]">
           Welcome back{first ? ", " : ""}
           {first ? <span className="text-[var(--lp-accent)]">{first}</span> : null}
         </h1>
-        <p className="mt-1 text-[14px] text-[var(--lp-muted)]">
+        <p className="mt-1 text-base text-[var(--lp-muted)]">
           {pct === null ? (
             "No probe results yet. Run one to start filling this page."
           ) : (
@@ -106,7 +106,7 @@ export function WelcomeHeader({
       <div className="flex flex-wrap items-center gap-2">
         <Link
           href="/status"
-          className="mr-1 hidden items-center gap-2 text-[12px] text-[var(--lp-muted)] hover:text-[var(--lp-text)] sm:flex"
+          className="mr-1 hidden items-center gap-2 text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)] sm:flex"
           title="Database, cache, and object storage status"
         >
           <span className="h-2 w-2 rounded-full" style={{ background: serviceColor }} />
@@ -224,12 +224,12 @@ function StatCard({ stat }: { stat: Stat }) {
         <span className="grid h-7 w-7 place-items-center rounded-md border border-[var(--lp-border-strong)] bg-white/[0.03]">
           <stat.icon className="h-4 w-4 text-[var(--lp-muted)]" />
         </span>
-        <span className="text-[13px] text-[var(--lp-text)]">{stat.label}</span>
+        <span className="text-sm text-[var(--lp-text)]">{stat.label}</span>
       </div>
       <div className="flex items-end justify-between gap-3 px-4 pb-3 pt-2">
         <span className="flex items-baseline gap-1.5">
-          <span className="text-[28px] font-medium tracking-[-0.02em]">{stat.value}</span>
-          {stat.unit ? <span className="text-[13px] text-[var(--lp-subtle)]">{stat.unit}</span> : null}
+          <span className="text-2xl font-medium tracking-[-0.02em]">{stat.value}</span>
+          {stat.unit ? <span className="text-sm text-[var(--lp-subtle)]">{stat.unit}</span> : null}
         </span>
         {stat.spark ? <Sparkline values={stat.spark.values} color={stat.spark.color} className="mb-1 w-[46%] max-w-[120px]" /> : null}
         {stat.split && stat.split.some((part) => part.value > 0) ? (
@@ -245,10 +245,10 @@ function StatCard({ stat }: { stat: Stat }) {
           </span>
         ) : null}
       </div>
-      <div className="mt-auto flex items-center justify-between gap-2 border-t border-[var(--lp-border)] px-4 py-2 text-[12px] text-[var(--lp-subtle)]">
+      <div className="mt-auto flex items-center justify-between gap-2 border-t border-[var(--lp-border)] px-4 py-2 text-xs text-[var(--lp-subtle)]">
         <span className="truncate">{stat.footer}</span>
         {stat.tone ? (
-          <span className={cn("rounded border px-1.5 py-px text-[11px]", toneClass)}>
+          <span className={cn("rounded border px-1.5 py-px text-2xs", toneClass)}>
             {stat.badge ?? (stat.tone === "good" ? "OK" : stat.tone === "warn" ? "Watch" : "High")}
           </span>
         ) : null}
@@ -500,14 +500,14 @@ export function ResponseTimeChart({ targets, historyMap }: { targets: OverviewTa
         <span className="grid h-7 w-7 place-items-center rounded-md border border-[var(--lp-border-strong)] bg-white/[0.03]">
           <Clock className="h-3.5 w-3.5 text-[var(--lp-muted)]" />
         </span>
-        <h2 id="rt-title" className="text-[14px] font-medium">
+        <h2 id="rt-title" className="text-base font-medium">
           Response time
         </h2>
         <span className="ml-auto flex items-center gap-3">
           {anyLive ? (
             <LivePill live updatedAt={lastSampleAt} />
           ) : (
-            <Link href="/monitors" className="text-[12px] text-[var(--lp-subtle)] hover:text-[var(--lp-text)]">
+            <Link href="/monitors" className="text-xs text-[var(--lp-subtle)] hover:text-[var(--lp-text)]">
               Add a monitor for a live line
             </Link>
           )}
@@ -515,7 +515,7 @@ export function ResponseTimeChart({ targets, historyMap }: { targets: OverviewTa
       </div>
       {allSeries.length ? (
         <>
-          <ul className="flex flex-wrap gap-1.5 px-4 pt-3 text-[12px]" aria-label="Series">
+          <ul className="flex flex-wrap gap-1.5 px-4 pt-3 text-xs" aria-label="Series">
             {allSeries.map((s) => {
               const off = hidden.includes(s.id);
               const last = s.points[s.points.length - 1];
@@ -535,7 +535,7 @@ export function ResponseTimeChart({ targets, historyMap }: { targets: OverviewTa
                   >
                     <span className="h-2.5 w-[3px] rounded-full" style={{ background: off ? "rgba(255,255,255,0.15)" : s.color }} />
                     <span className="max-w-[160px] truncate">{s.label}</span>
-                    {!off ? <span className="lp-mono text-[11px] text-[var(--lp-subtle)]">{formatMs(last.rtt)}ms</span> : null}
+                    {!off ? <span className="lp-mono text-2xs text-[var(--lp-subtle)]">{formatMs(last.rtt)}ms</span> : null}
                   </button>
                 </li>
               );
@@ -604,11 +604,11 @@ export function ResponseTimeChart({ targets, historyMap }: { targets: OverviewTa
               </svg>
             ) : null}
             {box.width > 0 && !series.length ? (
-              <div className="absolute inset-0 flex items-center justify-center text-[13px] text-[var(--lp-subtle)]">All series are hidden. Pick one above.</div>
+              <div className="absolute inset-0 flex items-center justify-center text-sm text-[var(--lp-subtle)]">All series are hidden. Pick one above.</div>
             ) : null}
             {hoverTs !== null && covering.length ? (
               <div
-                className="console-popover pointer-events-none absolute top-4 z-10 w-56 p-3 text-[12px]"
+                className="console-popover pointer-events-none absolute top-4 z-10 w-56 p-3 text-xs"
                 style={{ left: Math.min(Math.max(8, tooltipLeft + 12), Math.max(8, W - 232)) }}
               >
                 <div className="mb-2 text-[var(--lp-subtle)]">{clockTime(hoverTs)}</div>
@@ -630,8 +630,8 @@ export function ResponseTimeChart({ targets, historyMap }: { targets: OverviewTa
       ) : (
         <div className="m-4 flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-[var(--lp-border)] py-16 text-center">
           <Activity className="h-5 w-5 text-[var(--lp-subtle)]" />
-          <p className="mt-3 text-[13px] text-[var(--lp-muted)]">No latency data yet</p>
-          <p className="mt-1 text-[12px] text-[var(--lp-subtle)]">Add a monitor and it draws a live line here, checked every 30 seconds or more.</p>
+          <p className="mt-3 text-sm text-[var(--lp-muted)]">No latency data yet</p>
+          <p className="mt-1 text-xs text-[var(--lp-subtle)]">Add a monitor and it draws a live line here, checked every 30 seconds or more.</p>
           <Link href="/monitors" className="console-btn console-btn-secondary mt-4">
             <Plus className="h-3.5 w-3.5" /> Add a monitor
           </Link>
@@ -671,7 +671,7 @@ export function TargetHealthCard({ targets }: { targets: OverviewTargetSnapshot[
         <span className="grid h-7 w-7 place-items-center rounded-md border border-[var(--lp-border-strong)] bg-white/[0.03]">
           <Activity className="h-3.5 w-3.5 text-[var(--lp-muted)]" />
         </span>
-        <h2 id="health-title" className="text-[14px] font-medium">
+        <h2 id="health-title" className="text-base font-medium">
           Target health
         </h2>
       </div>
@@ -681,9 +681,9 @@ export function TargetHealthCard({ targets }: { targets: OverviewTargetSnapshot[
           const pct = total ? Math.round((count / total) * 100) : 0;
           return (
             <div key={row.state}>
-              <div className="mb-1 flex items-baseline justify-between text-[13px]">
+              <div className="mb-1 flex items-baseline justify-between text-sm">
                 <span className="text-[var(--lp-text)]">{row.label}</span>
-                <span className="lp-mono text-[12px]" style={{ color: count ? stateMeta[row.state].color : "var(--lp-subtle)" }}>
+                <span className="lp-mono text-xs" style={{ color: count ? stateMeta[row.state].color : "var(--lp-subtle)" }}>
                   {count} <span className="text-[var(--lp-subtle)]">· {pct}%</span>
                 </span>
               </div>
@@ -695,11 +695,11 @@ export function TargetHealthCard({ targets }: { targets: OverviewTargetSnapshot[
       {/* Only takes room when something needs a look, or before the first probe. */}
       {attention.length ? (
         <div className="mx-4 mb-4 rounded-lg border border-[var(--lp-border)] bg-black/20 p-3">
-          <p className="flex items-center gap-2 text-[12px] text-[var(--lp-muted)]">
+          <p className="flex items-center gap-2 text-xs text-[var(--lp-muted)]">
             <AlertTriangle className="h-3.5 w-3.5 text-[var(--lp-amber)]" />
             {attention.length} {attention.length === 1 ? "target needs" : "targets need"} attention
           </p>
-          <ul className="mt-2 space-y-1.5 text-[12px]">
+          <ul className="mt-2 space-y-1.5 text-xs">
             {attention.slice(0, 3).map((t) => (
               <li key={t.id}>
                 <Link href={t.href} className="flex items-center gap-2 text-[var(--lp-text)] hover:text-[var(--lp-accent)]">
@@ -712,7 +712,7 @@ export function TargetHealthCard({ targets }: { targets: OverviewTargetSnapshot[
           </ul>
         </div>
       ) : !total ? (
-        <p className="px-4 pb-4 text-[12px] text-[var(--lp-subtle)]">Targets appear here after your first probe.</p>
+        <p className="px-4 pb-4 text-xs text-[var(--lp-subtle)]">Targets appear here after your first probe.</p>
       ) : null}
     </section>
   );
@@ -744,7 +744,7 @@ export function TargetsSummary({ targets, historyMap }: { targets: OverviewTarge
   return (
     <section className="overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]" aria-labelledby="summary-title">
       <div className="flex flex-wrap items-center gap-2 px-4 py-3">
-        <h2 id="summary-title" className="mr-auto text-[14px] font-medium">
+        <h2 id="summary-title" className="mr-auto text-base font-medium">
           Targets
         </h2>
         <label className="relative">
@@ -754,17 +754,17 @@ export function TargetsSummary({ targets, historyMap }: { targets: OverviewTarge
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search"
-            className="h-8 w-40 pl-8 pr-2 text-[13px]"
+            className="h-8 w-40 pl-8 pr-2 text-sm"
           />
         </label>
-        <select aria-label="Filter by status" value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)} className="h-8 px-2 text-[13px]">
+        <select aria-label="Filter by status" value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)} className="h-8 px-2 text-sm">
           <option value="all">All statuses</option>
           <option value="stable">Healthy</option>
           <option value="warning">Degraded</option>
           <option value="critical">Down</option>
           <option value="idle">No data</option>
         </select>
-        <select aria-label="Filter by type" value={type} onChange={(e) => setType(e.target.value as TypeFilter)} className="h-8 px-2 text-[13px]">
+        <select aria-label="Filter by type" value={type} onChange={(e) => setType(e.target.value as TypeFilter)} className="h-8 px-2 text-sm">
           <option value="all">All types</option>
           <option value="ping">ICMP</option>
           <option value="tcpping">TCP</option>
@@ -774,9 +774,9 @@ export function TargetsSummary({ targets, historyMap }: { targets: OverviewTarge
         </Link>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] text-[13px]">
+        <table className="w-full min-w-[720px] text-sm">
           <thead>
-            <tr className="border-y border-[var(--lp-border)] bg-white/[0.015] text-left text-[12px] text-[var(--lp-subtle)]">
+            <tr className="border-y border-[var(--lp-border)] bg-white/[0.015] text-left text-xs text-[var(--lp-subtle)]">
               <th className="px-4 py-2.5 font-medium">Target</th>
               <th className="px-3 py-2.5 font-medium">Type</th>
               <th className="px-3 py-2.5 font-medium">Status</th>
@@ -797,9 +797,9 @@ export function TargetsSummary({ targets, historyMap }: { targets: OverviewTarge
                       {t.name}
                     </Link>
                   </td>
-                  <td className="lp-mono px-3 py-3 text-[12px] text-[var(--lp-muted)]">{t.protocol === "tcpping" ? "TCP" : "ICMP"}</td>
+                  <td className="lp-mono px-3 py-3 text-xs text-[var(--lp-muted)]">{t.protocol === "tcpping" ? "TCP" : "ICMP"}</td>
                   <td className="px-3 py-3">
-                    <span className={cn("inline-flex rounded-md border px-2 py-0.5 text-[12px]", stateMeta[t.healthState].pill)}>
+                    <span className={cn("inline-flex rounded-md border px-2 py-0.5 text-xs", stateMeta[t.healthState].pill)}>
                       {stateMeta[t.healthState].label}
                     </span>
                   </td>
@@ -811,7 +811,7 @@ export function TargetsSummary({ targets, historyMap }: { targets: OverviewTarge
                         height={22}
                         className="w-[96px]"
                       />
-                      <span className="lp-mono text-[11px] text-[var(--lp-subtle)]" title={`${t.pointCount} samples`}>
+                      <span className="lp-mono text-2xs text-[var(--lp-subtle)]" title={`${t.pointCount} samples`}>
                         {t.pointCount}
                       </span>
                     </span>
@@ -835,7 +835,7 @@ export function TargetsSummary({ targets, historyMap }: { targets: OverviewTarge
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-[13px] text-[var(--lp-subtle)]">
+                <td colSpan={7} className="px-4 py-10 text-center text-sm text-[var(--lp-subtle)]">
                   {targets.length ? "No targets match these filters." : "No targets yet. Run a probe and it will show up here."}
                 </td>
               </tr>
@@ -859,10 +859,10 @@ export function ComingNext() {
   return (
     <section aria-labelledby="next-title">
       <div className="mb-3 flex items-baseline justify-between">
-        <h2 id="next-title" className="text-[14px] font-medium">
+        <h2 id="next-title" className="text-base font-medium">
           Coming next
         </h2>
-        <span className="text-[12px] text-[var(--lp-subtle)]">Previews with sample data</span>
+        <span className="text-xs text-[var(--lp-subtle)]">Previews with sample data</span>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {upcoming.map((item) => (
@@ -872,11 +872,11 @@ export function ComingNext() {
             className="group rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4 transition-colors hover:border-[var(--lp-border-strong)] hover:bg-[#202025]"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[13px] font-medium">{item.title}</span>
-              <span className="rounded border border-[var(--lp-border)] px-1.5 text-[10px] leading-4 text-[var(--lp-subtle)]">Phase {item.phase}</span>
+              <span className="text-sm font-medium">{item.title}</span>
+              <span className="rounded border border-[var(--lp-border)] px-1.5 text-3xs leading-4 text-[var(--lp-subtle)]">Phase {item.phase}</span>
             </div>
-            <p className="mt-2 text-[12px] leading-relaxed text-[var(--lp-muted)]">{item.body}</p>
-            <span className="mt-3 inline-block text-[12px] text-[var(--lp-accent)] opacity-80 group-hover:opacity-100">See preview →</span>
+            <p className="mt-2 text-xs leading-relaxed text-[var(--lp-muted)]">{item.body}</p>
+            <span className="mt-3 inline-block text-xs text-[var(--lp-accent)] opacity-80 group-hover:opacity-100">See preview →</span>
           </Link>
         ))}
       </div>

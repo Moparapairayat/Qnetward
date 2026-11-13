@@ -36,7 +36,7 @@ function PasswordField({ label, value, onChange, autoComplete, disabled }: { lab
   const [show, setShow] = useState(false);
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[12px] text-[var(--lp-muted)]">{label}</span>
+      <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">{label}</span>
       <span className="relative block">
         <input
           aria-label={label}
@@ -177,7 +177,7 @@ function SessionsCard({ disabled }: { disabled: boolean }) {
       }
     >
       {sessionsQuery.isLoading ? (
-        <p className="text-[13px] text-[var(--lp-subtle)]">Loading sessions…</p>
+        <p className="text-sm text-[var(--lp-subtle)]">Loading sessions…</p>
       ) : (
         <ul className="divide-y divide-[var(--lp-border)] rounded-lg border border-[var(--lp-border)]">
           {visible.map((s) => {
@@ -189,11 +189,11 @@ function SessionsCard({ disabled }: { disabled: boolean }) {
                   <Icon className="h-4 w-4 text-[var(--lp-muted)]" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 text-[13px]">
+                  <p className="flex items-center gap-2 text-sm">
                     {agent.label}
-                    {s.current ? <span className="rounded-md border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] px-1.5 text-[11px] text-[#86efac]">This browser</span> : null}
+                    {s.current ? <span className="rounded-md border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] px-1.5 text-2xs text-[#86efac]">This browser</span> : null}
                   </p>
-                  <p className="truncate text-[12px] text-[var(--lp-subtle)]">
+                  <p className="truncate text-xs text-[var(--lp-subtle)]">
                     {s.ip_address ? <span className="lp-mono">{s.ip_address}</span> : "Unknown address"} · signed in {relative(s.created_at)} · expires {formatDate(s.expires_at)}
                   </p>
                 </div>
@@ -213,7 +213,7 @@ function SessionsCard({ disabled }: { disabled: boolean }) {
           })}
           {ordered.length > SESSIONS_PREVIEW ? (
             <li className="px-4 py-2">
-              <button type="button" className="text-[13px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setShowAll((v) => !v)}>
+              <button type="button" className="text-sm text-[var(--lp-muted)] hover:text-[var(--lp-text)]" onClick={() => setShowAll((v) => !v)}>
                 {showAll ? "Show fewer" : `Show all ${ordered.length} sessions`}
               </button>
             </li>
@@ -243,11 +243,11 @@ function ActivityCard() {
       ) : null}
     >
       {activityQuery.isLoading ? (
-        <p className="text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+        <p className="text-sm text-[var(--lp-subtle)]">Loading…</p>
       ) : activityQuery.isError ? (
         <Notice tone="error">{(activityQuery.error as ApiError).message || "Couldn't load activity."}</Notice>
       ) : events.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-[13px] text-[var(--lp-subtle)]">No activity recorded yet.</p>
+        <p className="rounded-lg border border-dashed border-[var(--lp-border)] px-4 py-5 text-center text-sm text-[var(--lp-subtle)]">No activity recorded yet.</p>
       ) : (
         <ul className="divide-y divide-[var(--lp-border)] rounded-lg border border-[var(--lp-border)]">
           {visible.map((event) => {
@@ -255,12 +255,12 @@ function ActivityCard() {
             return (
               <li key={event.id} className="flex items-start justify-between gap-3 px-4 py-2.5">
                 <div className="min-w-0">
-                  <p className={failed ? "text-[13px] text-[#ff8fb3]" : "text-[13px]"}>{describeAuditEvent(event)}</p>
-                  <p className="mt-0.5 truncate text-[12px] text-[var(--lp-subtle)]">
+                  <p className={failed ? "text-sm text-[#ff8fb3]" : "text-sm"}>{describeAuditEvent(event)}</p>
+                  <p className="mt-0.5 truncate text-xs text-[var(--lp-subtle)]">
                     {[event.ip_address, shortUserAgent(event.user_agent)].filter(Boolean).join(" · ") || "—"}
                   </p>
                 </div>
-                <time className="shrink-0 text-[12px] text-[var(--lp-subtle)]" dateTime={event.occurred_at} title={new Date(event.occurred_at).toLocaleString()}>
+                <time className="shrink-0 text-xs text-[var(--lp-subtle)]" dateTime={event.occurred_at} title={new Date(event.occurred_at).toLocaleString()}>
                   {relative(event.occurred_at)}
                 </time>
               </li>

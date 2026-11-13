@@ -50,14 +50,14 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative flex h-[34px] items-center gap-2.5 rounded-md px-3 text-[13px] font-medium transition-colors",
+        "relative flex h-[34px] items-center gap-2.5 rounded-md px-3 text-sm font-medium transition-colors",
         active ? "bg-white/[0.08] text-white" : "text-[#d0d0d7] hover:bg-white/[0.05] hover:text-white",
       )}
     >
       {active ? <span className="absolute -left-2 top-1.5 bottom-1.5 w-[3px] rounded-full bg-[var(--lp-accent)]" aria-hidden="true" /> : null}
       <item.icon weight={active ? "fill" : "bold"} className={cn("h-4 w-4", active ? "text-white" : "text-[#9a9aa4]")} />
       <span className="flex-1 truncate">{item.label}</span>
-      {item.soon ? <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-[10px] leading-[18px] text-[var(--lp-muted)]">Soon</span> : null}
+      {item.soon ? <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-3xs leading-[18px] text-[var(--lp-muted)]">Soon</span> : null}
     </Link>
   );
 }
@@ -68,8 +68,8 @@ function SectionHeading({ badge, title, meta }: { badge: ReactNode; title: strin
     <div className="mb-1 flex min-w-0 items-center gap-2.5 px-3 py-1.5">
       {badge}
       <div className="min-w-0">
-        <p className="truncate text-[13px] font-medium text-[var(--lp-text)]">{title}</p>
-        {meta ? <p className="truncate text-[11px] text-[var(--lp-subtle)]">{meta}</p> : null}
+        <p className="truncate text-sm font-medium text-[var(--lp-text)]">{title}</p>
+        {meta ? <p className="truncate text-2xs text-[var(--lp-subtle)]">{meta}</p> : null}
       </div>
     </div>
   );
@@ -106,8 +106,8 @@ export function SettingsShell({ children }: { context?: "personal" | "workspace"
   return (
     <div className="mx-auto w-full max-w-[1180px]">
       <header className="pb-6">
-        <h1 className="text-[22px] font-medium tracking-[-0.02em]">Settings</h1>
-        <p className="mt-1 text-[13px] text-[var(--lp-muted)]">
+        <h1 className="text-xl font-medium tracking-[-0.02em]">Settings</h1>
+        <p className="mt-1 text-sm text-[var(--lp-muted)]">
           Your own account, and everything shared in <span className="text-[var(--lp-text)]">{workspaceName}</span>.
         </p>
       </header>
@@ -125,7 +125,7 @@ export function SettingsShell({ children }: { context?: "personal" | "workspace"
                     href={item.href}
                     aria-current={isActive(item.href) ? "page" : undefined}
                     className={cn(
-                      "flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-[13px]",
+                      "flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm",
                       isActive(item.href) ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
                     )}
                   >

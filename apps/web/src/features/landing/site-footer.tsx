@@ -55,15 +55,15 @@ export function SiteFooter() {
               <QnetwardMark size={24} />
               <span className="font-semibold">Qnetward</span>
             </Link>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-[var(--lp-muted)]">Unified network, infrastructure, and security observability.</p>
+            <p className="mt-4 max-w-xs text-base leading-relaxed text-[var(--lp-muted)]">Unified network, infrastructure, and security observability.</p>
             <SocialLinks className="mt-6" />
           </div>
           {columns.map((col) => (
             <div key={col.title}>
-              <h3 className="text-sm font-medium">{col.title}</h3>
+              <h3 className="text-base font-medium">{col.title}</h3>
               <ul className="mt-4 space-y-2.5">
                 {col.links.map(([label, href]) => (
-                  <li key={label} className="text-sm text-[var(--lp-muted)]">
+                  <li key={label} className="text-base text-[var(--lp-muted)]">
                     <a href={href} {...(href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})} className="transition-colors hover:text-[var(--lp-text)]">
                       {label}
                     </a>
@@ -73,7 +73,7 @@ export function SiteFooter() {
             </div>
           ))}
         </div>
-        <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-[var(--lp-border)] pt-6 text-[13px] text-[var(--lp-subtle)] sm:flex-row sm:items-center">
+        <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-[var(--lp-border)] pt-6 text-sm text-[var(--lp-subtle)] sm:flex-row sm:items-center">
           <span>© 2026 Qnetward. All rights reserved.</span>
           <div className="flex gap-5">
             <Link href="/terms" className="hover:text-[var(--lp-text)]">

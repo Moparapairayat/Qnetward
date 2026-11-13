@@ -85,8 +85,8 @@ function Notifications({ session }: { session: SessionResponse }) {
       {open ? (
         <div role="dialog" aria-label="Notifications" className="console-popover absolute right-0 top-full z-50 mt-2 w-[340px] overflow-hidden">
           <div className="flex items-center justify-between border-b border-[var(--lp-border)] px-4 py-3">
-            <p className="text-[13px] font-medium">Notifications</p>
-            {count ? <span className="text-[12px] text-[var(--lp-subtle)]">{count} need attention</span> : null}
+            <p className="text-sm font-medium">Notifications</p>
+            {count ? <span className="text-xs text-[var(--lp-subtle)]">{count} need attention</span> : null}
           </div>
           <div className="max-h-[380px] overflow-y-auto">
             {firing.map((rule) => (
@@ -98,8 +98,8 @@ function Notifications({ session }: { session: SessionResponse }) {
               >
                 <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[var(--lp-accent)]" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] text-[var(--lp-text)]">{rule.name || rule.target} is alerting</span>
-                  <span className="block truncate text-[12px] text-[var(--lp-subtle)]">
+                  <span className="block truncate text-sm text-[var(--lp-text)]">{rule.name || rule.target} is alerting</span>
+                  <span className="block truncate text-xs text-[var(--lp-subtle)]">
                     {rule.target}
                     {rule.port ? `:${rule.port}` : ""}
                     {rule.last_triggered_at ? ` · since ${since(rule.last_triggered_at)}` : ""}
@@ -111,20 +111,20 @@ function Notifications({ session }: { session: SessionResponse }) {
               <div key={`i${inv.id}`} className="flex gap-3 border-b border-[var(--lp-border)] px-4 py-3">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#c4b5fd]" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] text-[var(--lp-text)]">
+                  <p className="text-sm text-[var(--lp-text)]">
                     {inv.inviter_name} invited you to <span className="font-medium">{inv.workspace_name ?? "a workspace"}</span>
                   </p>
-                  <p className="text-[12px] capitalize text-[var(--lp-subtle)]">as {inv.role}</p>
+                  <p className="text-xs capitalize text-[var(--lp-subtle)]">as {inv.role}</p>
                   <div className="mt-2 flex gap-2">
                     <button
                       type="button"
-                      className="console-btn console-btn-primary h-7 px-2.5 text-[12px]"
+                      className="console-btn console-btn-primary h-7 px-2.5 text-xs"
                       disabled={accept.isPending}
                       onClick={() => accept.mutate(inv.id)}
                     >
                       <Check className="h-3 w-3" /> Accept
                     </button>
-                    <Link href="/settings/workspaces" onClick={() => setOpen(false)} className="console-btn console-btn-secondary h-7 px-2.5 text-[12px]">
+                    <Link href="/settings/workspaces" onClick={() => setOpen(false)} className="console-btn console-btn-secondary h-7 px-2.5 text-xs">
                       Review
                     </Link>
                   </div>
@@ -134,15 +134,15 @@ function Notifications({ session }: { session: SessionResponse }) {
             {count === 0 ? (
               <div className="px-4 py-10 text-center">
                 <Bell className="mx-auto h-5 w-5 text-[var(--lp-subtle)]" />
-                <p className="mt-2 text-[13px] text-[var(--lp-muted)]">You&apos;re all caught up</p>
-                <p className="mt-1 text-[12px] text-[var(--lp-subtle)]">Firing alerts and workspace invitations show up here.</p>
+                <p className="mt-2 text-sm text-[var(--lp-muted)]">You&apos;re all caught up</p>
+                <p className="mt-1 text-xs text-[var(--lp-subtle)]">Firing alerts and workspace invitations show up here.</p>
               </div>
             ) : null}
           </div>
           <Link
             href="/alerts"
             onClick={() => setOpen(false)}
-            className="block border-t border-[var(--lp-border)] px-4 py-2.5 text-center text-[12px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
+            className="block border-t border-[var(--lp-border)] px-4 py-2.5 text-center text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
           >
             Manage alert rules
           </Link>
@@ -176,20 +176,20 @@ function ShortcutsDialog({ onClose }: { onClose: () => void }) {
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-[var(--lp-border)] px-5 py-3.5">
-          <p className="text-[14px] font-medium">Keyboard shortcuts</p>
+          <p className="text-base font-medium">Keyboard shortcuts</p>
           <button type="button" onClick={onClose} aria-label="Close" className={iconButton}>
             <X className="h-4 w-4" />
           </button>
         </div>
         <ul className="p-2">
           {shortcuts.map(([keys, action]) => (
-            <li key={action} className="flex items-center justify-between rounded-md px-3 py-2.5 text-[13px]">
+            <li key={action} className="flex items-center justify-between rounded-md px-3 py-2.5 text-sm">
               <span className="text-[var(--lp-muted)]">{action}</span>
               <span className="flex gap-1">
                 {keys.map((k) => (
                   <kbd
                     key={k}
-                    className="min-w-[24px] rounded border border-[var(--lp-border-strong)] bg-white/[0.04] px-1.5 py-0.5 text-center text-[11px] text-[var(--lp-text)]"
+                    className="min-w-[24px] rounded border border-[var(--lp-border-strong)] bg-white/[0.04] px-1.5 py-0.5 text-center text-2xs text-[var(--lp-text)]"
                   >
                     {k}
                   </kbd>
@@ -198,7 +198,7 @@ function ShortcutsDialog({ onClose }: { onClose: () => void }) {
             </li>
           ))}
         </ul>
-        <p className="border-t border-[var(--lp-border)] px-5 py-3 text-[12px] text-[var(--lp-subtle)]">On macOS, use ⌘ instead of Ctrl.</p>
+        <p className="border-t border-[var(--lp-border)] px-5 py-3 text-xs text-[var(--lp-subtle)]">On macOS, use ⌘ instead of Ctrl.</p>
       </div>
     </div>
   );
@@ -208,7 +208,7 @@ function HelpMenu() {
   const [open, setOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const ref = useDismiss(open, () => setOpen(false));
-  const item = "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] text-[var(--lp-text)] hover:bg-white/[0.05]";
+  const item = "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-[var(--lp-text)] hover:bg-white/[0.05]";
   return (
     <div ref={ref} className="relative">
       <button type="button" className={iconButton} aria-label="Help" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
@@ -237,7 +237,7 @@ function HelpMenu() {
           <Link href="/privacy" role="menuitem" className={item} onClick={() => setOpen(false)}>
             <FileText className="h-4 w-4 text-[var(--lp-subtle)]" /> Privacy
           </Link>
-          <p className="px-2.5 pb-1.5 pt-2 text-[11px] text-[var(--lp-subtle)]">Qnetward beta</p>
+          <p className="px-2.5 pb-1.5 pt-2 text-2xs text-[var(--lp-subtle)]">Qnetward beta</p>
         </div>
       ) : null}
       {/* Portal to the console root: the sticky, blurred header would otherwise trap this fixed overlay. */}
@@ -273,11 +273,11 @@ export function Topbar({ session }: { session: SessionResponse }) {
       <button
         type="button"
         onClick={() => setPaletteOpen(true)}
-        className="hidden h-9 w-full max-w-[340px] items-center gap-2.5 rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 text-[13px] text-[var(--lp-subtle)] transition-colors hover:border-[var(--lp-border-strong)] hover:text-[var(--lp-muted)] sm:flex"
+        className="hidden h-9 w-full max-w-[340px] items-center gap-2.5 rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 text-sm text-[var(--lp-subtle)] transition-colors hover:border-[var(--lp-border-strong)] hover:text-[var(--lp-muted)] sm:flex"
       >
         <Search className="h-4 w-4" />
         <span className="flex-1 text-left">Search pages…</span>
-        <kbd className="rounded border border-[var(--lp-border)] px-1.5 py-px text-[11px]">Ctrl K</kbd>
+        <kbd className="rounded border border-[var(--lp-border)] px-1.5 py-px text-2xs">Ctrl K</kbd>
       </button>
       <button type="button" onClick={() => setPaletteOpen(true)} aria-label="Search pages" className={cn(iconButton, "sm:hidden")}>
         <Search className="h-4 w-4" />
@@ -285,7 +285,7 @@ export function Topbar({ session }: { session: SessionResponse }) {
 
       <div className="ml-auto flex items-center gap-1">
         {isDemo ? (
-          <span className="mr-2 rounded-md border border-[rgba(251,191,36,0.3)] bg-[rgba(251,191,36,0.06)] px-2 py-0.5 text-[12px] text-[var(--lp-amber)]">
+          <span className="mr-2 rounded-md border border-[rgba(251,191,36,0.3)] bg-[rgba(251,191,36,0.06)] px-2 py-0.5 text-xs text-[var(--lp-amber)]">
             Demo
           </span>
         ) : null}

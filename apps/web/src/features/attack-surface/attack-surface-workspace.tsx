@@ -29,15 +29,15 @@ function SurfaceFindingRow({ finding }: { finding: SurfaceFinding }) {
   return (
     <li className="border-t border-[var(--lp-border)] first:border-t-0">
       <button type="button" className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-white/[0.015]" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
-        <span className={cn("mt-px shrink-0 rounded-md border px-1.5 py-px text-[11px]", meta.pill)}>{meta.label}</span>
+        <span className={cn("mt-px shrink-0 rounded-md border px-1.5 py-px text-2xs", meta.pill)}>{meta.label}</span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[13px] text-[var(--lp-text)]">{finding.title}</span>
-          <span className="lp-mono block truncate text-[11px] text-[var(--lp-subtle)]">{finding.host}</span>
+          <span className="block text-sm text-[var(--lp-text)]">{finding.title}</span>
+          <span className="lp-mono block truncate text-2xs text-[var(--lp-subtle)]">{finding.host}</span>
         </span>
         <ChevronDown className={cn("mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--lp-subtle)] transition-transform", open && "rotate-180")} />
       </button>
       {open ? (
-        <div className="grid gap-2 px-4 pb-3.5 pl-[4.6rem] text-[13px] leading-relaxed">
+        <div className="grid gap-2 px-4 pb-3.5 pl-[4.6rem] text-sm leading-relaxed">
           {finding.detail ? <p className="text-[var(--lp-muted)]">{finding.detail}</p> : null}
           {finding.fix ? (
             <p className="rounded-lg border border-[var(--lp-border)] bg-white/[0.02] px-3 py-2 text-[var(--lp-muted)]">
@@ -60,25 +60,25 @@ function HostRow({ host, isNew, newPorts }: { host: SurfaceHost; isNew: boolean;
   return (
     <tr className="border-t border-[var(--lp-border)] align-top">
       <td className="min-w-0 px-4 py-2.5">
-        <p className="lp-mono break-all text-[12px] text-[var(--lp-text)]">
+        <p className="lp-mono break-all text-xs text-[var(--lp-text)]">
           {host.name}
-          {isNew ? <span className="ml-2 rounded border border-[rgba(96,165,250,0.35)] px-1 font-sans text-[10px] text-[#93c5fd]">New</span> : null}
+          {isNew ? <span className="ml-2 rounded border border-[rgba(96,165,250,0.35)] px-1 font-sans text-3xs text-[#93c5fd]">New</span> : null}
         </p>
-        <p className="text-[11px] text-[var(--lp-subtle)]">
+        <p className="text-2xs text-[var(--lp-subtle)]">
           {host.source}
           {host.cname ? ` · CNAME ${host.cname}` : ""}
         </p>
         {host.services?.length ? (
           <p className="mt-0.5 flex flex-wrap gap-1">
             {host.services.map((s) => (
-              <span key={s.port} className="rounded border border-[var(--lp-border)] px-1 text-[10px] text-[var(--lp-muted)]" title={s.banner}>
+              <span key={s.port} className="rounded border border-[var(--lp-border)] px-1 text-3xs text-[var(--lp-muted)]" title={s.banner}>
                 {s.product ? `${s.product} ${s.version}` : (s.banner ?? "").slice(0, 32)}
               </span>
             ))}
           </p>
         ) : null}
       </td>
-      <td className="lp-mono hidden px-3 py-2.5 text-[11px] text-[var(--lp-muted)] md:table-cell">
+      <td className="lp-mono hidden px-3 py-2.5 text-2xs text-[var(--lp-muted)] md:table-cell">
         {host.addresses.length ? host.addresses.slice(0, 2).join(", ") + (host.addresses.length > 2 ? ` +${host.addresses.length - 2}` : "") : "—"}
         {host.private ? <span className="ml-1 font-sans text-[#fbbf24]">private, not probed</span> : null}
       </td>
@@ -89,7 +89,7 @@ function HostRow({ host, isNew, newPorts }: { host: SurfaceHost; isNew: boolean;
               <span
                 key={p}
                 className={cn(
-                  "lp-mono rounded border px-1.5 text-[11px]",
+                  "lp-mono rounded border px-1.5 text-2xs",
                   riskyPorts.has(p) ? "border-[rgba(255,61,127,0.35)] text-[#ff8fb3]" : "border-[var(--lp-border)] text-[var(--lp-muted)]",
                   newPorts.has(p) && "ring-1 ring-[rgba(96,165,250,0.6)]",
                 )}
@@ -99,11 +99,11 @@ function HostRow({ host, isNew, newPorts }: { host: SurfaceHost; isNew: boolean;
               </span>
             ))
           ) : (
-            <span className="text-[11px] text-[var(--lp-subtle)]">{host.private || !host.addresses.length ? "—" : "None open"}</span>
+            <span className="text-2xs text-[var(--lp-subtle)]">{host.private || !host.addresses.length ? "—" : "None open"}</span>
           )}
         </div>
       </td>
-      <td className="hidden px-4 py-2.5 text-right text-[11px] lg:table-cell">
+      <td className="hidden px-4 py-2.5 text-right text-2xs lg:table-cell">
         {days !== null ? (
           <span className={cn(days < 14 ? "text-[#ff8fb3]" : days < 30 ? "text-[#fbbf24]" : "text-[var(--lp-muted)]")} title={host.cert_issuer}>
             {days < 0 ? "Expired" : `${days}d left`}
@@ -129,21 +129,21 @@ function SurfaceReportView({ report, previous }: { report: SurfaceReport; previo
       <section className="flex flex-col gap-5 rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-5 sm:flex-row sm:items-center">
         <GradeBadge grade={report.grade} />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[18px] font-medium">{report.domain}</p>
-          <p className="mt-0.5 text-[13px] text-[var(--lp-muted)]">
+          <p className="truncate text-lg font-medium">{report.domain}</p>
+          <p className="mt-0.5 text-sm text-[var(--lp-muted)]">
             {report.hosts.length} host{report.hosts.length === 1 ? "" : "s"} · {openPorts} open port{openPorts === 1 ? "" : "s"} · scanned {formatDateTime(report.checked_at)} in{" "}
             {Math.round(report.duration_ms / 1000)}s
             {previous ? <span className="ml-2 text-[#93c5fd]">{newHosts ? `${newHosts} new host${newHosts === 1 ? "" : "s"} since last scan` : "no new hosts since last scan"}</span> : null}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {(["high", "medium", "low"] as const).map((s) => (
-              <span key={s} className={cn("rounded-md border px-2 py-0.5 text-[12px]", severityMeta[s].pill, !report.counts[s] && "opacity-40")}>
+              <span key={s} className={cn("rounded-md border px-2 py-0.5 text-xs", severityMeta[s].pill, !report.counts[s] && "opacity-40")}>
                 {report.counts[s] ?? 0} {severityMeta[s].label.toLowerCase()}
               </span>
             ))}
           </div>
-          {report.truncated ? <p className="mt-2 text-[12px] text-[#fbbf24]">Only the first 100 names were scanned.</p> : null}
-          {report.ct_error ? <p className="mt-2 text-[12px] text-[var(--lp-subtle)]">Certificate logs weren&apos;t reachable ({report.ct_error}), so only common names were tried.</p> : null}
+          {report.truncated ? <p className="mt-2 text-xs text-[#fbbf24]">Only the first 100 names were scanned.</p> : null}
+          {report.ct_error ? <p className="mt-2 text-xs text-[var(--lp-subtle)]">Certificate logs weren&apos;t reachable ({report.ct_error}), so only common names were tried.</p> : null}
         </div>
       </section>
 
@@ -155,13 +155,13 @@ function SurfaceReportView({ report, previous }: { report: SurfaceReport; previo
             ))}
           </ul>
         ) : (
-          <p className="border-t border-[var(--lp-border)] px-4 py-6 text-center text-[13px] text-[#86efac]">Nothing exposed that shouldn&apos;t be.</p>
+          <p className="border-t border-[var(--lp-border)] px-4 py-6 text-center text-sm text-[#86efac]">Nothing exposed that shouldn&apos;t be.</p>
         )}
         {info.length ? (
           <div className="border-t border-[var(--lp-border)]">
             <button
               type="button"
-              className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-[12px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
+              className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
               onClick={() => setShowInfo((v) => !v)}
               aria-expanded={showInfo}
             >
@@ -182,7 +182,7 @@ function SurfaceReportView({ report, previous }: { report: SurfaceReport; previo
       <Panel title="Hosts" bodyClassName="p-0">
         <div className="overflow-x-auto border-t border-[var(--lp-border)]">
           <table className="w-full min-w-[520px] text-left">
-            <thead className="text-[11px] uppercase tracking-[0.06em] text-[var(--lp-subtle)]">
+            <thead className="text-2xs uppercase tracking-[0.06em] text-[var(--lp-subtle)]">
               <tr>
                 <th className="px-4 py-2 font-normal">Name</th>
                 <th className="hidden px-3 py-2 font-normal md:table-cell">Addresses</th>
@@ -313,8 +313,8 @@ export function AttackSurfaceWorkspace() {
       {domainsQuery.isSuccess && verified.length === 0 ? (
         <div className="flex flex-col items-center rounded-xl border border-dashed border-[var(--lp-border)] px-6 py-12 text-center">
           <Radar className="h-6 w-6 text-[var(--lp-subtle)]" />
-          <p className="mt-3 text-[14px] text-[var(--lp-muted)]">Verify a domain first</p>
-          <p className="mt-1 max-w-md text-[13px] text-[var(--lp-subtle)]">
+          <p className="mt-3 text-base text-[var(--lp-muted)]">Verify a domain first</p>
+          <p className="mt-1 max-w-md text-sm text-[var(--lp-subtle)]">
             Attack surface scans probe ports, so they only run on domains you&apos;ve proved you control.
           </p>
           <Link href="/assets" className="console-btn console-btn-primary mt-4 h-9 px-4">
@@ -355,15 +355,15 @@ export function AttackSurfaceWorkspace() {
             </div>
           </div>
           {start.isError ? (
-            <p className="mt-3 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-[13px] text-[#ff8fb3]" role="alert">
+            <p className="mt-3 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-sm text-[#ff8fb3]" role="alert">
               {(start.error as ApiError).message}
             </p>
           ) : failed ? (
-            <p className="mt-3 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-[13px] text-[#ff8fb3]" role="alert">
+            <p className="mt-3 rounded-lg border border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] px-3 py-2.5 text-sm text-[#ff8fb3]" role="alert">
               The scan failed: {failed.error}
             </p>
           ) : (
-            <p className="mt-2 text-[12px] text-[var(--lp-subtle)]">Takes one to three minutes. You can leave this page; the result is saved.</p>
+            <p className="mt-2 text-xs text-[var(--lp-subtle)]">Takes one to three minutes. You can leave this page; the result is saved.</p>
           )}
         </form>
       )}
@@ -373,17 +373,17 @@ export function AttackSurfaceWorkspace() {
           {running && (!current || watching) ? (
             <div className="flex flex-col items-center rounded-xl border border-[var(--lp-border)] px-6 py-14 text-center">
               <span className="lp-pulse h-3 w-3 rounded-full bg-[var(--lp-accent)]" />
-              <p className="mt-4 text-[14px] text-[var(--lp-text)]">Scanning {running.domain}</p>
-              <p className="mt-1 max-w-md text-[13px] text-[var(--lp-subtle)]">
+              <p className="mt-4 text-base text-[var(--lp-text)]">Scanning {running.domain}</p>
+              <p className="mt-1 max-w-md text-sm text-[var(--lp-subtle)]">
                 Reading certificate logs, resolving names, and checking 20 service ports on each host. Started {ago(running.created_at)}.
               </p>
             </div>
           ) : current?.report && "hosts" in current.report ? (
             <SurfaceReportView key={current.id} report={current.report as unknown as SurfaceReport} previous={previous.data?.report as unknown as SurfaceReport | undefined} />
           ) : selected.isLoading ? (
-            <p className="rounded-xl border border-[var(--lp-border)] px-4 py-10 text-center text-[13px] text-[var(--lp-subtle)]">Loading report…</p>
+            <p className="rounded-xl border border-[var(--lp-border)] px-4 py-10 text-center text-sm text-[var(--lp-subtle)]">Loading report…</p>
           ) : verified.length ? (
-            <p className="rounded-xl border border-dashed border-[var(--lp-border)] px-4 py-12 text-center text-[13px] text-[var(--lp-subtle)]">Run your first scan to see what your domain exposes.</p>
+            <p className="rounded-xl border border-dashed border-[var(--lp-border)] px-4 py-12 text-center text-sm text-[var(--lp-subtle)]">Run your first scan to see what your domain exposes.</p>
           ) : null}
         </div>
 
@@ -414,13 +414,13 @@ export function AttackSurfaceWorkspace() {
                     {s.status === "done" ? (
                       <GradeBadge grade={s.grade} size="sm" />
                     ) : (
-                      <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-[10px]", s.status === "running" ? "border-[var(--lp-border)] text-[var(--lp-subtle)]" : "border-[rgba(255,61,127,0.35)] text-[#ff8fb3]")}>
+                      <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-3xs", s.status === "running" ? "border-[var(--lp-border)] text-[var(--lp-subtle)]" : "border-[rgba(255,61,127,0.35)] text-[#ff8fb3]")}>
                         {s.status === "running" ? "…" : "!"}
                       </span>
                     )}
                     <span className="min-w-0">
-                      <span className="block truncate text-[13px] text-[var(--lp-text)]">{s.domain}</span>
-                      <span className="block text-[11px] text-[var(--lp-subtle)]" title={formatDateTime(s.created_at)}>
+                      <span className="block truncate text-sm text-[var(--lp-text)]">{s.domain}</span>
+                      <span className="block text-2xs text-[var(--lp-subtle)]" title={formatDateTime(s.created_at)}>
                         {s.status === "running" ? "Running" : s.status === "failed" ? "Failed" : ago(s.created_at)}
                         {s.high ? <span className="text-[#ff8fb3]"> · {s.high} high</span> : null}
                       </span>
@@ -441,7 +441,7 @@ export function AttackSurfaceWorkspace() {
               ))}
             </ul>
           ) : (
-            <p className="border-t border-[var(--lp-border)] px-4 py-4 text-[13px] text-[var(--lp-subtle)]">{history.isLoading ? "Loading…" : "No scans yet."}</p>
+            <p className="border-t border-[var(--lp-border)] px-4 py-4 text-sm text-[var(--lp-subtle)]">{history.isLoading ? "Loading…" : "No scans yet."}</p>
           )}
         </Panel>
         </div>

@@ -44,7 +44,7 @@ const STEPS = ["Details", "Scopes", "Review", "Copy key"] as const;
 
 function ReviewRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[110px_minmax(0,1fr)] gap-3 py-2.5 text-[13px]">
+    <div className="grid grid-cols-[110px_minmax(0,1fr)] gap-3 py-2.5 text-sm">
       <dt className="text-[var(--lp-subtle)]">{label}</dt>
       <dd className="min-w-0">{children}</dd>
     </div>
@@ -108,7 +108,7 @@ function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () => void
       </button>
     ) : (
       <>
-        {create.isError ? <span className="mr-auto text-[12px] text-[#ff8fb3]">{(create.error as ApiError).message}</span> : null}
+        {create.isError ? <span className="mr-auto text-xs text-[#ff8fb3]">{(create.error as ApiError).message}</span> : null}
         {step > 0 ? (
           <button type="button" className="console-btn console-btn-secondary" disabled={create.isPending} onClick={() => setStep((s) => (s - 1) as Step)}>
             Back
@@ -144,12 +144,12 @@ function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () => void
         {step === 0 ? (
           <div className="grid gap-5">
             <label className="block">
-              <span className="mb-1.5 block text-[13px] text-[var(--lp-muted)]">Name</span>
+              <span className="mb-1.5 block text-sm text-[var(--lp-muted)]">Name</span>
               <input className="h-9 w-full px-3" placeholder="GitHub Actions deploy checks" maxLength={80} autoFocus value={name} onChange={(e) => setName(e.target.value)} />
-              <span className="mt-1.5 block text-[12px] text-[var(--lp-subtle)]">Name it after what will use it, so you know what breaks if you revoke it.</span>
+              <span className="mt-1.5 block text-xs text-[var(--lp-subtle)]">Name it after what will use it, so you know what breaks if you revoke it.</span>
             </label>
             <div>
-              <span className="mb-1.5 block text-[13px] text-[var(--lp-muted)]">Expiration</span>
+              <span className="mb-1.5 block text-sm text-[var(--lp-muted)]">Expiration</span>
               <div className="grid grid-cols-4 rounded-lg border border-[var(--lp-border)] p-0.5" role="radiogroup" aria-label="Expiration">
                 {expiries.map((e) => (
                   <button
@@ -159,7 +159,7 @@ function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () => void
                     aria-checked={days === e.days}
                     onClick={() => setDays(e.days)}
                     className={cn(
-                      "rounded-md px-2.5 py-1.5 text-[13px] transition-colors",
+                      "rounded-md px-2.5 py-1.5 text-sm transition-colors",
                       days === e.days ? "bg-white/[0.08] text-[var(--lp-text)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-text)]",
                     )}
                   >
@@ -167,14 +167,14 @@ function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () => void
                   </button>
                 ))}
               </div>
-              <span className="mt-1.5 block text-[12px] text-[var(--lp-subtle)]">
+              <span className="mt-1.5 block text-xs text-[var(--lp-subtle)]">
                 {expiryDate ? `Stops working on ${formatDate(expiryDate.toISOString())}.` : "Never expires. Revoke it by hand when it's no longer needed."}
               </span>
             </div>
           </div>
         ) : step === 1 ? (
           <fieldset>
-            <legend className="mb-2 text-[13px] text-[var(--lp-muted)]">What can this key do? Pick only what it needs.</legend>
+            <legend className="mb-2 text-sm text-[var(--lp-muted)]">What can this key do? Pick only what it needs.</legend>
             <div className="grid gap-2">
               {Object.entries(scopeInfo).map(([scope, info]) => {
                 const on = scopes.includes(scope);
@@ -188,14 +188,14 @@ function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () => void
                   >
                     <input type="checkbox" className="mt-0.5 accent-[var(--lp-accent)]" checked={on} onChange={() => toggle(scope)} />
                     <span>
-                      <span className="block text-[14px]">{info.label}</span>
-                      <span className="block text-[13px] leading-snug text-[var(--lp-subtle)]">{info.detail}</span>
+                      <span className="block text-base">{info.label}</span>
+                      <span className="block text-sm leading-snug text-[var(--lp-subtle)]">{info.detail}</span>
                     </span>
                   </label>
                 );
               })}
             </div>
-            {scopes.length === 0 ? <p className="mt-2 text-[12px] text-[#ff8fb3]">Choose at least one.</p> : null}
+            {scopes.length === 0 ? <p className="mt-2 text-xs text-[#ff8fb3]">Choose at least one.</p> : null}
           </fieldset>
         ) : step === 2 ? (
           <div>
@@ -204,14 +204,14 @@ function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () => void
               <ReviewRow label="Permissions">{scopes.map((s) => scopeInfo[s]?.label ?? s).join(", ")}</ReviewRow>
               <ReviewRow label="Expiration">{expiryDate ? `${expiryLabel}, until ${formatDate(expiryDate.toISOString())}` : "Never"}</ReviewRow>
             </dl>
-            <p className="mt-3 text-[12px] leading-relaxed text-[var(--lp-subtle)]">
+            <p className="mt-3 text-xs leading-relaxed text-[var(--lp-subtle)]">
               Creating the key is recorded in the audit log. Anyone holding it can act as this workspace within these permissions until it expires or you revoke it.
             </p>
           </div>
         ) : token ? (
           <div className="grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0">
             <div className="flex gap-2">
-              <code className="lp-mono flex h-10 min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap rounded-md border border-[var(--lp-border-strong)] bg-black/30 px-3 text-[13px]">
+              <code className="lp-mono flex h-10 min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap rounded-md border border-[var(--lp-border-strong)] bg-black/30 px-3 text-sm">
                 {token}
               </code>
               <button
@@ -226,8 +226,8 @@ function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () => void
               </button>
             </div>
             <div className="rounded-lg border border-[var(--lp-border)] bg-black/20 p-3">
-              <p className="text-[12px] text-[var(--lp-subtle)]">Try it</p>
-              <p className="lp-mono mt-1 overflow-x-auto whitespace-nowrap text-[12px] text-[var(--lp-muted)]">
+              <p className="text-xs text-[var(--lp-subtle)]">Try it</p>
+              <p className="lp-mono mt-1 overflow-x-auto whitespace-nowrap text-xs text-[var(--lp-muted)]">
                 curl -H &quot;Authorization: Bearer {token.slice(0, 12)}…&quot; https://console.qnetward.com/api/monitors
               </p>
             </div>
@@ -256,13 +256,13 @@ function KeyRow({ apiKey, disabled }: { apiKey: APIKey; disabled: boolean }) {
       </span>
       <div className="min-w-0 flex-1 max-sm:basis-[calc(100%-2.75rem)]">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate text-[13px] font-medium">{apiKey.name}</p>
-          <code className="lp-mono rounded border border-[var(--lp-border)] px-1.5 text-[11.5px] text-[var(--lp-muted)]">{apiKey.prefix}…</code>
+          <p className="truncate text-sm font-medium">{apiKey.name}</p>
+          <code className="lp-mono rounded border border-[var(--lp-border)] px-1.5 text-xs text-[var(--lp-muted)]">{apiKey.prefix}…</code>
           {state !== "active" ? (
-            <span className="rounded-md border border-[var(--lp-border)] px-1.5 text-[11.5px] text-[var(--lp-subtle)]">{state === "revoked" ? "Revoked" : "Expired"}</span>
+            <span className="rounded-md border border-[var(--lp-border)] px-1.5 text-xs text-[var(--lp-subtle)]">{state === "revoked" ? "Revoked" : "Expired"}</span>
           ) : null}
         </div>
-        <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-0.5 text-[12px] text-[var(--lp-subtle)]">
+        <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-0.5 text-xs text-[var(--lp-subtle)]">
           <span>{apiKey.scopes.map((s) => scopeInfo[s]?.label ?? s).join(", ")}</span>
           <span title={formatDateTime(apiKey.created_at)}>
             Created {formatDate(apiKey.created_at)}
@@ -273,7 +273,7 @@ function KeyRow({ apiKey, disabled }: { apiKey: APIKey; disabled: boolean }) {
           </span>
           {state === "active" ? <span>{apiKey.expires_at ? `Expires ${formatDate(apiKey.expires_at)}` : "No expiry"}</span> : null}
         </p>
-        {revoke.isError ? <p className="mt-1 text-[12px] text-[#ff8fb3]">{(revoke.error as ApiError).message}</p> : null}
+        {revoke.isError ? <p className="mt-1 text-xs text-[#ff8fb3]">{(revoke.error as ApiError).message}</p> : null}
       </div>
       {state === "active" && !disabled ? (
         <div className="flex shrink-0 items-center gap-1 max-sm:ml-11">
@@ -339,7 +339,7 @@ export function APIKeysWorkspace() {
         description={
           <>
             Keys let scripts, CI, and Terraform use the API as this workspace. Send one as{" "}
-            <code className="lp-mono text-[12.5px] text-[var(--lp-text)]">Authorization: Bearer qnw_…</code>. Browse every endpoint, with examples, in the{" "}
+            <code className="lp-mono text-sm text-[var(--lp-text)]">Authorization: Bearer qnw_…</code>. Browse every endpoint, with examples, in the{" "}
             <a href="/docs/api" target="_blank" rel="noreferrer" className="text-[var(--lp-text)] underline underline-offset-4 hover:text-[var(--lp-accent)]">
               API reference
             </a>
@@ -360,14 +360,14 @@ export function APIKeysWorkspace() {
           <CreateKeyDialog open={creating} onClose={() => setCreating(false)} />
           <SettingsCard id="keys" title="Keys" description="Only a hash of each key is stored. Revoking a key stops it immediately; every use is checked against it.">
             {keysQuery.isLoading ? (
-              <p className="text-[13px] text-[var(--lp-subtle)]">Loading…</p>
+              <p className="text-sm text-[var(--lp-subtle)]">Loading…</p>
             ) : keysQuery.isError ? (
               <Notice tone="error">{(keysQuery.error as ApiError).message || "Couldn't load keys."}</Notice>
             ) : keys.length === 0 ? (
               <div className="flex flex-col items-center rounded-lg border border-dashed border-[var(--lp-border)] px-6 py-10 text-center">
                 <KeyRound className="h-5 w-5 text-[var(--lp-subtle)]" aria-hidden="true" />
-                <p className="mt-3 text-[14px]">No API keys yet</p>
-                <p className="mt-1 max-w-sm text-[13px] text-[var(--lp-subtle)]">Create one for each script or pipeline, with only the permissions it needs.</p>
+                <p className="mt-3 text-base">No API keys yet</p>
+                <p className="mt-1 max-w-sm text-sm text-[var(--lp-subtle)]">Create one for each script or pipeline, with only the permissions it needs.</p>
                 {!isDemo ? (
                   <button type="button" className="console-btn console-btn-secondary mt-4" onClick={() => setCreating(true)}>
                     <Plus className="h-3.5 w-3.5" /> Create API key

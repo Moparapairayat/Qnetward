@@ -21,9 +21,9 @@ export function OverviewKpiStrip({ trackedTargets, critical, warning, stable, li
     <div className="grid gap-3 xl:grid-cols-5">
       {cards.map((card) => (
         <section key={card.label} className="dashboard-card rounded-[1.45rem] px-4 py-3.5">
-          <p className="text-[0.68rem] uppercase tracking-[0.24em] text-slate-500">{card.label}</p>
-          <p className={`mt-3 text-[1.65rem] font-semibold leading-none ${card.tone}`}>{card.value}</p>
-          <p className="mt-1.5 text-[0.82rem] text-slate-400">{card.copy}</p>
+          <p className="text-2xs uppercase tracking-[0.24em] text-slate-500">{card.label}</p>
+          <p className={`mt-3 text-2xl font-semibold leading-none ${card.tone}`}>{card.value}</p>
+          <p className="mt-1.5 text-sm text-slate-400">{card.copy}</p>
         </section>
       ))}
     </div>

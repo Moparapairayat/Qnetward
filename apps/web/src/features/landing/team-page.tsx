@@ -9,9 +9,9 @@ export function TeamPage() {
     <>
       <LandingNav />
       <main id="main" className="lp-container max-w-5xl py-20">
-        <p className="text-[13px] text-[var(--lp-accent)]">Team</p>
-        <h1 className="mt-4 max-w-3xl text-[40px] font-normal leading-[1.1] tracking-[-0.025em] sm:text-[48px]">The people behind Qnetward</h1>
-        <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-[var(--lp-muted)]">
+        <p className="text-sm text-[var(--lp-accent)]">Team</p>
+        <h1 className="mt-4 max-w-3xl text-3xl font-normal leading-[1.1] tracking-[-0.025em] sm:text-4xl">The people behind Qnetward</h1>
+        <p className="mt-5 max-w-2xl text-md leading-relaxed text-[var(--lp-muted)]">
           Qnetward is built in the open by the Quantum Axis organization and contributors on GitHub. Everyone here has shipped code, design, or
           ideas into the product you use.
         </p>
@@ -36,9 +36,9 @@ export function TeamPage() {
                   />
                 </span>
                 <span className="flex flex-1 flex-col p-5">
-                  <span className="text-[17px] leading-snug text-[var(--lp-text)]">{m.name}</span>
-                  <span className="mt-1 text-[14px] text-[var(--lp-muted)]">{m.role}</span>
-                  <span className="mt-auto inline-flex items-center gap-1.5 pt-4 text-[13px] text-[var(--lp-subtle)] transition-colors group-hover:text-[var(--lp-text)]">
+                  <span className="text-lg leading-snug text-[var(--lp-text)]">{m.name}</span>
+                  <span className="mt-1 text-base text-[var(--lp-muted)]">{m.role}</span>
+                  <span className="mt-auto inline-flex items-center gap-1.5 pt-4 text-sm text-[var(--lp-subtle)] transition-colors group-hover:text-[var(--lp-text)]">
                     <GitHubIcon size={14} /> @{m.github}
                   </span>
                 </span>
@@ -49,8 +49,8 @@ export function TeamPage() {
 
         <div className="mt-16 rounded-2xl border border-[var(--lp-border)] bg-[var(--lp-bg-raised)] p-8 sm:flex sm:items-center sm:justify-between sm:gap-8">
           <div>
-            <h2 className="text-[18px] font-normal">Want to help build it?</h2>
-            <p className="mt-1.5 text-[14px] text-[var(--lp-muted)]">Pick an issue, open a pull request, or tell us what you need. Contributors join this page.</p>
+            <h2 className="text-lg font-normal">Want to help build it?</h2>
+            <p className="mt-1.5 text-base text-[var(--lp-muted)]">Pick an issue, open a pull request, or tell us what you need. Contributors join this page.</p>
           </div>
           <div className="mt-5 flex shrink-0 gap-3 sm:mt-0">
             <a href="https://github.com/Quantum-Axis/Qnetward" target="_blank" rel="noreferrer" className="lp-btn lp-btn-primary">

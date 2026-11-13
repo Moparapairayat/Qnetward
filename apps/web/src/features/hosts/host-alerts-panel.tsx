@@ -56,7 +56,7 @@ function RuleForm({ hosts, onDone }: { hosts: Host[]; onDone: () => void }) {
           <button
             key={p.metric}
             type="button"
-            className="rounded-md border border-[var(--lp-border)] px-2.5 py-1 text-[12px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
+            className="rounded-md border border-[var(--lp-border)] px-2.5 py-1 text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)]"
             onClick={() => {
               setMetric(p.metric);
               setThreshold(String(p.threshold));
@@ -68,9 +68,9 @@ function RuleForm({ hosts, onDone }: { hosts: Host[]; onDone: () => void }) {
         ))}
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_7rem_8rem_minmax(0,1.4fr)]">
-        <label className="grid gap-1 text-[12px] text-[var(--lp-subtle)]">
+        <label className="grid gap-1 text-xs text-[var(--lp-subtle)]">
           Host
-          <select className="h-9 px-2 text-[13px]" value={agent} onChange={(e) => setAgent(e.target.value)}>
+          <select className="h-9 px-2 text-sm" value={agent} onChange={(e) => setAgent(e.target.value)}>
             <option value="">Every host</option>
             {hosts.map((h) => (
               <option key={h.id} value={h.id}>
@@ -79,9 +79,9 @@ function RuleForm({ hosts, onDone }: { hosts: Host[]; onDone: () => void }) {
             ))}
           </select>
         </label>
-        <label className="grid gap-1 text-[12px] text-[var(--lp-subtle)]">
+        <label className="grid gap-1 text-xs text-[var(--lp-subtle)]">
           Metric
-          <select className="h-9 px-2 text-[13px]" value={metric} onChange={(e) => setMetric(e.target.value as HostMetric)}>
+          <select className="h-9 px-2 text-sm" value={metric} onChange={(e) => setMetric(e.target.value as HostMetric)}>
             {(Object.keys(metricLabel) as HostMetric[]).map((m) => (
               <option key={m} value={m}>
                 {metricLabel[m]} · {metricHint[m]}
@@ -89,16 +89,16 @@ function RuleForm({ hosts, onDone }: { hosts: Host[]; onDone: () => void }) {
             ))}
           </select>
         </label>
-        <label className="grid gap-1 text-[12px] text-[var(--lp-subtle)]">
+        <label className="grid gap-1 text-xs text-[var(--lp-subtle)]">
           At or above
           <span className="flex items-center gap-1.5">
-            <input className="h-9 w-full px-2 text-[13px]" type="number" min={1} max={100} value={threshold} onChange={(e) => setThreshold(e.target.value)} />
-            <span className="text-[13px] text-[var(--lp-muted)]">%</span>
+            <input className="h-9 w-full px-2 text-sm" type="number" min={1} max={100} value={threshold} onChange={(e) => setThreshold(e.target.value)} />
+            <span className="text-sm text-[var(--lp-muted)]">%</span>
           </span>
         </label>
-        <label className="grid gap-1 text-[12px] text-[var(--lp-subtle)]">
+        <label className="grid gap-1 text-xs text-[var(--lp-subtle)]">
           For
-          <select className="h-9 px-2 text-[13px]" value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}>
+          <select className="h-9 px-2 text-sm" value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}>
             {minuteOptions.map((m) => (
               <option key={m} value={m}>
                 {m} {m === 1 ? "minute" : "minutes"}
@@ -106,9 +106,9 @@ function RuleForm({ hosts, onDone }: { hosts: Host[]; onDone: () => void }) {
             ))}
           </select>
         </label>
-        <label className="grid gap-1 text-[12px] text-[var(--lp-subtle)]">
+        <label className="grid gap-1 text-xs text-[var(--lp-subtle)]">
           Email (optional)
-          <input className="h-9 px-2 text-[13px]" type="email" placeholder="ops@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input className="h-9 px-2 text-sm" type="email" placeholder="ops@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
       </div>
       <div className="flex flex-wrap items-center gap-3">
@@ -118,8 +118,8 @@ function RuleForm({ hosts, onDone }: { hosts: Host[]; onDone: () => void }) {
         <button type="button" className="console-btn console-btn-secondary h-9 px-4" onClick={onDone}>
           Cancel
         </button>
-        <span className="text-[12px] text-[var(--lp-subtle)]">Alerts also go to channels that subscribe to Hosts in Integrations.</span>
-        {save.isError ? <span className="w-full text-[12px] text-[#ff8fb3]">{(save.error as ApiError).message}</span> : null}
+        <span className="text-xs text-[var(--lp-subtle)]">Alerts also go to channels that subscribe to Hosts in Integrations.</span>
+        {save.isError ? <span className="w-full text-xs text-[#ff8fb3]">{(save.error as ApiError).message}</span> : null}
       </div>
     </form>
   );
@@ -145,7 +145,7 @@ function RuleRow({ rule, hosts, canEdit }: { rule: HostAlertRule; hosts: Host[];
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <span
           className={cn(
-            "inline-flex rounded-md border px-1.5 py-0.5 text-[11px]",
+            "inline-flex rounded-md border px-1.5 py-0.5 text-2xs",
             !rule.enabled
               ? "border-[var(--lp-border)] text-[var(--lp-subtle)]"
               : firing
@@ -155,16 +155,16 @@ function RuleRow({ rule, hosts, canEdit }: { rule: HostAlertRule; hosts: Host[];
         >
           {!rule.enabled ? "Paused" : firing ? `Firing on ${rule.firing.length}` : "OK"}
         </span>
-        <span className="text-[13px]">
+        <span className="text-sm">
           {metricLabel[rule.metric]} ≥ {rule.threshold}% for {rule.minutes} {rule.minutes === 1 ? "minute" : "minutes"}
         </span>
-        <span className="text-[12px] text-[var(--lp-subtle)]">
+        <span className="text-xs text-[var(--lp-subtle)]">
           on {rule.agent_id ? name(rule.agent_id) : "every host"}
           {rule.notify_email ? ` · emails ${rule.notify_email}` : ""}
         </span>
         {canEdit ? (
           <span className="ml-auto flex items-center gap-2">
-            <button type="button" className="text-[12px] text-[var(--lp-muted)] hover:text-[var(--lp-text)]" disabled={toggle.isPending} onClick={() => toggle.mutate()}>
+            <button type="button" className="text-xs text-[var(--lp-muted)] hover:text-[var(--lp-text)]" disabled={toggle.isPending} onClick={() => toggle.mutate()}>
               {rule.enabled ? "Pause" : "Resume"}
             </button>
             <button type="button" aria-label="Delete rule" className="text-[var(--lp-subtle)] hover:text-[#ff8fb3]" disabled={remove.isPending} onClick={() => remove.mutate()}>
@@ -174,7 +174,7 @@ function RuleRow({ rule, hosts, canEdit }: { rule: HostAlertRule; hosts: Host[];
         ) : null}
       </div>
       {firing ? (
-        <ul className="grid gap-0.5 text-[12px] text-[var(--lp-muted)]">
+        <ul className="grid gap-0.5 text-xs text-[var(--lp-muted)]">
           {rule.firing.map((f) => (
             <li key={f.agent_id}>
               <span className="text-[var(--lp-text)]">{name(f.agent_id)}</span> at {f.value.toFixed(0)}% since {formatDateTime(f.firing_since)}
@@ -182,7 +182,7 @@ function RuleRow({ rule, hosts, canEdit }: { rule: HostAlertRule; hosts: Host[];
           ))}
         </ul>
       ) : null}
-      {toggle.isError || remove.isError ? <p className="text-[12px] text-[#ff8fb3]">{((toggle.error || remove.error) as ApiError).message}</p> : null}
+      {toggle.isError || remove.isError ? <p className="text-xs text-[#ff8fb3]">{((toggle.error || remove.error) as ApiError).message}</p> : null}
     </li>
   );
 }
@@ -199,7 +199,7 @@ export function HostAlertsPanel({ hosts, canEdit }: { hosts: Host[]; canEdit: bo
       bodyClassName="p-0"
       aside={
         canEdit && !adding ? (
-          <button type="button" className="console-btn console-btn-secondary h-8 px-3 text-[12px]" disabled={atLimit} title={atLimit ? "Your plan's rule limit is reached" : undefined} onClick={() => setAdding(true)}>
+          <button type="button" className="console-btn console-btn-secondary h-8 px-3 text-xs" disabled={atLimit} title={atLimit ? "Your plan's rule limit is reached" : undefined} onClick={() => setAdding(true)}>
             Add rule
           </button>
         ) : null
@@ -207,7 +207,7 @@ export function HostAlertsPanel({ hosts, canEdit }: { hosts: Host[]; canEdit: bo
     >
       {adding ? <RuleForm hosts={hosts} onDone={() => setAdding(false)} /> : null}
       {rules.isError ? (
-        <p className="border-t border-[var(--lp-border)] px-4 py-3 text-[13px] text-[#ff8fb3]">{(rules.error as ApiError).message}</p>
+        <p className="border-t border-[var(--lp-border)] px-4 py-3 text-sm text-[#ff8fb3]">{(rules.error as ApiError).message}</p>
       ) : list.length ? (
         <ul className="border-t border-[var(--lp-border)]">
           {list.map((r) => (
@@ -215,7 +215,7 @@ export function HostAlertsPanel({ hosts, canEdit }: { hosts: Host[]; canEdit: bo
           ))}
         </ul>
       ) : !adding ? (
-        <p className="border-t border-[var(--lp-border)] px-4 py-5 text-[13px] text-[var(--lp-subtle)]">
+        <p className="border-t border-[var(--lp-border)] px-4 py-5 text-sm text-[var(--lp-subtle)]">
           {rules.isLoading ? "Loading…" : "No rules yet. Add one to hear when a host's CPU, memory, disk, or swap stays high."}
         </p>
       ) : null}

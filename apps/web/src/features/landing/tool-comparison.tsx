@@ -12,7 +12,7 @@ const rows: { before: string; after: string; icon: AppIcon }[] = [
 export function ToolComparison() {
   return (
     <div className="lp-reveal overflow-hidden rounded-2xl border border-[var(--lp-border)]">
-      <div className="grid grid-cols-2 border-b border-[var(--lp-border)] bg-[var(--lp-bg-raised)] text-[13px]">
+      <div className="grid grid-cols-2 border-b border-[var(--lp-border)] bg-[var(--lp-bg-raised)] text-sm">
         <div className="px-5 py-4 text-[var(--lp-subtle)] sm:px-8">What you use now</div>
         <div className="flex items-center gap-2 border-l border-[var(--lp-border)] bg-[rgba(255,61,127,0.05)] px-5 py-4 text-[var(--lp-text)] sm:px-8">
           <QnetwardMark size={16} />
@@ -21,7 +21,7 @@ export function ToolComparison() {
       </div>
       <ul>
         {rows.map((row, i) => (
-          <li key={row.before} className={`grid grid-cols-2 text-[14px] ${i > 0 ? "border-t border-[var(--lp-border)]" : ""}`}>
+          <li key={row.before} className={`grid grid-cols-2 text-base ${i > 0 ? "border-t border-[var(--lp-border)]" : ""}`}>
             <div className="flex gap-3 px-5 py-5 text-[var(--lp-subtle)] sm:px-8">
               <row.icon className="mt-[2px] hidden h-4 w-4 shrink-0 opacity-60 sm:block" aria-hidden="true" />
               <span className="line-through decoration-[rgba(255,255,255,0.18)]">{row.before}</span>
