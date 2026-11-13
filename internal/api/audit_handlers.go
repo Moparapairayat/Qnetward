@@ -42,6 +42,9 @@ func (srv *Server) recordAudit(r *http.Request, workspaceID int64, actor store.U
 	if err != nil {
 		log.Printf("audit %s failed: %v", action, err)
 	}
+	if typ := auditLiveEvent(action); typ != "" && workspaceID > 0 {
+		srv.events.publish(workspaceID, liveEvent{Type: typ})
+	}
 }
 
 func idTarget(kind string, id int64, label string) auditTarget {

@@ -328,7 +328,7 @@ func (srv *Server) handleAgentDevices(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		s.Clean()
-		ch, err := srv.store.RecordDeviceSample(ctx, agent.ID, agent.WorkspaceID, s)
+		_, err := srv.store.RecordDeviceSample(ctx, agent.ID, agent.WorkspaceID, s)
 		if err != nil {
 			if !errors.Is(err, store.ErrDeviceNotFound) {
 				log.Printf("recording device %d sample failed: %v", s.DeviceID, err)
@@ -336,9 +336,10 @@ func (srv *Server) handleAgentDevices(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		accepted++
-		if ch.OldStatus != ch.NewStatus {
-			srv.events.publish(agent.WorkspaceID, liveEvent{Type: "device.changed"})
-		}
+	}
+	if accepted > 0 {
+		// One event per batch: the console refreshes devices and their charts.
+		srv.events.publish(agent.WorkspaceID, liveEvent{Type: EventDevice})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"accepted": accepted})
 }

@@ -277,6 +277,8 @@ func (srv *Server) deliver(ctx context.Context, ch store.Channel, msg notify.Mes
 // notifyChannels sends msg, in the background, to every enabled channel in
 // the workspace that subscribes to event.
 func (srv *Server) notifyChannels(workspaceID int64, event string, msg notify.Message) {
+	// Every alert worth sending to a channel is worth showing in open consoles.
+	srv.publishNotice(workspaceID, event, msg)
 	if srv.store == nil {
 		return
 	}

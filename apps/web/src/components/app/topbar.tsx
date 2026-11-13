@@ -9,6 +9,7 @@ import { apiRequest } from "@/lib/api";
 import { AlertRule, SessionResponse, WorkspaceInvitationsResponse } from "@/lib/types";
 import { useShellStore } from "@/store/ui-store";
 import { cn } from "@/lib/utils";
+import { useLiveInterval } from "@/lib/live";
 
 function useDismiss(open: boolean, close: () => void) {
   const ref = useRef<HTMLDivElement>(null);
@@ -41,10 +42,11 @@ function Notifications({ session }: { session: SessionResponse }) {
   const enabled = session.authenticated && !session.read_only;
 
   // Same cache keys as the sidebar and overview, so these add no duplicate requests.
+  const liveFallback = useLiveInterval(60_000);
   const alerts = useQuery({
     queryKey: ["alert-rules"],
     queryFn: () => apiRequest<AlertRule[]>("/api/alerts/rules"),
-    refetchInterval: 60_000,
+    refetchInterval: liveFallback,
     enabled,
   });
   const invitations = useQuery({

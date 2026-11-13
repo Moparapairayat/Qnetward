@@ -406,6 +406,23 @@ body {
   background: linear-gradient(90deg, rgba(64, 240, 255, 0.08), transparent 42%);
 }
 
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-[toast-in"] {
+    animation: none !important;
+  }
+}
+
 @keyframes dashboard-live-pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(99, 243, 255, 0.45);

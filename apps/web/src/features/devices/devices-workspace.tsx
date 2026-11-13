@@ -9,6 +9,7 @@ import type { DeviceInterface, DeviceListResponse, DeviceSeriesResponse, Network
 import { cn, formatDateTime } from "@/lib/utils";
 import { DefinitionList, PageHeader, Panel, RunStatus, StatStrip } from "@/components/tools/probe-ui";
 import { Chart, formatUptime } from "@/features/hosts/hosts-workspace";
+import { useLiveInterval } from "@/lib/live";
 
 export function formatBits(bps?: number | null) {
   if (bps == null || !Number.isFinite(bps)) return "–";
@@ -243,10 +244,11 @@ function DeviceDetail({ device, canEdit }: { device: NetworkDevice; canEdit: boo
   const [range, setRange] = useState<(typeof ranges)[number]>("6h");
   const [iface, setIface] = useState(0);
   const [editing, setEditing] = useState(false);
+  const seriesInterval = useLiveInterval(60_000);
   const series = useQuery({
     queryKey: ["device-series", device.id, range, iface],
     queryFn: () => apiRequest<DeviceSeriesResponse>(`/api/devices?id=${device.id}&range=${range}${iface ? `&if=${iface}` : ""}`),
-    refetchInterval: 60_000,
+    refetchInterval: seriesInterval,
   });
   const remove = useMutation({
     mutationFn: () => apiRequest(`/api/devices?id=${device.id}`, { method: "DELETE" }),
@@ -386,7 +388,8 @@ function DeviceDetail({ device, canEdit }: { device: NetworkDevice; canEdit: boo
 export function DevicesWorkspace() {
   const [open, setOpen] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
-  const list = useQuery({ queryKey: ["devices"], queryFn: () => apiRequest<DeviceListResponse>("/api/devices"), refetchInterval: 30_000 });
+  const listInterval = useLiveInterval(30_000, 60_000);
+  const list = useQuery({ queryKey: ["devices"], queryFn: () => apiRequest<DeviceListResponse>("/api/devices"), refetchInterval: listInterval });
   const workspace = useQuery({ queryKey: ["workspace-general"], queryFn: () => apiRequest<{ workspace: { role: string } }>("/api/workspace") });
   const canEdit = ["owner", "admin"].includes(workspace.data?.workspace.role ?? "");
   const devices = list.data?.devices ?? [];

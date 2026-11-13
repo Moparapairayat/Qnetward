@@ -26,6 +26,7 @@ import type {
   Severity,
 } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
+import { useLiveInterval } from "@/lib/live";
 import {
   Field,
   PageHeader,
@@ -539,11 +540,12 @@ export function PassiveChecksWorkspace() {
     queryKey: ["session"],
     queryFn: () => apiRequest<SessionResponse>("/api/auth/session"),
   });
+  const liveFallback = useLiveInterval(60_000);
   const watchesQuery = useQuery({
     queryKey: ["security-watches"],
     queryFn: () =>
       apiRequest<SecurityWatchListResponse>("/api/security/watches"),
-    refetchInterval: 60_000,
+    refetchInterval: liveFallback,
   });
   // The plan's limit counts every watch; this page shows the passive ones.
   const allWatches = watchesQuery.data?.watches ?? [];

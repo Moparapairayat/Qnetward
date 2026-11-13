@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Field, PageHeader, Panel, RunStatus, StatStrip } from "@/components/tools/probe-ui";
 import { Modal } from "@/components/ui/modal";
 import { Stepper } from "@/components/ui/stepper";
+import { useLiveInterval } from "@/lib/live";
 
 function ago(value?: string | null) {
   if (!value) return null;
@@ -198,7 +199,8 @@ export function AgentsWorkspace() {
   const sessionQuery = useQuery({ queryKey: ["session"], queryFn: () => apiRequest<SessionResponse>("/api/auth/session") });
   const enabled = sessionQuery.data?.authenticated === true;
   const teamQuery = useQuery({ queryKey: ["workspace-team"], queryFn: () => apiRequest<WorkspaceTeamResponse>("/api/workspace/team"), enabled });
-  const agentsQuery = useQuery({ queryKey: ["agents"], queryFn: () => apiRequest<ProbeAgentListResponse>("/api/agents"), enabled, refetchInterval: 30_000 });
+  const listInterval = useLiveInterval(30_000, 60_000);
+  const agentsQuery = useQuery({ queryKey: ["agents"], queryFn: () => apiRequest<ProbeAgentListResponse>("/api/agents"), enabled, refetchInterval: listInterval });
 
   const role = teamQuery.data?.workspace?.role;
   const isDemo = sessionQuery.data?.mode === "demo";

@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"qnetward/internal/platform/notify"
 	"qnetward/internal/store"
 )
 
@@ -195,4 +196,47 @@ func TestEventsResumeFromLastEventID(t *testing.T) {
 	if _, typ := next(stale); typ != EventResync {
 		t.Fatalf("an unknown position resyncs, got %s", typ)
 	}
+}
+
+// Changes people make go live through the audit trail, and every channel
+// alert also reaches open consoles as a toast that links to its page.
+func TestAuditAndAlertsGoLive(t *testing.T) {
+	st := installTestStore(t)
+	user, _ := issueTestSession(t, st)
+	workspaceID := testWorkspaceID(t, st, user.ID)
+	events, stop, ok := testSrv.events.subscribe(workspaceID)
+	if !ok {
+		t.Fatal("subscribe")
+	}
+	defer stop()
+	next := func() liveEvent {
+		t.Helper()
+		select {
+		case e := <-events:
+			return e
+		case <-time.After(5 * time.Second):
+			t.Fatal("no event")
+		}
+		return liveEvent{}
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/devices", nil)
+	for action, want := range map[string]string{"device.created": EventDevice, "monitor.deleted": EventMonitorChanged, "domain.verified": EventSecurityChanged, "member.invited": EventWorkspaceChanged} {
+		testSrv.recordAudit(req, workspaceID, user, action, auditTarget{Type: "x", ID: "1"}, nil)
+		if e := next(); e.Type != want || e.ID == 0 {
+			t.Fatalf("%s: got %+v, want %s with an id", action, e, want)
+		}
+	}
+	// Account events have no workspace stream.
+	testSrv.recordAudit(req, 0, user, "account.password_changed", auditTarget{}, nil)
+
+	testSrv.notifyChannels(workspaceID, store.ChannelEventMonitors, notify.Message{
+		Event: "monitor.down", Severity: "critical", Title: "api.acme.dev is down", Summary: "HTTPS returned 502.", URL: "https://console.example.com/monitors",
+	})
+	e := next()
+	if e.Type != EventNotice || e.Notice == nil || e.Notice.Title != "api.acme.dev is down" || e.Notice.Href != "/monitors" || e.Notice.Severity != "critical" ||
+		!strings.Contains(string(e.Data), `"group":"monitors"`) {
+		t.Fatalf("a channel alert becomes a toast: %+v %s", e.Notice, e.Data)
+	}
+	testSrv.background.Wait()
 }

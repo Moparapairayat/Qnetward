@@ -93,6 +93,10 @@ func (srv *Server) handleAgentMetrics(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: "saving metrics failed"})
 		return
 	}
+	if accepted > 0 {
+		data, _ := json.Marshal(map[string]int64{"agent_id": agent.ID})
+		srv.events.publish(agent.WorkspaceID, liveEvent{Type: EventHost, Data: data})
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"accepted": accepted})
 }
 

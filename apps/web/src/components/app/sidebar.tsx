@@ -13,6 +13,7 @@ import { QnetwardMark } from "@/features/landing/qnetward-mark";
 import { isSettingsPath, sectionOpenByDefault, sidebarSections, type NavItem } from "@/components/app/nav-config";
 import { cn } from "@/lib/utils";
 import { planLabel } from "@/lib/plans";
+import { useLiveInterval } from "@/lib/live";
 
 /** Closes a popover on outside click or Escape. */
 function useDismiss(open: boolean, close: () => void) {
@@ -330,10 +331,11 @@ export function Sidebar({ session }: { session: SessionResponse }) {
   const collapsed = sidebarCollapsed && !sidebarOpen;
 
   // Shares the overview's cache key, so this adds no extra request on that page.
+  const liveFallback = useLiveInterval(60_000);
   const alertRules = useQuery({
     queryKey: ["alert-rules"],
     queryFn: () => apiRequest<AlertRule[]>("/api/alerts/rules"),
-    refetchInterval: 60_000,
+    refetchInterval: liveFallback,
     enabled: session.authenticated && !session.read_only,
   });
   const firing = (alertRules.data ?? []).filter((r) => r.enabled && r.last_state === "alert").length;

@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"qnetward/internal/platform/notify"
 	"qnetward/internal/store"
 )
 
@@ -49,7 +51,54 @@ const (
 	EventHost    = "host.changed"
 	EventDevice  = "device.changed"
 	EventScan    = "security.scan"
+	// Changes people make, raised from the audit trail.
+	EventMonitorChanged   = "monitor.changed"
+	EventSecurityChanged  = "security.changed"
+	EventStatusPage       = "status_page.changed"
+	EventWorkspaceChanged = "workspace.changed"
 )
+
+// auditEvents maps audit actions, by prefix, to the live event that tells
+// consoles to refresh. Every change people make already writes the audit
+// trail, so this one table makes all of them live.
+var auditEvents = []struct{ prefix, event string }{
+	{"monitor", EventMonitorChanged},
+	{"alert_rule", EventAlert},
+	{"agent.", EventAgent},
+	{"device", EventDevice},
+	{"host_alert", EventHost},
+	{"domain", EventSecurityChanged},
+	{"scan.", EventSecurityChanged},
+	{"security.", EventSecurityChanged},
+	{"deep", EventSecurityChanged},
+	{"vuln", EventSecurityChanged},
+	{"status_page", EventStatusPage},
+	{"channel", EventWorkspaceChanged},
+	{"member.", EventWorkspaceChanged},
+	{"apikey.", EventWorkspaceChanged},
+	{"workspace.", EventWorkspaceChanged},
+	{"billing.", EventWorkspaceChanged},
+}
+
+func auditLiveEvent(action string) string {
+	for _, m := range auditEvents {
+		if strings.HasPrefix(action, m.prefix) {
+			return m.event
+		}
+	}
+	return ""
+}
+
+// liveNotice is what a console shows as a toast: something worth interrupting
+// for, such as a monitor going down. It is the same message channels and
+// email get, so every place says the same thing.
+type liveNotice struct {
+	Severity string `json:"severity"` // critical, warning, success, info
+	Title    string `json:"title"`
+	Body     string `json:"body,omitempty"`
+	// Href is a path in the console, such as /monitors.
+	Href string `json:"href,omitempty"`
+}
 
 // liveEvent is what a console receives. It names what changed, and may carry
 // the new values when they are small; otherwise the console fetches details
@@ -60,6 +109,7 @@ type liveEvent struct {
 	MonitorID int64           `json:"monitor_id,omitempty"`
 	Status    string          `json:"status,omitempty"`
 	Data      json.RawMessage `json:"data,omitempty"`
+	Notice    *liveNotice     `json:"notice,omitempty"`
 	At        int64           `json:"at"`
 }
 
@@ -323,4 +373,19 @@ func (srv *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+}
+
+// EventNotice carries a toast: an alert also sent to the workspace's channels.
+const EventNotice = "notice"
+
+// publishNotice tells open consoles about an alert. group is the channel event
+// it belongs to (monitors, hosts, security, ...), so consoles also refresh
+// what it's about.
+func (srv *Server) publishNotice(workspaceID int64, group string, msg notify.Message) {
+	n := &liveNotice{Severity: msg.Severity, Title: msg.Title, Body: msg.Summary}
+	if u, err := url.Parse(msg.URL); err == nil && strings.HasPrefix(u.Path, "/") {
+		n.Href = u.Path
+	}
+	data, _ := json.Marshal(map[string]string{"group": group, "event": msg.Event})
+	srv.events.publish(workspaceID, liveEvent{Type: EventNotice, Notice: n, Data: data})
 }

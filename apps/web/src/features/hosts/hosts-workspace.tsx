@@ -10,6 +10,7 @@ import type { Host, HostListResponse, HostSeriesResponse } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
 import { DefinitionList, PageHeader, Panel, RunStatus, StatStrip } from "@/components/tools/probe-ui";
 import { HostAlertsPanel } from "@/features/hosts/host-alerts-panel";
+import { useLiveInterval } from "@/lib/live";
 
 const WARN = 85;
 const CRIT = 95;
@@ -169,10 +170,11 @@ export function Chart({
 
 function HostDetail({ host }: { host: Host }) {
   const [range, setRange] = useState<Range>("24h");
+  const seriesInterval = useLiveInterval(60_000);
   const series = useQuery({
     queryKey: ["host-series", host.id, range],
     queryFn: () => apiRequest<HostSeriesResponse>(`/api/hosts?id=${host.id}&range=${range}`),
-    refetchInterval: 60_000,
+    refetchInterval: seriesInterval,
   });
   const data = (series.data?.points ?? []).map((p) => ({ ...p, ts: new Date(p.at).getTime() }));
   const info = (host.info ?? {}) as HostInfo;
@@ -258,7 +260,8 @@ function HostDetail({ host }: { host: Host }) {
 
 export function HostsWorkspace() {
   const [open, setOpen] = useState<number | null>(null);
-  const list = useQuery({ queryKey: ["hosts"], queryFn: () => apiRequest<HostListResponse>("/api/hosts"), refetchInterval: 30_000 });
+  const listInterval = useLiveInterval(30_000, 60_000);
+  const list = useQuery({ queryKey: ["hosts"], queryFn: () => apiRequest<HostListResponse>("/api/hosts"), refetchInterval: listInterval });
   const workspace = useQuery({ queryKey: ["workspace-general"], queryFn: () => apiRequest<{ workspace: { role: string } }>("/api/workspace") });
   const canEdit = ["owner", "admin"].includes(workspace.data?.workspace.role ?? "");
   const hosts = list.data?.hosts ?? [];

@@ -99,6 +99,7 @@ import {
   UserPlus as PhUserPlus,
   Users as PhUsers,
   Warning as PhWarning,
+  Info as PhInfo,
   WebhooksLogo as PhWebhooksLogo,
   WifiSlash as PhWifiSlash,
   X as PhX,
@@ -117,6 +118,7 @@ function bold(Base: Icon): Icon {
 
 export const Activity = bold(PhPulse);
 export const AlertTriangle = bold(PhWarning);
+export const Info = bold(PhInfo);
 export const ArrowRight = bold(PhArrowRight);
 export const ArrowUpRight = bold(PhArrowUpRight);
 export const BadgeCheck = bold(PhSealCheck);

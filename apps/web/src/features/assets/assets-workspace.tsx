@@ -14,6 +14,7 @@ import {
 import { apiRequest, ApiError } from "@/lib/api";
 import type { VerifiedDomain, VerifiedDomainListResponse } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
+import { useLiveInterval } from "@/lib/live";
 import {
   Field,
   PageHeader,
@@ -271,11 +272,12 @@ export function AssetsWorkspace() {
   } | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
 
+  const liveFallback = useLiveInterval(60_000);
   const list = useQuery({
     queryKey: ["asset-domains"],
     queryFn: () =>
       apiRequest<VerifiedDomainListResponse>("/api/assets/domains"),
-    refetchInterval: 60_000,
+    refetchInterval: liveFallback,
   });
   const domains = list.data?.domains ?? [];
   const limit = list.data?.limit ?? 0;

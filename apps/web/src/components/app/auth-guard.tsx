@@ -10,6 +10,7 @@ import { LiveEvents } from "@/components/app/live-events";
 import { Topbar } from "@/components/app/topbar";
 import { CommandPalette } from "@/components/app/command-palette";
 import { QnetwardMark } from "@/features/landing/qnetward-mark";
+import { LiveToaster } from "@/components/app/live-toaster";
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -56,6 +57,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen">
       <LiveEvents />
+      <LiveToaster />
       <Sidebar session={session.data} />
       <CommandPalette isAdmin={session.data.platform_role === "admin"} />
       <div className="flex min-w-0 flex-1 flex-col">

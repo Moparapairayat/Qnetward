@@ -7,6 +7,7 @@ import { apiRequest, ApiError } from "@/lib/api";
 import type { Host, HostAlertRule, HostAlertRuleList, HostMetric } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
 import { Panel } from "@/components/tools/probe-ui";
+import { useLiveInterval } from "@/lib/live";
 
 const metricLabel: Record<HostMetric, string> = { cpu: "CPU", memory: "Memory", disk: "Disk", swap: "Swap" };
 const metricHint: Record<HostMetric, string> = {
@@ -189,7 +190,8 @@ function RuleRow({ rule, hosts, canEdit }: { rule: HostAlertRule; hosts: Host[];
 
 export function HostAlertsPanel({ hosts, canEdit }: { hosts: Host[]; canEdit: boolean }) {
   const [adding, setAdding] = useState(false);
-  const rules = useQuery({ queryKey: ["host-alerts"], queryFn: () => apiRequest<HostAlertRuleList>("/api/hosts/alerts"), refetchInterval: 30_000 });
+  const liveFallback = useLiveInterval(30_000);
+  const rules = useQuery({ queryKey: ["host-alerts"], queryFn: () => apiRequest<HostAlertRuleList>("/api/hosts/alerts"), refetchInterval: liveFallback });
   const list = rules.data?.rules ?? [];
   const atLimit = rules.data ? rules.data.limit > 0 && list.length >= rules.data.limit : false;
 
