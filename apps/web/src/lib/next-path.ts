@@ -57,13 +57,21 @@ export function peekNext(): string | null {
   }
 }
 
-/** Where to go now that the visitor is signed in; forgets it once read. */
+/**
+ * Where to go now that the visitor is signed in. Reading doesn't forget it:
+ * sign-in can ask more than once at the same moment (the form and the
+ * signed-in check both navigate), and each must get the same answer. The
+ * console forgets it once the visitor arrives (clearNext).
+ */
 export function takeNext(): string {
-  const next = peekNext();
+  return peekNext() ?? FALLBACK;
+}
+
+/** Forgets the remembered destination. */
+export function clearNext() {
   try {
     sessionStorage.removeItem(KEY);
   } catch {
     // Nothing to clean up.
   }
-  return next ?? FALLBACK;
 }

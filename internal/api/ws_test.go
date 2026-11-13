@@ -6,11 +6,32 @@ import (
 	"net/http/httptest"
 	"qnetward/internal/probe"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/gorilla/websocket"
 )
+
+// newWSTestServer serves handleWS for one test. Its cleanup runs before the
+// test store is swapped out (cleanups run last in, first out, and the store is
+// installed first): it closes the server and waits for every handler to
+// return, so nothing a handler still does, such as writing an audit event,
+// races the swap.
+func newWSTestServer(t *testing.T) *httptest.Server {
+	t.Helper()
+	var running sync.WaitGroup
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		running.Add(1)
+		defer running.Done()
+		testSrv.handleWS(w, r)
+	}))
+	t.Cleanup(func() {
+		server.Close()
+		running.Wait()
+	})
+	return server
+}
 
 func TestIsAllowedWSOriginAcceptsSameHostAndRejectsDifferentHost(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "http://127.0.0.1:8080/ws", nil)
@@ -28,8 +49,7 @@ func TestHandleWSRejectsInvalidPingRequest(t *testing.T) {
 	st := installTestStore(t)
 	cookie := issueTestSessionCookie(t, st)
 
-	server := httptest.NewServer(http.HandlerFunc(testSrv.handleWS))
-	defer server.Close()
+	server := newWSTestServer(t)
 
 	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
 	header := http.Header{}
@@ -62,8 +82,7 @@ func TestHandleWSRejectsInvalidPortScanRequest(t *testing.T) {
 	st := installTestStore(t)
 	cookie := issueTestSessionCookie(t, st)
 
-	server := httptest.NewServer(http.HandlerFunc(testSrv.handleWS))
-	defer server.Close()
+	server := newWSTestServer(t)
 
 	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
 	header := http.Header{}
@@ -98,8 +117,7 @@ func TestHandleWSRejectsWhenProbeLimiterFull(t *testing.T) {
 	st := installTestStore(t)
 	cookie := issueTestSessionCookie(t, st)
 
-	server := httptest.NewServer(http.HandlerFunc(testSrv.handleWS))
-	defer server.Close()
+	server := newWSTestServer(t)
 
 	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
 	header := http.Header{}
@@ -147,8 +165,7 @@ func TestHandleWSStopCancelsActiveRun(t *testing.T) {
 		}
 	}()
 
-	server := httptest.NewServer(http.HandlerFunc(testSrv.handleWS))
-	defer server.Close()
+	server := newWSTestServer(t)
 
 	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
 	header := http.Header{}

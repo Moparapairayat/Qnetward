@@ -23,6 +23,8 @@ test("a pricing link goes on to Pro checkout after sign-in", async ({ page, requ
 });
 
 test("next links to other sites are ignored", async ({ page, request, baseURL }) => {
+  // Three sign-ins in one test.
+  test.setTimeout(120_000);
   const user = await provisionVerifiedUser(request, resolveOrigin(baseURL));
   for (const evil of ["https://evil.example/", "//evil.example/", "/\\evil.example"]) {
     await page.context().clearCookies();
