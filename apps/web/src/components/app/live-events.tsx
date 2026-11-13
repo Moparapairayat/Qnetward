@@ -9,13 +9,20 @@ import { useShellStore } from "@/store/ui-store";
 const STALE: Record<string, string[][]> = {
   "monitor.check": [["monitors"], ["monitor-series"], ["recent-history-targets"], ["overview-history"]],
   "alert.changed": [["alert-rules"]],
-  "agent.changed": [["agents"]],
+  "agent.changed": [["agents"], ["hosts"], ["devices"]],
+  "host.changed": [["hosts"], ["host-series"], ["host-alerts"]],
+  "device.changed": [["devices"], ["device-series"]],
+  "security.scan": [["security-scans"], ["security-scan"], ["surface-scans"], ["surface-scan"], ["security-watches"], ["vulnerabilities"], ["compliance"], ["deep-scans"]],
 };
 
 /**
  * Keeps one Server-Sent Events stream open for the console and refetches what
- * an event touches. Bursts are folded into one refetch. The browser reconnects
- * on its own; while it's down, the queries' normal polling carries on.
+ * an event touches. Bursts are folded into one refetch.
+ *
+ * Every event carries an id. When the connection drops, the browser reconnects
+ * on its own and sends the last id it saw, and the server replays what was
+ * missed. If the gap can't be filled, the server sends "resync" and every
+ * query is refetched, so the console is never quietly out of date.
  */
 export function LiveEvents() {
   const queryClient = useQueryClient();
@@ -38,8 +45,16 @@ export function LiveEvents() {
       pending.add(e.type);
       timer ??= setTimeout(flush, 400);
     };
+    const onResync = () => {
+      pending.clear();
+      if (timer) clearTimeout(timer);
+      timer = null;
+      void queryClient.invalidateQueries();
+    };
 
-    source.onopen = () => setLiveConnected(true);
+    // "ready" arrives once the stream is caught up, which is when it's truly live.
+    source.addEventListener("ready", () => setLiveConnected(true));
+    source.addEventListener("resync", onResync);
     source.onerror = () => setLiveConnected(false);
     for (const type of Object.keys(STALE)) source.addEventListener(type, onEvent);
 

@@ -1,55 +1,103 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
+
+	"qnetward/internal/store"
 )
 
-// Live events tell open consoles that something changed, so they refetch at
-// once instead of polling. The hub lives in this process: an event raised by
-// another API instance doesn't reach browsers connected here, and the console
-// keeps a slow poll for that case.
-
+// Live events tell open consoles that something changed, so they update at
+// once instead of polling.
+//
+// Every event is appended to the workspace's log in Postgres, which gives it
+// an increasing id, and a trigger announces it with NOTIFY. Each API instance
+// listens and pushes announcements to the consoles connected to it, so an
+// event raised anywhere reaches everyone. A console that reconnects sends the
+// last id it saw and receives what it missed; if that's gone from the log it
+// is told to refetch everything.
+//
+// When no listener is running (tests, no database, or the listening
+// connection dropped) the instance delivers its own events directly, so
+// consoles connected to it never go quiet.
 const (
-	eventBuffer    = 32
+	eventBuffer    = 64
 	eventHeartbeat = 25 * time.Second
 	// eventMaxPerWorkspace caps open streams so one workspace can't hold
 	// thousands of connections.
 	eventMaxPerWorkspace = 50
+	// eventBackfillMax is the most missed events replayed on reconnect;
+	// beyond it the console refetches instead.
+	eventBackfillMax = 500
 )
 
-// liveEvent is what a console receives. It names what changed; the console
-// fetches the details through the normal API, with the normal checks.
+// Event types every console understands. Clients ignore types they don't know.
+const (
+	EventReady   = "ready"  // sent first on every stream, with the current position
+	EventResync  = "resync" // the console missed too much: refetch everything
+	EventMonitor = "monitor.check"
+	EventAlert   = "alert.changed"
+	EventAgent   = "agent.changed"
+	EventHost    = "host.changed"
+	EventDevice  = "device.changed"
+	EventScan    = "security.scan"
+)
+
+// liveEvent is what a console receives. It names what changed, and may carry
+// the new values when they are small; otherwise the console fetches details
+// through the normal API, with the normal checks.
 type liveEvent struct {
-	Type      string `json:"type"`
-	MonitorID int64  `json:"monitor_id,omitempty"`
-	Status    string `json:"status,omitempty"`
-	At        int64  `json:"at"`
+	ID        int64           `json:"id,omitempty"`
+	Type      string          `json:"type"`
+	MonitorID int64           `json:"monitor_id,omitempty"`
+	Status    string          `json:"status,omitempty"`
+	Data      json.RawMessage `json:"data,omitempty"`
+	At        int64           `json:"at"`
+}
+
+// frame is one Server-Sent Events message, ready to write.
+func (e liveEvent) frame() []byte {
+	data, _ := json.Marshal(e)
+	if e.ID > 0 {
+		return []byte(fmt.Sprintf("id: %d\nevent: %s\ndata: %s\n\n", e.ID, e.Type, data))
+	}
+	return []byte(fmt.Sprintf("event: %s\ndata: %s\n\n", e.Type, data))
 }
 
 type eventHub struct {
 	mu   sync.Mutex
-	subs map[int64]map[chan []byte]struct{}
+	subs map[int64]map[chan liveEvent]struct{}
+	// logOf returns the store that keeps events, or nil without a database.
+	// It's read on use because the server's store is set after the hub.
+	logOf func() *store.Store
+	// listening is true while this instance hears NOTIFY announcements, so
+	// delivery goes through them rather than directly.
+	listening atomic.Bool
 }
 
 func newEventHub() *eventHub {
-	return &eventHub{subs: map[int64]map[chan []byte]struct{}{}}
+	return &eventHub{subs: map[int64]map[chan liveEvent]struct{}{}}
 }
 
-// subscribe returns a channel of encoded events for the workspace, or false
-// when the workspace already has too many streams open.
-func (h *eventHub) subscribe(workspaceID int64) (chan []byte, func(), bool) {
+// subscribe returns a channel of the workspace's events, or false when the
+// workspace already has too many streams open.
+func (h *eventHub) subscribe(workspaceID int64) (chan liveEvent, func(), bool) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if len(h.subs[workspaceID]) >= eventMaxPerWorkspace {
 		return nil, nil, false
 	}
-	ch := make(chan []byte, eventBuffer)
+	ch := make(chan liveEvent, eventBuffer)
 	if h.subs[workspaceID] == nil {
-		h.subs[workspaceID] = map[chan []byte]struct{}{}
+		h.subs[workspaceID] = map[chan liveEvent]struct{}{}
 	}
 	h.subs[workspaceID][ch] = struct{}{}
 	return ch, func() {
@@ -62,8 +110,7 @@ func (h *eventHub) subscribe(workspaceID int64) (chan []byte, func(), bool) {
 	}, true
 }
 
-// publish sends an event to every stream in the workspace. A stream too slow
-// to keep up misses it; its next refetch catches up anyway.
+// publish records an event and gets it to every console of the workspace.
 func (h *eventHub) publish(workspaceID int64, evt liveEvent) {
 	if h == nil {
 		return
@@ -71,18 +118,107 @@ func (h *eventHub) publish(workspaceID int64, evt liveEvent) {
 	if evt.At == 0 {
 		evt.At = time.Now().UnixMilli()
 	}
-	data, err := json.Marshal(evt)
-	if err != nil {
-		return
+	if lg := h.eventLog(); lg != nil {
+		payload, _ := json.Marshal(evt)
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		id, err := lg.AppendEvent(ctx, workspaceID, evt.Type, payload)
+		cancel()
+		if err == nil {
+			evt.ID = id
+			if h.listening.Load() {
+				return // the listener delivers it, here and on every other instance
+			}
+		} else {
+			log.Printf("recording live event %s failed: %v", evt.Type, err)
+		}
 	}
+	h.deliver(workspaceID, evt)
+}
+
+func (h *eventHub) eventLog() *store.Store {
+	if h == nil || h.logOf == nil {
+		return nil
+	}
+	return h.logOf()
+}
+
+// deliver hands an event to the workspace's open streams. A stream too slow
+// to keep up misses it and is told to resync.
+func (h *eventHub) deliver(workspaceID int64, evt liveEvent) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	for ch := range h.subs[workspaceID] {
 		select {
-		case ch <- data:
+		case ch <- evt:
 		default:
+			// Full: drop the oldest and ask the console to catch up.
+			select {
+			case <-ch:
+			default:
+			}
+			select {
+			case ch <- liveEvent{Type: EventResync, At: time.Now().UnixMilli()}:
+			default:
+			}
 		}
 	}
+}
+
+// RunEventBus listens for events from every API instance until ctx ends,
+// reconnecting with backoff when the connection drops.
+func (srv *Server) RunEventBus(ctx context.Context) {
+	h := srv.events
+	if h == nil || h.eventLog() == nil {
+		return
+	}
+	backoff := time.Second
+	for ctx.Err() == nil {
+		started := time.Now()
+		err := h.eventLog().ListenEvents(ctx, func() {
+			h.listening.Store(true)
+			log.Printf("live events: listening")
+		}, func(e store.WorkspaceEvent) {
+			var evt liveEvent
+			if json.Unmarshal(e.Payload, &evt) != nil {
+				evt = liveEvent{Type: e.Type}
+			}
+			evt.ID, evt.Type = e.ID, e.Type
+			if evt.At == 0 {
+				evt.At = e.At.UnixMilli()
+			}
+			h.deliver(e.WorkspaceID, evt)
+		})
+		h.listening.Store(false)
+		if ctx.Err() != nil {
+			return
+		}
+		if time.Since(started) > time.Minute {
+			backoff = time.Second
+		}
+		log.Printf("live events: listener stopped (%v); delivering locally, retrying in %s", err, backoff)
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(backoff):
+		}
+		if backoff < 30*time.Second {
+			backoff *= 2
+		}
+	}
+}
+
+// lastEventID is where a reconnecting console left off: the Last-Event-ID
+// header the browser sends, or ?since= for clients that set it themselves.
+func lastEventID(r *http.Request) int64 {
+	raw := strings.TrimSpace(r.Header.Get("Last-Event-ID"))
+	if raw == "" {
+		raw = r.URL.Query().Get("since")
+	}
+	id, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || id < 0 {
+		return -1
+	}
+	return id
 }
 
 // handleEvents streams the workspace's live events as Server-Sent Events.
@@ -100,6 +236,7 @@ func (srv *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: "streaming isn't supported here"})
 		return
 	}
+	// Subscribe before reading the backlog, so nothing falls between them.
 	events, unsubscribe, ok := srv.events.subscribe(user.WorkspaceID)
 	if !ok {
 		writeJSON(w, http.StatusTooManyRequests, apiError{Error: "too many live connections for this workspace"})
@@ -114,8 +251,54 @@ func (srv *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	// Tells nginx and similar proxies not to buffer the stream.
 	h.Set("X-Accel-Buffering", "no")
 	w.WriteHeader(http.StatusOK)
-	_, _ = fmt.Fprint(w, "retry: 5000\n\n: connected\n\n")
-	flusher.Flush()
+	write := func(b []byte) bool {
+		if _, err := w.Write(b); err != nil {
+			return false
+		}
+		flusher.Flush()
+		return true
+	}
+	if !write([]byte("retry: 3000\n\n")) {
+		return
+	}
+
+	// Catch up: replay what the console missed, or tell it to refetch.
+	var sent int64
+	if log := srv.events.eventLog(); log != nil {
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		since := lastEventID(r)
+		switch {
+		case since > 0:
+			missed, covered, err := log.EventsSince(ctx, user.WorkspaceID, since, eventBackfillMax+1)
+			if err != nil || !covered || len(missed) > eventBackfillMax {
+				latest, _ := log.LatestEventID(ctx, user.WorkspaceID)
+				sent = latest
+				write(liveEvent{ID: latest, Type: EventResync, At: time.Now().UnixMilli()}.frame())
+				break
+			}
+			sent = since
+			for _, e := range missed {
+				var evt liveEvent
+				if json.Unmarshal(e.Payload, &evt) != nil {
+					evt = liveEvent{Type: e.Type}
+				}
+				evt.ID, evt.Type = e.ID, e.Type
+				if !write(evt.frame()) {
+					cancel()
+					return
+				}
+				sent = e.ID
+			}
+		default:
+			sent, _ = log.LatestEventID(ctx, user.WorkspaceID)
+		}
+		cancel()
+	}
+	// "ready" carries the stream's position, so even a console that hears
+	// nothing before dropping can resume from here.
+	if !write(liveEvent{ID: sent, Type: EventReady, At: time.Now().UnixMilli()}.frame()) {
+		return
+	}
 
 	heartbeat := time.NewTicker(eventHeartbeat)
 	defer heartbeat.Stop()
@@ -124,17 +307,20 @@ func (srv *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 		case <-r.Context().Done():
 			return
 		case <-heartbeat.C:
-			if _, err := fmt.Fprint(w, ": ping\n\n"); err != nil {
+			if !write([]byte(": ping\n\n")) {
 				return
 			}
-			flusher.Flush()
-		case data := <-events:
-			var evt liveEvent
-			_ = json.Unmarshal(data, &evt)
-			if _, err := fmt.Fprintf(w, "event: %s\ndata: %s\n\n", evt.Type, data); err != nil {
+		case evt := <-events:
+			// Events already replayed in the catch-up arrive here too; skip them.
+			if evt.ID > 0 && evt.ID <= sent {
+				continue
+			}
+			if evt.ID > 0 {
+				sent = evt.ID
+			}
+			if !write(evt.frame()) {
 				return
 			}
-			flusher.Flush()
 		}
 	}
 }

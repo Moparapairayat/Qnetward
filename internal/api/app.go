@@ -139,6 +139,7 @@ func New(deps Deps, opts Options) *Server {
 			srv.demoWorkspace = "Kestrel Labs"
 		}
 	}
+	srv.events.logOf = func() *store.Store { return srv.store }
 	return srv
 }
 

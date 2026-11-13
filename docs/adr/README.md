@@ -45,3 +45,4 @@ patterns don't.
 | [0029](0029-compliance-maps-external-evidence.md) | Compliance maps external scan evidence to framework controls | Accepted |
 | [0030](0030-host-metrics-from-agents.md) | Host metrics come from the probe agent | Accepted |
 | [0031](0031-network-devices-over-snmp.md) | Network devices are polled over SNMP by agents | Accepted |
+| [0032](0032-live-events-through-postgres.md) | Live events go through a Postgres log with LISTEN/NOTIFY | Accepted |

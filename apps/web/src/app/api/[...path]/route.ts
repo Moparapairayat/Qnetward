@@ -24,6 +24,10 @@ async function forward(request: NextRequest, path: string[]) {
     headers,
     redirect: "manual",
     cache: "no-store",
+    // When the browser goes away, so does the backend request. This matters for
+    // the live event stream, which would otherwise hold a slot until its next
+    // heartbeat.
+    signal: request.signal,
   };
 
   if (request.method !== "GET" && request.method !== "HEAD") {

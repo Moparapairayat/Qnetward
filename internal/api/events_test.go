@@ -58,7 +58,7 @@ func TestEventsStreamMonitorChecks(t *testing.T) {
 			}
 		}
 	}
-	waitLine(": connected")
+	waitLine("event: ready")
 
 	// Another workspace's event must not arrive; ours must.
 	testSrv.events.publish(workspaceID+1_000_000, liveEvent{Type: "monitor.check", MonitorID: 1})
@@ -106,3 +106,94 @@ func TestEventHubCapsStreamsPerWorkspace(t *testing.T) {
 		t.Fatal("closing a stream should free a slot")
 	}
 }
+
+// A console that reconnects with the last id it saw gets exactly what it
+// missed, then "ready"; one whose position is gone is told to resync.
+func TestEventsResumeFromLastEventID(t *testing.T) {
+	st := installTestStore(t)
+	user, cookie := issueTestSession(t, st)
+	workspaceID := testWorkspaceID(t, st, user.ID)
+	server := httptest.NewServer(testSrv.Handler())
+	defer server.Close()
+
+	open := func(lastID string) (<-chan string, func()) {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/events", nil)
+		req.AddCookie(cookie)
+		if lastID != "" {
+			req.Header.Set("Last-Event-ID", lastID)
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			cancel()
+			t.Fatalf("connect: %v", err)
+		}
+		lines := make(chan string, 64)
+		go func() {
+			sc := bufio.NewScanner(resp.Body)
+			for sc.Scan() {
+				lines <- sc.Text()
+			}
+			close(lines)
+		}()
+		return lines, func() { cancel(); resp.Body.Close() }
+	}
+	// next returns the next event's id and type.
+	next := func(lines <-chan string) (string, string) {
+		t.Helper()
+		id := ""
+		for {
+			select {
+			case line, ok := <-lines:
+				if !ok {
+					t.Fatal("stream closed")
+				}
+				if strings.HasPrefix(line, "id: ") {
+					id = strings.TrimPrefix(line, "id: ")
+				}
+				if strings.HasPrefix(line, "event: ") {
+					return id, strings.TrimPrefix(line, "event: ")
+				}
+			case <-time.After(10 * time.Second):
+				t.Fatal("timed out waiting for an event")
+			}
+		}
+	}
+
+	lines, closeFirst := open("")
+	readyID, typ := next(lines)
+	if typ != EventReady {
+		t.Fatalf("a stream starts with ready, got %s", typ)
+	}
+	testSrv.events.publish(workspaceID, liveEvent{Type: EventHost})
+	firstID, typ := next(lines)
+	if typ != EventHost || firstID == "" || firstID == readyID {
+		t.Fatalf("live events carry a new id: %s %s (ready %s)", firstID, typ, readyID)
+	}
+	closeFirst()
+
+	// While disconnected, two more happen.
+	testSrv.events.publish(workspaceID, liveEvent{Type: EventDevice})
+	testSrv.events.publish(workspaceID, liveEvent{Type: EventAgent})
+
+	lines, closeSecond := open(firstID)
+	defer closeSecond()
+	if _, typ := next(lines); typ != EventDevice {
+		t.Fatalf("first missed event is device.changed, got %s", typ)
+	}
+	lastID, typ := next(lines)
+	if typ != EventAgent {
+		t.Fatalf("second missed event is agent.changed, got %s", typ)
+	}
+	if id, typ := next(lines); typ != EventReady || id != lastID {
+		t.Fatalf("ready follows at the newest position: %s %s, want %s", id, typ, lastID)
+	}
+
+	// A position that isn't in this workspace's log can't be caught up.
+	stale, closeStale := open("1")
+	defer closeStale()
+	if _, typ := next(stale); typ != EventResync {
+		t.Fatalf("an unknown position resyncs, got %s", typ)
+	}
+}
+

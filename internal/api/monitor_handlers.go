@@ -280,6 +280,9 @@ func (srv *Server) RunMonitors(ctx context.Context) {
 			if err := srv.store.PruneDeviceMetrics(pruneCtx, time.Now().Add(-store.DeviceMetricsRetention)); err != nil {
 				log.Printf("device metrics pruning failed: %v", err)
 			}
+			if err := srv.store.PruneEvents(pruneCtx, time.Now().Add(-store.EventRetention)); err != nil {
+				log.Printf("live event pruning failed: %v", err)
+			}
 			// Paid periods that ran out return their workspaces to Free.
 			if n, err := srv.store.ExpirePlans(pruneCtx); err != nil {
 				log.Printf("expiring plans failed: %v", err)

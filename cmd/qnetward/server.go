@@ -201,6 +201,8 @@ func runServe(args []string) {
 
 	monitorsCtx, stopMonitors := context.WithCancel(context.Background())
 	defer stopMonitors()
+	// Live updates reach consoles on every instance, whether or not this one runs monitors.
+	go apiServer.RunEventBus(monitorsCtx)
 	if *runMonitors {
 		go apiServer.RunMonitors(monitorsCtx)
 		go apiServer.RunSecurityWatches(monitorsCtx)
