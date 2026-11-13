@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/lib/api";
 import { SessionResponse } from "@/lib/types";
+import { takeNext } from "@/lib/next-path";
 
 /**
  * Shows its children only to signed-out visitors and sends anyone signed in to
@@ -21,7 +22,7 @@ export function GuestOnly({ children, hold = false }: { children: ReactNode; hol
 
   useEffect(() => {
     if (!hold && !session.isLoading && session.data?.authenticated) {
-      router.replace("/overview");
+      router.replace(takeNext());
     }
   }, [hold, router, session.data?.authenticated, session.isLoading]);
 

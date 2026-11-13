@@ -11,6 +11,7 @@ import { Topbar } from "@/components/app/topbar";
 import { CommandPalette } from "@/components/app/command-palette";
 import { LiveToaster } from "@/components/app/live-toaster";
 import { ConsoleShellSkeleton } from "@/components/app/route-states";
+import { peekNext, takeNext } from "@/lib/next-path";
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -22,7 +23,16 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!session.isLoading && !session.data?.authenticated) {
-      router.replace("/login");
+      // Come back to this page after signing in.
+      const here = window.location.pathname + window.location.search;
+      router.replace(pathname === "/overview" ? "/login" : `/login?next=${encodeURIComponent(here)}`);
+      return;
+    }
+    // Google sign-in always lands on the overview; go on to where the visitor
+    // was headed when they started (a pricing link, say).
+    if (!session.isLoading && pathname === "/overview" && !session.data?.read_only && peekNext()) {
+      router.replace(takeNext());
+      return;
     }
     if (!session.isLoading && session.data?.read_only && pathname !== "/overview") {
       router.replace("/overview");

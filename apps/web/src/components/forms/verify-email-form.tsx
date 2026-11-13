@@ -8,6 +8,7 @@ import { AuthInputField } from "@/components/auth/auth-input-field";
 import { AuthLayoutCard } from "@/components/auth/auth-layout-card";
 import { GuestOnly } from "@/components/auth/guest-only";
 import { Pending, VerifyStep } from "@/components/forms/signup-form";
+import { takeNext } from "@/lib/next-path";
 
 /**
  * Verifying an email outside signup, like after signing in to an account that
@@ -52,7 +53,7 @@ export function VerifyEmailFlow() {
             }}
             onVerified={async () => {
               await queryClient.invalidateQueries({ queryKey: ["session"] });
-              router.replace("/overview");
+              router.replace(takeNext());
             }}
           />
         ) : (

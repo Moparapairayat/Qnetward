@@ -94,7 +94,12 @@ export function Pricing({ initial }: { initial: PublicPlansResponse | null }) {
           const featured = plan.id === "pro";
           const price = priceFor(plan.id);
           const copy = planCopy(plan.id, plan.limits);
-          const cta = CTA[plan.id];
+          // Pro sends the visitor through signup (or sign-in) straight to checkout,
+          // with the period they picked here.
+          const cta =
+            plan.id === "pro" && catalog.payments_enabled
+              ? { ...CTA.pro, href: `/signup?next=${encodeURIComponent(`/workspace/billing?plan=pro&period=${period}`)}` }
+              : CTA[plan.id];
           return (
             <article
               key={plan.id}

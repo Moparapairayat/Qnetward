@@ -11,6 +11,7 @@ import { KeyRound, LockKeyhole, Mail, ShieldCheck } from "@/components/icons";
 import { AlternateSignIn } from "@/components/auth/alternate-sign-in";
 import { AuthInputField } from "@/components/auth/auth-input-field";
 import { apiRequest, ApiError } from "@/lib/api";
+import { takeNext } from "@/lib/next-path";
 import type { MFAChallengeResponse, SessionResponse } from "@/lib/types";
 
 const schema = z.object({
@@ -116,7 +117,7 @@ export function LoginForm() {
   }, []);
   const finish = async () => {
     await queryClient.invalidateQueries({ queryKey: ["session"] });
-    router.replace("/overview");
+    router.replace(takeNext());
   };
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),

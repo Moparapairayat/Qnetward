@@ -13,6 +13,7 @@ import { AuthLayoutCard } from "@/components/auth/auth-layout-card";
 import { CodeInput } from "@/components/auth/code-input";
 import { DemoLoginButton } from "@/components/auth/demo-login-button";
 import { GuestOnly } from "@/components/auth/guest-only";
+import { takeNext } from "@/lib/next-path";
 import { PasswordStrengthMeter } from "@/components/auth/password-strength-meter";
 import { Stepper } from "@/components/ui/stepper";
 import { apiRequest, ApiError } from "@/lib/api";
@@ -361,7 +362,7 @@ function WorkspaceStep({ email }: { email: string }) {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["session"] });
-      router.replace("/overview");
+      router.replace(takeNext());
     },
     onError: (err: ApiError) => setErrors({ form: err.message }),
   });

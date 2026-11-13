@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Check, Lock } from "@/components/icons";
@@ -97,7 +97,14 @@ function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; pla
   const monthly = pro.monthly;
   const yearly = pro.yearly;
   // Yearly by default; falls back to whichever price the server offers.
-  const [period, setPeriod] = useState<Period>(12);
+  // A pricing link (?plan=pro&period=monthly) arrives with its choice made.
+  const params = useSearchParams();
+  const wantsPro = params.get("plan") === "pro";
+  const [period, setPeriod] = useState<Period>(params.get("period") === "monthly" ? 1 : 12);
+  const proCard = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (wantsPro) proCard.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [wantsPro]);
   const price = (period === 12 ? yearly : monthly) ?? monthly ?? yearly;
   const saving = pro.saving;
   const canBuy = Boolean(billing?.payments_enabled && price);
@@ -212,8 +219,10 @@ function PlansGrid({ billing, plans, current }: { billing?: BillingResponse; pla
           return (
             <div
               key={p.id}
+              ref={featured ? proCard : undefined}
               className={cn(
                 "relative flex flex-col rounded-xl border p-5",
+                featured && wantsPro && current !== "enterprise" && "ring-2 ring-[rgba(255,61,127,0.45)] ring-offset-2 ring-offset-[#1b1b1f]",
                 featured ? "border-[rgba(255,61,127,0.5)] bg-[linear-gradient(180deg,rgba(255,61,127,0.07),rgba(255,61,127,0)_45%)]" : "border-[var(--lp-border)] bg-white/[0.01]",
               )}
             >
@@ -382,7 +391,9 @@ export function BillingWorkspace() {
         )}
       </SettingsCard>
 
-      <PlansGrid billing={billing} plans={usageQuery.data?.plans} current={current} />
+      <Suspense fallback={null}>
+        <PlansGrid billing={billing} plans={usageQuery.data?.plans} current={current} />
+      </Suspense>
 
       <SettingsCard id="invoices" title="Payments" description="Receipts for Pro, newest first. Only owners and admins see them.">
         {payments.length ? (
