@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"qnetward/internal/platform/mailer"
 	"strconv"
 	"strings"
 	"time"
@@ -41,6 +42,9 @@ type authAdminSystemRuntime struct {
 	RedisEnabled   bool   `json:"redis_enabled"`
 	ObjectStorage  bool   `json:"object_storage_enabled"`
 	EmailDelivery  bool   `json:"email_delivery_enabled"`
+	// EmailHealth is the latest outcome of sending, so a misconfigured sender
+	// (an unverified domain, say) shows here instead of only in the logs.
+	EmailHealth mailer.Health `json:"email_health"`
 }
 
 type authAdminSystemFeatures struct {
@@ -163,6 +167,7 @@ func (srv *Server) handleAdminSystem(w http.ResponseWriter, r *http.Request) {
 			RedisEnabled:   srv.cache != nil,
 			ObjectStorage:  srv.objects != nil,
 			EmailDelivery:  srv.mailer != nil,
+			EmailHealth:    srv.mailer.Health(),
 		},
 		Features: authAdminSystemFeatures{
 			PublicBaseURL:    srv.publicBaseURL,

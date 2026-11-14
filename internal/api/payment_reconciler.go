@@ -26,18 +26,34 @@ func (srv *Server) RunPaymentReconciler(ctx context.Context) {
 	}
 	ticker := time.NewTicker(paymentReconcileEvery)
 	defer ticker.Stop()
-	for {
+	for tick := 0; ; tick++ {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			srv.reconcilePayments(ctx)
+			srv.reconcilePayments(ctx, tick)
 		}
 	}
 }
 
-// reconcilePayments checks one batch of pending payments with the gateway.
-func (srv *Server) reconcilePayments(ctx context.Context) {
+// reconcileDue says whether a checkout of this age is asked about on this
+// tick. Most people pay within minutes, so young checkouts are asked about
+// every tick; older ones less and less, which keeps an abandoned checkout to
+// about a hundred questions to the gateway over its two days instead of
+// fourteen hundred. Tick 0, the first after a start, asks about all of them.
+func reconcileDue(age time.Duration, tick int) bool {
+	switch {
+	case tick == 0 || age < time.Hour:
+		return true
+	case age < 6*time.Hour:
+		return tick%8 == 0 // about every 16 minutes
+	default:
+		return tick%30 == 0 // about every hour
+	}
+}
+
+// reconcilePayments checks the pending payments due on this tick with the gateway.
+func (srv *Server) reconcilePayments(ctx context.Context, tick int) {
 	if !srv.payments.Configured() {
 		return
 	}
@@ -57,6 +73,9 @@ func (srv *Server) reconcilePayments(ctx context.Context) {
 	for _, p := range pending {
 		if ctx.Err() != nil {
 			return
+		}
+		if !reconcileDue(time.Since(p.CreatedAt), tick) {
+			continue
 		}
 		settleCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		outcome, _ := srv.settlePayment(settleCtx, nil, p.InvoiceID)

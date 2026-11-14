@@ -184,3 +184,39 @@ func TestSendAlertBuildsResendRequest(t *testing.T) {
 		t.Fatalf("expected branded alert email html, got %q", html)
 	}
 }
+
+// Health shows the latest outcome, so an unverified sender domain is visible
+// to an admin and not only in the logs.
+func TestHealthRecordsOutcomes(t *testing.T) {
+	fail := true
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if fail {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"message":"The domain is not verified."}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"id":"email_1"}`))
+	}))
+	defer srv.Close()
+	client, err := Open(Config{APIKey: "test-key", From: "Qnetward <alerts@example.com>", Endpoint: srv.URL, Timeout: 5 * time.Second})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if h := client.Health(); h.LastSentAt != nil || h.LastError != "" {
+		t.Fatalf("nothing sent yet: %+v", h)
+	}
+	in := AlertEmailInput{To: "ops@example.com", Title: "Down", Summary: "x", TriggeredAt: time.Now()}
+	if err := client.SendAlert(context.Background(), in); err == nil {
+		t.Fatal("expected the send to fail")
+	}
+	if h := client.Health(); h.LastError == "" || h.LastErrorAt == nil || h.LastSentAt != nil {
+		t.Fatalf("a failure should be recorded: %+v", h)
+	}
+	fail = false
+	if err := client.SendAlert(context.Background(), in); err != nil {
+		t.Fatal(err)
+	}
+	if h := client.Health(); h.LastSentAt == nil || h.LastError == "" {
+		t.Fatalf("a success should be recorded and the last error kept: %+v", h)
+	}
+}

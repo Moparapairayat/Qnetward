@@ -217,7 +217,7 @@ func TestUddoktaPayCheckoutAndSettlement(t *testing.T) {
 		t.Fatalf("checkout should keep the gateway's invoice, got %q (%v)", p.InvoiceID, err)
 	}
 	beforeReconcile, _ := st.WorkspacePlanExpiry(t.Context(), workspaceID)
-	testSrv.reconcilePayments(t.Context())
+	testSrv.reconcilePayments(t.Context(), 0)
 	if p, _ := st.GetPayment(t.Context(), abandoned.PaymentID); p.Status != "paid" {
 		t.Fatalf("the reconciler should complete a paid checkout, status %q", p.Status)
 	}
@@ -226,7 +226,7 @@ func TestUddoktaPayCheckoutAndSettlement(t *testing.T) {
 		t.Fatalf("the reconciled payment should add its month, %v -> %v", beforeReconcile, reconciled)
 	}
 	// Running it again changes nothing.
-	testSrv.reconcilePayments(t.Context())
+	testSrv.reconcilePayments(t.Context(), 0)
 	if again, _ := st.WorkspacePlanExpiry(t.Context(), workspaceID); !again.Equal(*reconciled) {
 		t.Fatal("reconciling again must not add time")
 	}
@@ -345,5 +345,24 @@ func TestBillingDetails(t *testing.T) {
 	_ = json.Unmarshal(call(http.MethodGet, "").Body.Bytes(), &got)
 	if got.Name != "Kestrel Labs" || got.Phone != "01812345678" || got.Company != "Kestrel Labs Ltd" || got.City != "Dhaka" || got.Country != "BD" {
 		t.Fatalf("saved details: %+v", got)
+	}
+}
+
+func TestReconcileDue(t *testing.T) {
+	for _, c := range []struct {
+		age  time.Duration
+		tick int
+		want bool
+	}{
+		{10 * time.Minute, 7, true}, // young: every tick
+		{3 * time.Hour, 8, true},    // a few hours: every eighth tick
+		{3 * time.Hour, 9, false},
+		{20 * time.Hour, 30, true}, // older: every thirtieth tick
+		{20 * time.Hour, 8, false},
+		{40 * time.Hour, 0, true}, // the first tick after a start asks about everything
+	} {
+		if got := reconcileDue(c.age, c.tick); got != c.want {
+			t.Errorf("age %v tick %d: got %v, want %v", c.age, c.tick, got, c.want)
+		}
 	}
 }

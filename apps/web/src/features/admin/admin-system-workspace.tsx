@@ -8,12 +8,12 @@ import { cn, formatDateTime } from "@/lib/utils";
 import { DefinitionList, PageHeader, Panel, RunStatus } from "@/components/tools/probe-ui";
 import { Pill } from "@/features/admin/admin-ui";
 
-type DepRow = { key: string; name: string; purpose: string; icon: typeof Database; enabled: boolean; dep?: RuntimeHealthDependency; required?: boolean };
+type DepRow = { key: string; name: string; purpose: string; icon: typeof Database; enabled: boolean; dep?: RuntimeHealthDependency; required?: boolean; badLabel?: string };
 
 function depState(row: DepRow) {
   if (!row.enabled) return { label: row.required ? "Missing" : "Not configured", tone: row.required ? ("bad" as const) : ("muted" as const) };
   if (!row.dep) return { label: "Configured", tone: "good" as const };
-  return row.dep.healthy ? { label: "Healthy", tone: "good" as const } : { label: "Unreachable", tone: "bad" as const };
+  return row.dep.healthy ? { label: "Healthy", tone: "good" as const } : { label: row.badLabel ?? "Unreachable", tone: "bad" as const };
 }
 
 export function AdminSystemWorkspace() {
@@ -23,11 +23,21 @@ export function AdminSystemWorkspace() {
   const system = systemQuery.data;
   const health = healthQuery.data;
 
+  // Email is "configured" once it has a key, but only sending shows whether it
+  // works: an unverified sender domain fails every message.
+  const mail = system?.runtime.email_health;
+  const mailFailing = Boolean(mail?.last_error && (!mail.last_sent_at || (mail.last_error_at ?? "") > mail.last_sent_at));
+  const mailDep: RuntimeHealthDependency | undefined = mailFailing
+    ? { enabled: true, healthy: false, error: `Last email failed: ${mail?.last_error}` }
+    : mail?.last_sent_at
+      ? { enabled: true, healthy: true, driver: `last sent ${new Date(mail.last_sent_at).toLocaleString()}` }
+      : undefined;
+
   const rows: DepRow[] = [
     { key: "db", name: "PostgreSQL", purpose: "Accounts, workspaces, alert rules, and probe history", icon: Database, enabled: health?.database.enabled ?? true, dep: health?.database, required: true },
     { key: "redis", name: "Redis", purpose: "Caches history queries", icon: Zap, enabled: health?.redis.enabled ?? system?.runtime.redis_enabled ?? false, dep: health?.redis },
     { key: "s3", name: "Object storage", purpose: "History exports and avatar images", icon: HardDrive, enabled: health?.object_storage.enabled ?? system?.runtime.object_storage_enabled ?? false, dep: health?.object_storage },
-    { key: "mail", name: "Email delivery", purpose: "Verification, password reset, invitations, and alerts", icon: Mail, enabled: system?.runtime.email_delivery_enabled ?? false },
+    { key: "mail", name: "Email delivery", purpose: "Verification, password reset, invitations, and alerts", icon: Mail, enabled: system?.runtime.email_delivery_enabled ?? false, dep: mailDep, badLabel: "Failing" },
   ];
   const failing = rows.filter((r) => depState(r).tone === "bad").length;
 

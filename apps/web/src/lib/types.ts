@@ -154,6 +154,8 @@ export type AdminSystemResponse = {
     redis_enabled: boolean;
     object_storage_enabled: boolean;
     email_delivery_enabled: boolean;
+    /** The latest outcome of sending email on this instance. */
+    email_health?: { last_sent_at?: string; last_error?: string; last_error_at?: string };
   };
   features: {
     public_base_url?: string;

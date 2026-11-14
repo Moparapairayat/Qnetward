@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -28,6 +29,39 @@ type Client struct {
 	from       string
 	replyTo    string
 	httpClient *http.Client
+
+	// The latest outcome of sending, so an admin can see whether email is
+	// actually arriving and not only whether it is configured.
+	mu         sync.Mutex
+	lastSentAt time.Time
+	lastErr    string
+	lastErrAt  time.Time
+}
+
+// Health is the latest outcome of sending email.
+type Health struct {
+	LastSentAt  *time.Time `json:"last_sent_at,omitempty"`
+	LastError   string     `json:"last_error,omitempty"`
+	LastErrorAt *time.Time `json:"last_error_at,omitempty"`
+}
+
+// Health reports when email last went out and the latest failure, if any.
+func (c *Client) Health() Health {
+	if c == nil {
+		return Health{}
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	var h Health
+	if !c.lastSentAt.IsZero() {
+		t := c.lastSentAt
+		h.LastSentAt = &t
+	}
+	if c.lastErr != "" {
+		t := c.lastErrAt
+		h.LastError, h.LastErrorAt = c.lastErr, &t
+	}
+	return h
 }
 
 type PasswordResetInput struct {
@@ -422,6 +456,18 @@ func (c *Client) SendAlert(ctx context.Context, in AlertEmailInput) error {
 }
 
 func (c *Client) send(ctx context.Context, payload map[string]any) error {
+	err := c.post(ctx, payload)
+	c.mu.Lock()
+	if err != nil {
+		c.lastErr, c.lastErrAt = err.Error(), time.Now()
+	} else {
+		c.lastSentAt = time.Now()
+	}
+	c.mu.Unlock()
+	return err
+}
+
+func (c *Client) post(ctx context.Context, payload map[string]any) error {
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return err
