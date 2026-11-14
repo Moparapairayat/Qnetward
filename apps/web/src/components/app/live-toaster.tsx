@@ -59,7 +59,7 @@ function Toast({ notice }: { notice: LiveNotice }) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       className={cn(
-        "pointer-events-auto relative w-[360px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border bg-[#1b1b1f]/95 shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur transition-all duration-200",
+        "pointer-events-auto relative w-[360px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border bg-[#0a0a0a]/95 shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur transition-all duration-200",
         t.ring,
         leaving ? "translate-x-4 opacity-0" : "animate-[toast-in_220ms_ease-out]",
       )}

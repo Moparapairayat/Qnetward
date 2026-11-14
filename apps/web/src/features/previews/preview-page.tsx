@@ -80,7 +80,7 @@ export function PreviewPage({ feature }: { feature: FeaturePreview }) {
 
       <dl className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {feature.stats.map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4">
+          <div key={stat.label} className="rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-4">
             <dt className="text-sm text-[var(--lp-muted)]">{stat.label}</dt>
             <dd className="mt-2 truncate text-xl font-medium tracking-[-0.02em]" style={{ color: stat.tone ? toneText[stat.tone] : undefined }}>
               {stat.value}
@@ -94,7 +94,7 @@ export function PreviewPage({ feature }: { feature: FeaturePreview }) {
         <div className={cn("grid grid-cols-1 gap-5 [&>*]:min-w-0", feature.visual && feature.side && "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]")}>
           {feature.visual ? <Visual kind={feature.visual} /> : null}
           {feature.side ? (
-            <section className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-5">
+            <section className="rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-5">
               <h2 className="text-base font-medium">{feature.side.title}</h2>
               <ul className="mt-4 divide-y divide-[var(--lp-border)] text-sm">
                 {feature.side.items.map((item) => (
@@ -112,7 +112,7 @@ export function PreviewPage({ feature }: { feature: FeaturePreview }) {
       ) : null}
 
       {feature.table ? (
-        <section className="overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]">
+        <section className="overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a]">
           <div className="px-4 py-3 text-base font-medium">{feature.table.title}</div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
@@ -141,7 +141,7 @@ export function PreviewPage({ feature }: { feature: FeaturePreview }) {
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-5">
+      <section className="rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-5">
         <h2 className="text-base font-medium">What this will do</h2>
         <ul className="mt-3 grid gap-x-8 gap-y-2 text-sm text-[var(--lp-muted)] sm:grid-cols-2">
           {feature.capabilities.map((cap) => (

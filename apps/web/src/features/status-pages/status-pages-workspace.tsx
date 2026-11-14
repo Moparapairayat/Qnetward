@@ -195,7 +195,7 @@ function PageCard({ page, monitors, onEdit }: { page: StatusPage; monitors: Map<
   const down = shown.filter((m) => m.enabled && m.status === "down").length;
 
   return (
-    <li className="flex flex-col gap-4 rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4 sm:flex-row sm:items-center">
+    <li className="flex flex-col gap-4 rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-4 sm:flex-row sm:items-center">
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-2 text-md font-medium">
           <span className="truncate">{page.title}</span>

@@ -126,7 +126,7 @@ export function Chart({
   };
   const Kind = series.length > 1 ? LineChart : AreaChart;
   return (
-    <div className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-3">
+    <div className="rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="text-xs text-[var(--lp-muted)]">{title}</span>
         {series.length > 1 ? (

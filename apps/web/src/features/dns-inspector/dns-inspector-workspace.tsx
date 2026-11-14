@@ -143,7 +143,7 @@ function Check({ ok, label }: { ok: boolean; label: string }) {
 
 function DNSRecordSection({ title, meta, items, error }: { title: string; meta: string; items: RecordItem[]; error?: string }) {
   return (
-    <section className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]">
+    <section className="rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a]">
       <div className="flex items-baseline justify-between gap-3 px-4 pt-3.5">
         <h3 className="text-sm font-medium">
           {title}
@@ -350,7 +350,7 @@ export function DNSInspectorWorkspace() {
         }
       />
 
-      <form className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4" onSubmit={form.handleSubmit((values) => lookup.mutate(values))}>
+      <form className="rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-4" onSubmit={form.handleSubmit((values) => lookup.mutate(values))}>
         <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_140px_200px_auto] md:items-end">
           <Field label="Domain or IP" error={errors.target?.message}>
             <input

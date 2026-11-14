@@ -222,7 +222,7 @@ function StatCard({ stat }: { stat: Stat }) {
           ? "border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] text-[#ff8fb3]"
           : "";
   return (
-    <div className="flex flex-col rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]">
+    <div className="flex flex-col rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a]">
       <div className="flex items-center gap-2.5 px-4 pt-4">
         <span className="grid h-7 w-7 place-items-center rounded-md border border-[var(--lp-border-strong)] bg-white/[0.03]">
           <stat.icon className="h-4 w-4 text-[var(--lp-muted)]" />
@@ -498,7 +498,7 @@ export function ResponseTimeChart({ targets, historyMap }: { targets: OverviewTa
   const dim = (id: string) => focusId !== null && focusId !== id;
 
   return (
-    <section className="flex flex-col rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]" aria-labelledby="rt-title">
+    <section className="flex flex-col rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a]" aria-labelledby="rt-title">
       <div className="flex flex-wrap items-center gap-3 px-4 pt-4">
         <span className="grid h-7 w-7 place-items-center rounded-md border border-[var(--lp-border-strong)] bg-white/[0.03]">
           <Clock className="h-3.5 w-3.5 text-[var(--lp-muted)]" />
@@ -591,7 +591,7 @@ export function ResponseTimeChart({ targets, historyMap }: { targets: OverviewTa
                   return (
                     <g key={`head-${s.id}`} pointerEvents="none" opacity={dim(s.id) ? 0.18 : 1}>
                       {live && !reducedMotion ? <circle cx={hx} cy={hy} r="9" fill={s.color} opacity="0.35" className="lp-map-ping" /> : null}
-                      <circle cx={hx} cy={hy} r={live ? 3.5 : 2.75} fill={live ? s.color : "#1b1b1f"} stroke={s.color} strokeWidth="1.5" />
+                      <circle cx={hx} cy={hy} r={live ? 3.5 : 2.75} fill={live ? s.color : "#0a0a0a"} stroke={s.color} strokeWidth="1.5" />
                     </g>
                   );
                 })}
@@ -600,7 +600,7 @@ export function ResponseTimeChart({ targets, historyMap }: { targets: OverviewTa
                     <line x1={x(hoverTs)} x2={x(hoverTs)} y1={PAD.t} y2={H - PAD.b} stroke="rgba(255,255,255,0.18)" strokeDasharray="3 3" />
                     {covering.map((s) => {
                       const p = nearest(s, hoverTs);
-                      return <circle key={s.id} cx={x(p.ts)} cy={y(p.rtt)} r="3.5" fill={s.color} stroke="#1b1b1f" strokeWidth="1.5" />;
+                      return <circle key={s.id} cx={x(p.ts)} cy={y(p.rtt)} r="3.5" fill={s.color} stroke="#0a0a0a" strokeWidth="1.5" />;
                     })}
                   </>
                 ) : null}
@@ -669,7 +669,7 @@ export function TargetHealthCard({ targets }: { targets: OverviewTargetSnapshot[
   const attention = targets.filter((t) => t.healthState === "critical" || t.healthState === "warning");
 
   return (
-    <section className="flex flex-col rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]" aria-labelledby="health-title">
+    <section className="flex flex-col rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a]" aria-labelledby="health-title">
       <div className="flex items-center gap-3 px-4 pt-4">
         <span className="grid h-7 w-7 place-items-center rounded-md border border-[var(--lp-border-strong)] bg-white/[0.03]">
           <Activity className="h-3.5 w-3.5 text-[var(--lp-muted)]" />
@@ -745,7 +745,7 @@ export function TargetsSummary({ targets, historyMap }: { targets: OverviewTarge
   );
 
   return (
-    <section className="overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]" aria-labelledby="summary-title">
+    <section className="overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a]" aria-labelledby="summary-title">
       <div className="flex flex-wrap items-center gap-2 px-4 py-3">
         <h2 id="summary-title" className="mr-auto text-base font-medium">
           Targets

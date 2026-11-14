@@ -77,7 +77,7 @@ export function QuickProbe({
   const active = toolOptions.find((t) => t.id === tool) ?? toolOptions[0];
   return (
     <form
-      className="min-w-0 rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-2"
+      className="min-w-0 rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-2"
       onSubmit={(event) => {
         event.preventDefault();
         onRun();
@@ -135,7 +135,7 @@ export function StatRow({
     { label: "Live now", value: live, hint: "streamed in the last 15s" },
   ];
   return (
-    <dl className="grid grid-cols-2 overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] lg:grid-cols-4">
+    <dl className="grid grid-cols-2 overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] lg:grid-cols-4">
       {stats.map((stat, i) => (
         <div
           key={stat.label}
@@ -170,7 +170,7 @@ export function LatencyCard({ points }: { points: { ts: number; rttMs?: number |
   const median = sorted.length ? sorted[Math.floor(sorted.length / 2)] : null;
 
   return (
-    <section className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-5" aria-labelledby="latency-title">
+    <section className="rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-5" aria-labelledby="latency-title">
       <div className="flex items-baseline justify-between gap-4">
         <h2 id="latency-title" className="text-md font-medium">
           Latency
@@ -210,7 +210,7 @@ export function StatusCard({ targets, alertRuleCount }: { targets: OverviewTarge
   const order: OverviewTargetSnapshot["healthState"][] = ["critical", "warning", "stable", "idle"];
   const total = targets.length || 1;
   return (
-    <section className="flex flex-col rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-5" aria-labelledby="status-title">
+    <section className="flex flex-col rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-5" aria-labelledby="status-title">
       <h2 id="status-title" className="text-md font-medium">
         Status
       </h2>
@@ -247,7 +247,7 @@ export function StatusCard({ targets, alertRuleCount }: { targets: OverviewTarge
 
 export function TargetsTable({ targets }: { targets: OverviewTargetSnapshot[] }) {
   return (
-    <section className="overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]" aria-labelledby="targets-title">
+    <section className="overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a]" aria-labelledby="targets-title">
       <div className="flex items-center justify-between px-5 py-4">
         <h2 id="targets-title" className="text-md font-medium">
           Targets
@@ -323,7 +323,7 @@ export function GettingStarted({ hasAlertRules }: { hasAlertRules: boolean }) {
     },
   ];
   return (
-    <section className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]" aria-labelledby="start-title">
+    <section className="rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a]" aria-labelledby="start-title">
       <div className="border-b border-[var(--lp-border)] px-5 py-4">
         <h2 id="start-title" className="text-md font-medium">
           Get started

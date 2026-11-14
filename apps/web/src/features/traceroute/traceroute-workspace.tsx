@@ -107,7 +107,7 @@ export function TracerouteWorkspace() {
       />
 
       <form
-        className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4"
+        className="rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-4"
         onSubmit={(e) => {
           e.preventDefault();
           if (target.trim()) trace.mutate();

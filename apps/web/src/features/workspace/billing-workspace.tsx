@@ -113,7 +113,7 @@ function PlanBanner({ billing, plans, current }: { billing?: BillingResponse; pl
           </p>
         ) : null}
       </div>
-      <Link href="/upgrade" className="console-btn console-btn-primary h-9 shrink-0 justify-center px-4">
+      <Link href="/upgrade" className="console-btn console-btn-brand h-9 shrink-0 justify-center px-4">
         {current === "pro" ? "Add time" : "See plans"}
       </Link>
     </section>

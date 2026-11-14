@@ -135,7 +135,7 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
   const timeFmt = (ts: number) => new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <section className="flex flex-col rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]" aria-labelledby="rt-title">
+    <section className="flex flex-col rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a]" aria-labelledby="rt-title">
       <div className="flex flex-wrap items-center gap-3 px-4 pt-4">
         <span className="grid h-7 w-7 place-items-center rounded-md border border-[var(--lp-border-strong)] bg-white/[0.03]">
           <Clock className="h-3.5 w-3.5 text-[var(--lp-muted)]" />
@@ -299,7 +299,7 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
                 return (
                   <g key={`head-${l.id}`} pointerEvents="none" opacity={dim(l.id) ? 0.18 : 1}>
                     {live && !reducedMotion ? <circle cx={hx} cy={hy} r="9" fill={l.color} opacity="0.35" className="lp-map-ping" /> : null}
-                    <circle cx={hx} cy={hy} r={live ? 3.5 : 2.75} fill={live ? l.color : "#1b1b1f"} stroke={l.color} strokeWidth="1.5" />
+                    <circle cx={hx} cy={hy} r={live ? 3.5 : 2.75} fill={live ? l.color : "#0a0a0a"} stroke={l.color} strokeWidth="1.5" />
                   </g>
                 );
               })}
@@ -308,7 +308,7 @@ export function MonitorResponseChart({ enabled, fallback }: { enabled: boolean; 
               <>
                 <line x1={x(hoverTs)} x2={x(hoverTs)} y1={PAD.t} y2={H - PAD.b} stroke="rgba(255,255,255,0.18)" strokeDasharray="3 3" />
                 {hovered.map(({ line, point }) =>
-                  point && point.rtt !== null ? <circle key={line.id} cx={x(point.ts)} cy={y(point.rtt)} r="3.5" fill={line.color} stroke="#1b1b1f" strokeWidth="1.5" /> : null,
+                  point && point.rtt !== null ? <circle key={line.id} cx={x(point.ts)} cy={y(point.rtt)} r="3.5" fill={line.color} stroke="#0a0a0a" strokeWidth="1.5" /> : null,
                 )}
               </>
             ) : null}

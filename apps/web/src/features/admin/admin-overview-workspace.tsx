@@ -61,7 +61,7 @@ export function AdminOverviewWorkspace() {
           <Link
             key={item.href}
             href={item.href}
-            className="group flex items-start gap-3 rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4 transition-colors hover:border-[var(--lp-border-strong)] hover:bg-[#202025]"
+            className="group flex items-start gap-3 rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-4 transition-colors hover:border-[var(--lp-border-strong)] hover:bg-[#111111]"
           >
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[var(--lp-border-strong)] bg-white/[0.03]">
               <item.icon className="h-4 w-4 text-[var(--lp-muted)]" />

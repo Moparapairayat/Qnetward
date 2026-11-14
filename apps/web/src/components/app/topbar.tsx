@@ -82,7 +82,7 @@ function Notifications({ session }: { session: SessionResponse }) {
         onClick={() => setOpen((v) => !v)}
       >
         {count ? <BellRing className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-        {count ? <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[var(--lp-accent)] ring-2 ring-[#141417]" /> : null}
+        {count ? <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[var(--lp-accent)] ring-2 ring-[#000000]" /> : null}
       </button>
       {open ? (
         <div role="dialog" aria-label="Notifications" className="console-popover absolute right-0 top-full z-50 mt-2 w-[340px] overflow-hidden">
@@ -267,7 +267,7 @@ export function Topbar({ session }: { session: SessionResponse }) {
   }, [toggleSidebarCollapsed]);
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-[var(--lp-border)] bg-[#141417]/85 px-4 backdrop-blur-md lg:px-8">
+    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-[var(--lp-border)] bg-[#000000]/85 px-4 backdrop-blur-md lg:px-8">
       <button type="button" onClick={toggleSidebar} aria-label="Open navigation" className={cn(iconButton, "-ml-1 lg:hidden")}>
         <Menu className="h-5 w-5" />
       </button>

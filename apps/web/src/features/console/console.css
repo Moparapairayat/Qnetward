@@ -11,22 +11,37 @@
 
 /* ---------- tokens: point Tailwind theme colours at the brand ---------- */
 .lp-console {
-  --color-background: #141417;
-  --color-foreground: #ededf0;
-  --color-card: #1b1b1f;
-  --color-card-foreground: #ededf0;
-  --color-popover: #1d1d22;
-  --color-popover-foreground: #ededf0;
+  /*
+   * The console's palette: true neutral greys on black, one bright element
+   * (white primary buttons), and the brand pink kept for focus and accents.
+   * Type runs a step larger than the marketing site so working screens read
+   * comfortably: body 14px, secondary 13px.
+   */
+  --lp-bg: #000000;
+  --lp-bg-raised: #0a0a0a;
+  --lp-surface: #111111;
+  --lp-border: #262626;
+  --lp-border-strong: #333333;
+  --lp-text: #ededed;
+  --text-2xs: 12px;
+  --text-xs: 13px;
+  --text-sm: 14px;
+  --color-background: #000000;
+  --color-foreground: #ededed;
+  --color-card: #0a0a0a;
+  --color-card-foreground: #ededed;
+  --color-popover: #111111;
+  --color-popover-foreground: #ededed;
   --color-primary: #ff3d7f;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #202025;
-  --color-secondary-foreground: #ededf0;
-  --color-muted: #202025;
-  --color-muted-foreground: #9a9aa3;
+  --color-secondary: #111111;
+  --color-secondary-foreground: #ededed;
+  --color-muted: #111111;
+  --color-muted-foreground: #a1a1a1;
   --color-accent: #8b5cf6;
   --color-accent-foreground: #ffffff;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-input: rgba(255, 255, 255, 0.06);
+  --color-border: #262626;
+  --color-input: #333333;
   --color-ring: #ff3d7f;
   --color-nw-teal: #ff3d7f;
   --color-nw-cyan: #a78bfa;
@@ -34,21 +49,21 @@
   --color-nw-mint: #4ade80;
   --color-nw-violet: #8b5cf6;
   --color-nw-red: #ff6b9a;
-  --color-sidebar: #111114;
-  --color-sidebar-border: rgba(255, 255, 255, 0.08);
+  --color-sidebar: #000000;
+  --color-sidebar-border: #262626;
 
   /* legacy custom properties read by some screens */
-  --foreground: #ededf0;
-  --muted: #9a9aa3;
-  --border: rgba(255, 255, 255, 0.08);
-  --card: #1b1b1f;
+  --foreground: #ededed;
+  --muted: #a1a1a1;
+  --border: #262626;
+  --card: #0a0a0a;
   --teal: #ff3d7f;
   --cyan: #a78bfa;
   --gold: #fbbf24;
   --danger: #ff6b9a;
   --success: #4ade80;
 
-  background: #141417;
+  background: #000000;
   font-family: var(--font-geist), system-ui, sans-serif;
 }
 
@@ -300,9 +315,9 @@
   .lp-console input:not([type]):not(.auth-input),
   .lp-console select,
   .lp-console textarea {
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid var(--lp-border-strong);
-    background-color: rgba(255, 255, 255, 0.03);
+    background-color: #0a0a0a;
     color: var(--lp-text);
     font-family: var(--font-geist), system-ui, sans-serif;
     font-size: 14px;
@@ -315,8 +330,8 @@
   .lp-console select:focus-visible,
   .lp-console textarea:focus-visible {
     outline: none;
-    border-color: var(--lp-accent);
-    box-shadow: 0 0 0 3px rgba(255, 61, 127, 0.15);
+    border-color: #8f8f8f;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
   }
 
   .lp-console select option {
@@ -344,9 +359,9 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    border-radius: 8px;
+    border-radius: 6px;
     padding: 0 12px;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     white-space: nowrap;
     transition:
@@ -356,22 +371,32 @@
   }
 
   .lp-console .console-btn-primary {
+    background: #ededed;
+    color: #0a0a0a;
+  }
+
+  .lp-console .console-btn-primary:hover {
+    background: #ffffff;
+  }
+
+  /* For the few actions that should stand out in the brand colour (Upgrade). */
+  .lp-console .console-btn-brand {
     background: var(--lp-accent);
     color: #fff;
   }
 
-  .lp-console .console-btn-primary:hover {
+  .lp-console .console-btn-brand:hover {
     background: #ff5a93;
   }
 
   .lp-console .console-btn-secondary {
     border: 1px solid var(--lp-border-strong);
-    background: rgba(255, 255, 255, 0.03);
+    background: #0a0a0a;
     color: var(--lp-text);
   }
 
   .lp-console .console-btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.07);
+    background: #1a1a1a;
   }
 
   .lp-console .console-btn:disabled {
@@ -382,7 +407,7 @@
   .lp-console .console-popover {
     border-radius: 10px;
     border: 1px solid var(--lp-border-strong);
-    background: #1d1d22;
+    background: #111111;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
   }
 }
@@ -517,8 +542,8 @@ html:has(.lp-console) {
  * arbitrary classes, so this maps them up here in one place. Unlayered rules
  * win over Tailwind's utilities layer. */
 .lp-console {
-  --lp-muted: #a3a3ab;
-  --lp-subtle: #85858e;
+  --lp-muted: #a1a1a1;
+  --lp-subtle: #8f8f8f;
   font-size: 14px;
   line-height: 1.5;
   text-rendering: optimizeLegibility;

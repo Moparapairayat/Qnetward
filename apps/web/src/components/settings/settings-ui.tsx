@@ -81,10 +81,10 @@ export function WorkspaceAvatar({ name, id, size = 32, className }: { name?: str
 
 export function SettingsPageTitle({ title, description, action }: { title: string; description?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-[var(--lp-border)] pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+    <div className="flex flex-col gap-3 border-b border-[var(--lp-border)] pb-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
       <div className="min-w-0">
-        <h1 className="text-xl font-medium tracking-[-0.02em]">{title}</h1>
-        {description ? <p className="mt-1 text-sm leading-relaxed text-[var(--lp-muted)]">{description}</p> : null}
+        <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.025em]">{title}</h1>
+        {description ? <p className="mt-1.5 text-sm leading-relaxed text-[var(--lp-muted)]">{description}</p> : null}
       </div>
       {action ? <div className="flex shrink-0 gap-2">{action}</div> : null}
     </div>
@@ -116,28 +116,28 @@ export function SettingsCard({
 }) {
   const body = (
     <>
-      <div className="p-5">
-        <h2 id={id ? `${id}-title` : undefined} className="text-md font-medium">
+      <div className="p-6">
+        <h2 id={id ? `${id}-title` : undefined} className="text-[20px] font-semibold leading-snug tracking-[-0.02em]">
           {title}
         </h2>
-        {description ? <p className="mt-1 text-sm leading-relaxed text-[var(--lp-muted)]">{description}</p> : null}
-        {children ? <div className="mt-4">{children}</div> : null}
+        {description ? <p className="mt-2 max-w-3xl text-sm leading-[1.6] text-[var(--lp-muted)]">{description}</p> : null}
+        {children ? <div className="mt-5">{children}</div> : null}
       </div>
       {hint || action ? (
         <div
           className={cn(
-            "flex min-h-[52px] flex-wrap items-center justify-between gap-3 rounded-b-xl border-t px-5 py-2.5",
-            tone === "danger" ? "border-[rgba(255,61,127,0.25)] bg-[rgba(255,61,127,0.05)]" : "border-[var(--lp-border)] bg-white/[0.015]",
+            "flex min-h-[57px] flex-wrap items-center justify-between gap-3 rounded-b-lg border-t px-6 py-3",
+            tone === "danger" ? "border-[rgba(255,61,127,0.25)] bg-[rgba(255,61,127,0.05)]" : "border-[var(--lp-border)] bg-[#050505]",
           )}
         >
-          <div className="min-w-0 text-xs text-[var(--lp-subtle)]">{hint}</div>
+          <div className="min-w-0 text-sm text-[var(--lp-muted)]">{hint}</div>
           {action ? <div className="flex shrink-0 gap-2">{action}</div> : null}
         </div>
       ) : null}
     </>
   );
   const className = cn(
-    "rounded-xl border bg-[#1b1b1f]",
+    "rounded-lg border bg-[#0a0a0a]",
     tone === "danger" ? "border-[rgba(255,61,127,0.3)]" : "border-[var(--lp-border)]",
   );
   if (onSubmit) {

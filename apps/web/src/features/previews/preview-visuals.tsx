@@ -2,7 +2,7 @@ import { Bot, MessageSquare, Send, Sparkles } from "@/components/icons";
 
 /* Illustrative visuals for feature previews. All data below is sample data. */
 
-const card = "rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]";
+const card = "rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a]";
 
 export function TopologyVisual() {
   const nodes = [
@@ -72,9 +72,9 @@ export function TopologyVisual() {
         })}
         {nodes.map((n) => (
           <g key={n.id}>
-            <circle cx={n.x} cy={n.y} r="14" fill="#1d1d22" stroke={nodeColor[n.kind]} strokeWidth="1.5" />
+            <circle cx={n.x} cy={n.y} r="14" fill="#111111" stroke={nodeColor[n.kind]} strokeWidth="1.5" />
             <circle cx={n.x} cy={n.y} r="4" fill={nodeColor[n.kind]} />
-            <text x={n.x} y={n.y + 30} textAnchor="middle" fontSize="11" fill="#9a9aa3" stroke="#1b1b1f" strokeWidth="4" paintOrder="stroke">
+            <text x={n.x} y={n.y + 30} textAnchor="middle" fontSize="11" fill="#9a9aa3" stroke="#0a0a0a" strokeWidth="4" paintOrder="stroke">
               {n.label}
             </text>
           </g>
@@ -177,7 +177,7 @@ export function TimelineVisual() {
       <ol className="mt-4 space-y-4 border-l border-[var(--lp-border)] pl-5">
         {events.map(([time, kind, text, color]) => (
           <li key={time + kind} className="relative text-sm">
-            <span className="absolute -left-[25px] top-1 h-2.5 w-2.5 rounded-full ring-4 ring-[#1b1b1f]" style={{ background: color }} />
+            <span className="absolute -left-[25px] top-1 h-2.5 w-2.5 rounded-full ring-4 ring-[#0a0a0a]" style={{ background: color }} />
             <span className="lp-mono mr-2 text-[var(--lp-subtle)]">{time}</span>
             <span className="mr-2 text-[var(--lp-text)]">{kind}</span>
             <span className="text-[var(--lp-muted)]">{text}</span>

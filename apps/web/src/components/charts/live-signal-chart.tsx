@@ -234,7 +234,7 @@ export function LiveSignalChart({
         {lastOk && typeof lastOk.v === "number" ? (
           <g>
             {live && !reduced ? <circle cx={x(lastOk.t)} cy={y(lastOk.v)} r="9" fill={headColor} opacity="0.25" className="lp-map-ping" /> : null}
-            <circle cx={x(lastOk.t)} cy={y(lastOk.v)} r="4" fill={headColor} stroke="#1b1b1f" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+            <circle cx={x(lastOk.t)} cy={y(lastOk.v)} r="4" fill={headColor} stroke="#0a0a0a" strokeWidth="2" vectorEffect="non-scaling-stroke" />
             <line x1={x(lastOk.t)} x2={W - PAD.r + 6} y1={y(lastOk.v)} y2={y(lastOk.v)} stroke={headColor} strokeOpacity="0.35" strokeDasharray="2 3" vectorEffect="non-scaling-stroke" />
             <text x={W - PAD.r + 10} y={y(lastOk.v) + 4} fontSize="12" fill={headColor} fontFamily="var(--font-geist-mono), monospace">
               {lastOk.v >= 100 ? Math.round(lastOk.v) : lastOk.v.toFixed(1)}

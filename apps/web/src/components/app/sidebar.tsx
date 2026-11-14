@@ -40,7 +40,7 @@ function RailTip({ label, show }: { label: string; show: boolean }) {
   return (
     <span
       role="tooltip"
-      className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md border border-[var(--lp-border-strong)] bg-[#1d1d22] px-2 py-1 text-xs text-[var(--lp-text)] opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+      className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md border border-[var(--lp-border-strong)] bg-[#111111] px-2 py-1 text-xs text-[var(--lp-text)] opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
     >
       {label}
     </span>
@@ -349,7 +349,7 @@ export function Sidebar({ session }: { session: SessionResponse }) {
       <aside
         aria-label="Sidebar"
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[var(--lp-border)] bg-[#111114] transition-[transform,width] duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[var(--lp-border)] bg-[#000000] transition-[transform,width] duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
           collapsed ? "w-[60px]" : "w-64",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}

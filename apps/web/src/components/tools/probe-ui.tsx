@@ -43,7 +43,7 @@ export function RunStatus({ tone, label }: { tone: RunTone; label: string }) {
 
 export function Panel({ title, aside, children, className, bodyClassName }: { title?: string; aside?: ReactNode; children: ReactNode; className?: string; bodyClassName?: string }) {
   return (
-    <section className={cn("rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]", className)}>
+    <section className={cn("rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a]", className)}>
       {title ? (
         <div className="flex items-center justify-between gap-3 px-4 pt-4">
           <h2 className="text-base font-medium">{title}</h2>
@@ -86,7 +86,7 @@ export function StatStrip({ items }: { items: { label: string; value: string; to
   return (
     <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[var(--lp-border)] sm:grid-cols-3 xl:grid-cols-6">
       {items.map((item) => (
-        <div key={item.label} className="bg-[#1b1b1f] px-4 py-3.5">
+        <div key={item.label} className="bg-[#0a0a0a] px-4 py-3.5">
           <dt className="text-xs text-[var(--lp-subtle)]">{item.label}</dt>
           <dd className="lp-mono mt-1 truncate text-lg" style={{ color: item.tone ? color[item.tone] : undefined }}>
             <AnimatedValue value={item.value} better={item.better} />
@@ -164,7 +164,7 @@ export function LatencyChart({ points, emptyText }: { points: { seq: number; rtt
         {hp && hover !== null ? (
           <>
             <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} stroke="rgba(255,255,255,0.18)" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
-            {typeof hp.rtt === "number" ? <circle cx={x(hover)} cy={y(hp.rtt)} r="3.5" fill="#ff3d7f" stroke="#1b1b1f" strokeWidth="1.5" vectorEffect="non-scaling-stroke" /> : null}
+            {typeof hp.rtt === "number" ? <circle cx={x(hover)} cy={y(hp.rtt)} r="3.5" fill="#ff3d7f" stroke="#0a0a0a" strokeWidth="1.5" vectorEffect="non-scaling-stroke" /> : null}
           </>
         ) : null}
       </svg>

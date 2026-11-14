@@ -193,7 +193,7 @@ export function PortScanClient() {
         status={<RunStatus tone={tone} label={runStateLabel(runState)} />}
       />
 
-      <form className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4" onSubmit={form.handleSubmit((values) => void run(values))}>
+      <form className="rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-4" onSubmit={form.handleSubmit((values) => void run(values))}>
         <div className="flex flex-col gap-3 md:flex-row md:items-end">
           <Field label="Target" error={errors.host?.message} className="min-w-0 flex-1">
             <input id="scan-target" className="h-10 w-full px-3" placeholder="example.com or 203.0.113.10" autoComplete="off" {...form.register("host")} />
@@ -331,7 +331,7 @@ export function PortScanClient() {
         {visibleResults.length ? (
           <div className="max-h-[420px] overflow-y-auto border-t border-[var(--lp-border)]">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-[#1b1b1f]">
+              <thead className="sticky top-0 bg-[#0a0a0a]">
                 <tr className="border-b border-[var(--lp-border)] text-left text-xs text-[var(--lp-subtle)]">
                   <th className="px-4 py-2 font-medium">Port</th>
                   <th className="px-4 py-2 font-medium">Service</th>

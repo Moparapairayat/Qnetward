@@ -11,7 +11,7 @@ const rate = (bps: number) => `${formatBytes(bps)}/s`;
 
 function Tile({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "warn" | "bad" }) {
   return (
-    <div className="bg-[#1b1b1f] px-4 py-3">
+    <div className="bg-[#0a0a0a] px-4 py-3">
       <div className="text-xs text-[var(--lp-subtle)]">{label}</div>
       <div className={cn("lp-mono mt-1 text-xl transition-colors", tone === "bad" ? "text-[#ff8fb3]" : tone === "warn" ? "text-[#fcd34d]" : "text-[var(--lp-text)]")}>{value}</div>
       {sub ? <div className="mt-0.5 text-2xs text-[var(--lp-subtle)]">{sub}</div> : null}

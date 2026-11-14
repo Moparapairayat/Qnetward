@@ -48,7 +48,7 @@ function FrameworkCard({ fw, active, onClick }: { fw: ComplianceReport["framewor
       aria-pressed={active}
       className={cn(
         "grid gap-2.5 rounded-xl border px-4 py-3.5 text-left transition-colors",
-        active ? "border-[var(--lp-accent)] bg-[rgba(255,61,127,0.06)]" : "border-[var(--lp-border)] bg-[#1b1b1f] hover:border-white/20",
+        active ? "border-[var(--lp-accent)] bg-[rgba(255,61,127,0.06)]" : "border-[var(--lp-border)] bg-[#0a0a0a] hover:border-white/20",
       )}
     >
       <div className="flex items-baseline justify-between gap-2">

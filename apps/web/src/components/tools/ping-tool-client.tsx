@@ -195,7 +195,7 @@ export function PingToolClient({ mode }: { mode: "ping" | "tcpping" }) {
       />
 
       <form
-        className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4"
+        className="rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-4"
         onSubmit={form.handleSubmit((values) => {
           setActiveContinuous(values.continuous === true);
           void run(values);
@@ -328,7 +328,7 @@ export function PingToolClient({ mode }: { mode: "ping" | "tcpping" }) {
         {results.length ? (
           <div className="max-h-[360px] overflow-y-auto border-t border-[var(--lp-border)]">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-[#1b1b1f]">
+              <thead className="sticky top-0 bg-[#0a0a0a]">
                 <tr className="border-b border-[var(--lp-border)] text-left text-xs text-[var(--lp-subtle)]">
                   <th className="px-4 py-2 font-medium">Seq</th>
                   <th className="px-4 py-2 font-medium">Address</th>

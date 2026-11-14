@@ -12,8 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
  */
 export function ConsoleShellSkeleton() {
   return (
-    <div className="flex min-h-screen bg-[#141417]" role="status" aria-label="Loading your workspace">
-      <div className="hidden w-64 shrink-0 flex-col gap-2 border-r border-[var(--lp-border)] bg-[#111114] lg:flex">
+    <div className="flex min-h-screen bg-[#000000]" role="status" aria-label="Loading your workspace">
+      <div className="hidden w-64 shrink-0 flex-col gap-2 border-r border-[var(--lp-border)] bg-[#000000] lg:flex">
         <div className="flex h-14 items-center gap-2 border-b border-[var(--lp-border)] px-3">
           <QnetwardMark size={24} />
           <span className="text-md font-semibold text-[var(--lp-text)]">Qnetward</span>
@@ -80,7 +80,7 @@ function StateScreen({ code, title, message, actions, fullScreen }: StateScreenP
     </div>
   );
   if (!fullScreen) return <div className="flex min-h-[60vh] items-center justify-center">{body}</div>;
-  return <div className="lp-root flex min-h-screen items-center justify-center bg-[#141417]">{body}</div>;
+  return <div className="lp-root flex min-h-screen items-center justify-center bg-[#000000]">{body}</div>;
 }
 
 const primary =

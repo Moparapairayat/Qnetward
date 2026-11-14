@@ -42,7 +42,7 @@ export function Modal({
       ref={ref}
       aria-labelledby="modal-title"
       className={cn(
-        "lp-modal m-auto w-[calc(100%-2rem)] max-w-[560px] rounded-xl border border-[var(--lp-border-strong)] bg-[#1b1b1f] p-0 text-[var(--lp-text)] shadow-[0_30px_90px_rgba(0,0,0,0.6)] backdrop:bg-black/60 backdrop:backdrop-blur-sm",
+        "lp-modal m-auto w-[calc(100%-2rem)] max-w-[560px] rounded-xl border border-[var(--lp-border-strong)] bg-[#0a0a0a] p-0 text-[var(--lp-text)] shadow-[0_30px_90px_rgba(0,0,0,0.6)] backdrop:bg-black/60 backdrop:backdrop-blur-sm",
         className,
       )}
       onCancel={(e) => {

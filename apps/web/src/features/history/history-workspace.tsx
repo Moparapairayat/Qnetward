@@ -365,7 +365,7 @@ export function HistoryWorkspace() {
         }
       />
 
-      <form className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4" onSubmit={form.handleSubmit((values) => void loadHistory(values))}>
+      <form className="rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-4" onSubmit={form.handleSubmit((values) => void loadHistory(values))}>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
           <div className="lg:w-auto">
             <span className="mb-1.5 block text-xs text-[var(--lp-muted)]">Protocol</span>
@@ -511,7 +511,7 @@ export function HistoryWorkspace() {
         {tablePoints.length ? (
           <div className="max-h-[460px] overflow-y-auto border-t border-[var(--lp-border)]">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-[#1b1b1f]">
+              <thead className="sticky top-0 bg-[#0a0a0a]">
                 <tr className="border-b border-[var(--lp-border)] text-left text-xs text-[var(--lp-subtle)]">
                   <th className="px-4 py-2 font-medium">Time</th>
                   <th className="px-4 py-2 font-medium">Seq</th>

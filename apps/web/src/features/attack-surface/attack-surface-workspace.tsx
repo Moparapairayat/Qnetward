@@ -126,7 +126,7 @@ function SurfaceReportView({ report, previous }: { report: SurfaceReport; previo
 
   return (
     <div className="grid gap-5 [&>*]:min-w-0">
-      <section className="flex flex-col gap-5 rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-5 sm:flex-row sm:items-center">
+      <section className="flex flex-col gap-5 rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-5 sm:flex-row sm:items-center">
         <GradeBadge grade={report.grade} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-lg font-medium">{report.domain}</p>
@@ -323,7 +323,7 @@ export function AttackSurfaceWorkspace() {
         </div>
       ) : (
         <form
-          className="rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f] p-4"
+          className="rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a] p-4"
           onSubmit={(e) => {
             e.preventDefault();
             if (target) start.mutate(target);

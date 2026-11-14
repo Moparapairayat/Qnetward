@@ -33,11 +33,12 @@ const PERMISSIONS: { label: string; roles: string[] }[] = [
   { label: "Invite, promote, or remove admins and owners", roles: ["owner"] },
 ];
 
+// Quiet badges: grey for everyone, a touch of the brand colour for owners.
 const ROLE_BADGE: Record<string, string> = {
-  owner: "border-[rgba(255,61,127,0.35)] bg-[rgba(255,61,127,0.1)] text-[#ff8fb3]",
-  admin: "border-[rgba(167,139,250,0.35)] bg-[rgba(167,139,250,0.1)] text-[#c4b5fd]",
-  member: "border-[var(--lp-border-strong)] bg-white/[0.04] text-[var(--lp-text)]",
-  viewer: "border-[rgba(96,165,250,0.3)] bg-[rgba(96,165,250,0.08)] text-[#93c5fd]",
+  owner: "border-[rgba(255,61,127,0.3)] bg-[rgba(255,61,127,0.08)] text-[#ff8fb3]",
+  admin: "border-[var(--lp-border-strong)] bg-[#111111] text-[var(--lp-text)]",
+  member: "border-[var(--lp-border-strong)] bg-[#111111] text-[var(--lp-muted)]",
+  viewer: "border-[var(--lp-border-strong)] bg-[#111111] text-[var(--lp-muted)]",
 };
 
 const STATUS_STYLE: Record<string, string> = {
@@ -129,7 +130,7 @@ function RowMenu({ label, children }: { label: string; children: (close: () => v
         <MoreHorizontal className="h-4 w-4" />
       </button>
       {open ? (
-        <div role="menu" className="absolute right-0 top-9 z-30 w-56 overflow-hidden rounded-lg border border-[var(--lp-border-strong)] bg-[#1d1d22] py-1 shadow-[0_18px_40px_rgba(0,0,0,0.5)]">
+        <div role="menu" className="absolute right-0 top-9 z-30 w-56 overflow-hidden rounded-lg border border-[var(--lp-border-strong)] bg-[#111111] py-1 shadow-[0_18px_40px_rgba(0,0,0,0.5)]">
           {children(() => setOpen(false))}
         </div>
       ) : null}
@@ -468,7 +469,7 @@ export function TeamWorkspace() {
         </div>
       ) : null}
 
-      <section className="overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#1b1b1f]">
+      <section className="overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#0a0a0a]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--lp-border)] px-4">
           <div role="tablist" aria-label="Team" className="-mb-px flex gap-1">
             {(
