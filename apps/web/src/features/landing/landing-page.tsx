@@ -119,18 +119,21 @@ export function LandingPage({ plans }: { plans: PublicPlansResponse | null }) {
         <section className="relative overflow-hidden">
           <div className="lp-hero-glow pointer-events-none absolute inset-0" aria-hidden="true" />
           {/* The hero ends where the product shot is cropped. */}
-          <div className="lp-container relative pt-14 text-center sm:pt-24">
+          <div className="lp-container lp-hero-type relative pt-14 text-center sm:pt-24">
             <Link href="/signup" className="lp-hero-pill">
-              <span className="lp-badge lp-badge-new">New</span>
-              <span>Uptime monitors are live</span>
-              <span aria-hidden="true" className="text-[var(--lp-accent)]">→</span>
+              <span className="lp-hero-pill-inner">
+                <span className="lp-hero-pill-badge">New</span>
+                <span>Uptime monitors are live</span>
+                <svg width="12" height="10" viewBox="0 0 12 10" fill="none" aria-hidden="true">
+                  <path d="M1 5h10M7 1l4 4-4 4" stroke="var(--lp-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
             </Link>
-            <h1 className="mx-auto mt-7 max-w-4xl text-[clamp(28px,8.4vw,44px)] font-semibold leading-[1.1] tracking-[-0.03em] sm:text-[64px]">
-              See every network,
-              <br />
-              <span className="text-[var(--lp-accent)]">server, and threat</span>
+            <h1 className="mx-auto mt-7 max-w-4xl text-3xl font-normal leading-[1.08] tracking-[-0.035em] [font-family:var(--font-geist),system-ui,sans-serif] sm:text-5xl">
+              <span className="lp-hero-text">See every network, server, and threat</span>
+              <span className="lp-cursor" />
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-md font-medium leading-relaxed text-[var(--lp-muted)] sm:text-lg">
+            <p className="mx-auto mt-5 max-w-[780px] text-md font-semibold leading-[1.4] text-[#a6a6a6] sm:text-[20px]">
               Probe, monitor, and protect your infrastructure from one platform — diagnostics and uptime monitors
               today, agents and attack-surface scans next.
             </p>

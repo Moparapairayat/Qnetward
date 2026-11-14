@@ -132,28 +132,42 @@
 
 /* Hero: a pill linking to what's new, warm glows from the sides, and a lit
    top edge on the product shot. */
+/* The hero is set in Inter, the rest of the site in Geist. */
+.lp-hero-type {
+  font-family: var(--font-inter), var(--font-geist), system-ui, sans-serif;
+}
+
+/* News pill: a 2px gradient rim lit at the top-left, a near-black body, and
+   a dark badge with pink text. */
 .lp-hero-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  height: 36px;
-  padding: 0 14px 0 6px;
+  display: inline-block;
+  padding: 2px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 61, 127, 0.35);
-  background: rgba(10, 10, 12, 0.6);
-  font-size: 14px;
-  color: var(--lp-text);
-  transition: border-color 0.2s ease;
+  background: linear-gradient(150deg, var(--lp-accent), rgba(229, 229, 229, 0.05) 30%, rgba(229, 229, 229, 0.05));
+  transition: filter 0.2s ease;
 }
 
 .lp-hero-pill:hover {
-  border-color: rgba(255, 61, 127, 0.6);
+  filter: brightness(1.25);
 }
 
-.lp-hero-pill .lp-badge {
-  height: 24px;
-  padding: 0 10px;
-  font-size: 13px;
+.lp-hero-pill-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #0c0c0c;
+  font-size: 14px;
+  font-weight: 500;
+  color: #a6a6a6;
+}
+
+.lp-hero-pill-badge {
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: #151515;
+  color: var(--lp-accent);
 }
 
 .lp-hero-glow {
@@ -289,6 +303,43 @@
     color 0.2s ease,
     background 0.2s ease,
     transform 0.2s ease;
+}
+
+/* Phone logo strip: slides on its own, fades out at both edges */
+.lp-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+
+.lp-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: lp-marquee 30s linear infinite;
+}
+
+.lp-marquee-reverse {
+  animation-direction: reverse;
+}
+
+.lp-marquee:active .lp-marquee-track,
+.lp-marquee:hover .lp-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes lp-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-marquee {
+    overflow-x: auto;
+  }
+  .lp-marquee-track {
+    animation: none;
+  }
 }
 
 /* Still in development: a step darker, but readable */

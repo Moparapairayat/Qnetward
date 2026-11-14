@@ -54,7 +54,9 @@ function hoverColor(hex: string) {
   return luminance < 0.35 ? "#ffffff" : `#${hex}`;
 }
 
-function LogoRow({ items, dim = false }: { items: { icon: SimpleIcon; note: string }[]; dim?: boolean }) {
+type Logo = { icon: SimpleIcon; note: string };
+
+function LogoRow({ items, dim = false }: { items: Logo[]; dim?: boolean }) {
   return (
     <ul className="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
       {items.map(({ icon, note }) => (
@@ -77,16 +79,50 @@ function LogoRow({ items, dim = false }: { items: { icon: SimpleIcon; note: stri
   );
 }
 
+/**
+ * Phones: one line that slides on its own and loops without a seam (the list
+ * is drawn twice and moved by half its width). A finger on it pauses it.
+ */
+function LogoMarquee({ items, dim = false, reverse = false }: { items: Logo[]; dim?: boolean; reverse?: boolean }) {
+  const logo = ({ icon }: Logo, copy: number) => (
+    <li key={`${copy}-${icon.slug}`} className="shrink-0 px-2.5" aria-hidden={copy === 1 ? true : undefined}>
+      <span className={`lp-logo flex h-11 w-11 items-center justify-center ${dim ? "lp-logo-dim" : ""}`}>
+        <svg role="img" viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-label={copy === 0 ? icon.title : undefined}>
+          <path d={icon.path} />
+        </svg>
+      </span>
+    </li>
+  );
+  return (
+    <div className="lp-marquee -mx-6">
+      <ul className={`lp-marquee-track ${reverse ? "lp-marquee-reverse" : ""}`}>
+        {items.map((item) => logo(item, 0))}
+        {items.map((item) => logo(item, 1))}
+      </ul>
+    </div>
+  );
+}
+
 export function TechLogos() {
   return (
-    <div className="grid gap-10 lg:grid-cols-[auto_1fr] lg:gap-16">
-      <div>
+    <div className="grid grid-cols-1 gap-10 lg:grid-cols-[auto_1fr] lg:gap-16">
+      <div className="min-w-0">
         <div className="mb-3 text-xs text-[var(--lp-muted)]">Runs on today</div>
-        <LogoRow items={today} />
+        <div className="sm:hidden">
+          <LogoMarquee items={today} />
+        </div>
+        <div className="hidden sm:block">
+          <LogoRow items={today} />
+        </div>
       </div>
-      <div className="lg:border-l lg:border-[var(--lp-border)] lg:pl-16">
+      <div className="min-w-0 lg:border-l lg:border-[var(--lp-border)] lg:pl-16">
         <div className="mb-3 text-xs text-[var(--lp-subtle)]">Integrations in development</div>
-        <LogoRow items={planned} dim />
+        <div className="sm:hidden">
+          <LogoMarquee items={planned} dim reverse />
+        </div>
+        <div className="hidden sm:block">
+          <LogoRow items={planned} dim />
+        </div>
       </div>
     </div>
   );

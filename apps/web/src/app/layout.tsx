@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 import { AppProviders } from "@/providers/app-providers";
 import "./globals.css";
 
-// One type family across the site, console, and docs: Geist for text and
-// Geist Mono for code and figures. Loaded once, here.
+// Geist for text and Geist Mono for code and figures across the site, console,
+// and docs. Inter is used only by the landing hero. Loaded once, here.
 const geist = Geist({
   variable: "--font-geist",
+  subsets: ["latin"],
+});
+
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -56,7 +61,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
+    <html lang="en" className={`${geist.variable} ${geistMono.variable} ${inter.variable}`}>
       <body>
         <AppProviders>{children}</AppProviders>
       </body>
