@@ -14,6 +14,10 @@ const (
 	defaultSessionTTL    = 30 * 24 * time.Hour
 	defaultResetTTL      = 30 * time.Minute
 	defaultVerifyCodeTTL = 10 * time.Minute
+	// loginFailureLimit wrong passwords for one account within loginFailureWindow,
+	// from any number of addresses, pause sign-in to it.
+	loginFailureLimit    = 20
+	loginFailureWindow   = time.Hour
 	verifyResendCooldown = 60 * time.Second
 	resetIssueCooldown   = 60 * time.Second
 	rateLimitSweepEvery  = 5 * time.Minute

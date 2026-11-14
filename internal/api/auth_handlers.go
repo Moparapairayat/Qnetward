@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -284,6 +285,15 @@ func (srv *Server) handleAuthLogin(w http.ResponseWriter, r *http.Request) {
 	if !srv.enforceRateLimit(w, r, "auth-login", email, rateLimitConfig{Limit: 8, Window: 15 * time.Minute}) {
 		return
 	}
+	// A limit per account, whatever the address: wrong passwords from many
+	// addresses at one account stop here. Only failures count, so the owner
+	// signing in normally is never held up by it.
+	failuresKey := "auth-login-failures|" + email
+	if srv.authLimiter.Count(failuresKey, loginFailureWindow) >= loginFailureLimit {
+		w.Header().Set("Retry-After", strconv.Itoa(int(loginFailureWindow.Seconds())))
+		writeJSON(w, http.StatusTooManyRequests, apiError{Error: "too many wrong passwords for this account; try again later or reset your password"})
+		return
+	}
 	if strings.TrimSpace(req.Password) == "" {
 		writeJSON(w, http.StatusBadRequest, apiError{Error: "password is required"})
 		return
@@ -305,6 +315,7 @@ func (srv *Server) handleAuthLogin(w http.ResponseWriter, r *http.Request) {
 	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.Password)); err != nil {
 		// Recorded on the account so its owner can see attempts on it.
 		srv.recordAudit(r, 0, user, "auth.login_failed", auditTarget{}, nil)
+		srv.authLimiter.Allow(failuresKey, rateLimitConfig{Limit: loginFailureLimit, Window: loginFailureWindow})
 		writeJSON(w, http.StatusUnauthorized, apiError{Error: "invalid email or password"})
 		return
 	}

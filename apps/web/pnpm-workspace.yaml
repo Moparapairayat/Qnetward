@@ -1,3 +1,9 @@
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+# Security fixes for packages Next.js pulls in, held to their current major
+# versions until Next ships them itself (pnpm audit, 2026-11-14).
+overrides:
+  "@babel/core@<7.29.6": "^7.29.6"
+  "browserslist@<4.28.7": "^4.28.7"
+  "baseline-browser-mapping@<2.11.0": "^2.11.0"
