@@ -224,6 +224,11 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
+/* Phone menu: the same plain links, cards, and logos as the desktop dropdowns. */
+.lp-mobile-sub {
+  font-family: var(--font-inter), var(--font-geist), system-ui, sans-serif;
+}
+
 /* Integrations hub: three columns, small-big-small circles either side of a
    lit centre. Each circle has a 1px rim that glows on the side facing the centre. */
 .lp-int-grid {

@@ -44,6 +44,20 @@ function Circle({ spot }: { spot: Spot }) {
 export function IntegrationsHub() {
   return (
     <div className="lp-hero-type mx-auto max-w-[740px] text-center">
+      {/* A small looping 3D mark above the heading. Lighten blending drops the
+          video's black backdrop into the page colour. */}
+      <video
+        src="/landing/3d-broadcast.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
+        width={170}
+        height={170}
+        className="lp-reveal mx-auto mb-6 h-[120px] w-[120px] mix-blend-lighten sm:mb-8 sm:h-[170px] sm:w-[170px]"
+      />
       <h2 className="lp-heading-fade lp-reveal text-[32px] font-semibold leading-[1.1] sm:text-[48px]">
         Alerts where your team works
       </h2>

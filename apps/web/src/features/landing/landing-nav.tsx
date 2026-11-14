@@ -226,24 +226,47 @@ function MobileMenu({ top, container, onClose }: { top: number; container: HTMLE
                   <CaretDown size={16} weight="bold" aria-hidden className={`text-[var(--lp-subtle)] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
                 </button>
                 {isOpen ? (
-                  <ul id={`mobile-${entry.label}`} className="mb-2 ml-3 mt-0.5 border-l border-[var(--lp-border)] pl-2">
-                    {[...entry.items, ...(entry.cards ?? [])].map((item) => (
-                      <li key={item.label}>
-                        <MenuLink item={item} onPick={onClose} className="flex items-center gap-3 rounded-xl px-3 py-2.5 active:bg-white/[0.06] hover:bg-white/[0.04]">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--lp-border)] text-[var(--lp-muted)]">
-                            <item.icon size={17} weight="bold" aria-hidden />
-                          </span>
-                          <span className="min-w-0">
-                            <span className="block text-md text-[var(--lp-text)]">
-                              {item.label}
-                              {item.external ? <span className="ml-1 text-[var(--lp-subtle)]">↗</span> : null}
+                  <div id={`mobile-${entry.label}`} className="lp-mobile-sub mb-3 mt-1 flex flex-col gap-4 px-3">
+                    <ul className="flex flex-col gap-1">
+                      {entry.items.map((item) => (
+                        <li key={item.label}>
+                          <MenuLink item={item} onPick={onClose} className="lp-menu-link block py-1.5">
+                            {item.label}
+                            {item.external ? <span className="ml-1 text-[0.85em]">↗</span> : null}
+                          </MenuLink>
+                        </li>
+                      ))}
+                    </ul>
+                    {entry.cards ? (
+                      <div className="flex flex-col gap-2">
+                        {entry.cards.map((card) => (
+                          <MenuLink key={card.label} item={card} onPick={onClose} className="lp-menu-card">
+                            <span className="lp-menu-card-art">
+                              <card.icon size={24} weight="duotone" aria-hidden />
                             </span>
-                            <span className="block truncate text-sm text-[var(--lp-subtle)]">{item.hint}</span>
-                          </span>
-                        </MenuLink>
-                      </li>
-                    ))}
-                  </ul>
+                            <span>
+                              <span className="block text-sm font-medium text-[#f0f0f0]">{card.label}</span>
+                              <span className="block text-[13px] text-[#a1a4a5]">{card.hint}</span>
+                            </span>
+                          </MenuLink>
+                        ))}
+                      </div>
+                    ) : null}
+                    {entry.logos ? (
+                      <div>
+                        <p className="mb-1 text-[13px] text-[#a1a4a5]">Runs on</p>
+                        <ul className="grid grid-cols-4 gap-1">
+                          {entry.logos.map((icon) => (
+                            <li key={icon.slug} className="lp-menu-logo w-auto" title={icon.title}>
+                              <svg role="img" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-label={icon.title}>
+                                <path d={icon.path} />
+                              </svg>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                  </div>
                 ) : null}
               </li>
             );

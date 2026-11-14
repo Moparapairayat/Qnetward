@@ -133,7 +133,7 @@ export function LandingPage({ plans }: { plans: PublicPlansResponse | null }) {
               <span className="lp-hero-text">See every network, server, and threat</span>
               <span className="lp-cursor" />
             </h1>
-            <p className="mx-auto mt-5 max-w-[780px] text-md font-semibold leading-[1.4] text-[#a6a6a6] sm:text-[20px]">
+            <p className="mx-auto mt-5 max-w-[780px] max-sm:-mx-2 text-[clamp(12.5px,3.45vw,15px)] font-semibold leading-[1.45] tracking-[-0.01em] sm:tracking-normal text-[#a6a6a6] sm:text-[20px]">
               Probe, monitor, and protect your infrastructure from one platform — diagnostics and uptime monitors
               today, agents and attack-surface scans next.
             </p>
