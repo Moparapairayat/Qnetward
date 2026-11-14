@@ -79,3 +79,14 @@ func TestRoleMayAct(t *testing.T) {
 		}
 	}
 }
+
+// An invitation's link signs existing users in and signs new ones up with
+// their address filled in; either way it ends on their invitations.
+func TestInvitationAcceptPath(t *testing.T) {
+	if got := invitationAcceptPath("a@example.com", true); got != "/login?next=%2Fsettings%2Fworkspaces" {
+		t.Fatalf("existing account: %q", got)
+	}
+	if got := invitationAcceptPath("new+x@example.com", false); got != "/signup?email=new%2Bx%40example.com&next=%2Fsettings%2Fworkspaces" {
+		t.Fatalf("new account: %q", got)
+	}
+}

@@ -87,6 +87,8 @@ export type WorkspaceInvitation = {
   expires_at: string;
   created_at: string;
   inviter_name: string;
+  /** The link the invitation email carries (pending invitations only). */
+  accept_path?: string;
 };
 
 export type WorkspaceTeamResponse = {

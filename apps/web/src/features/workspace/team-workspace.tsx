@@ -166,6 +166,23 @@ export function TeamWorkspace() {
       apiRequest<AuthMessageResponse>("/api/workspace/team", { method: "DELETE", body: JSON.stringify({ user_id: userID }) }),
     ...report("Member removed."),
   });
+  // Sending again replaces the invitation with a fresh one and a new email.
+  const resend = useMutation({
+    mutationFn: (values: { email: string; role: string }) =>
+      apiRequest<AuthMessageResponse>("/api/workspace/team", { method: "POST", body: JSON.stringify(values) }),
+    ...report("Invitation sent again."),
+  });
+  const [copied, setCopied] = useState<number | null>(null);
+  const copyLink = async (invitation: { id: number; accept_path?: string }) => {
+    if (!invitation.accept_path) return;
+    try {
+      await navigator.clipboard.writeText(window.location.origin + invitation.accept_path);
+      setCopied(invitation.id);
+      window.setTimeout(() => setCopied((c) => (c === invitation.id ? null : c)), 2000);
+    } catch {
+      setNotice({ tone: "error", text: "Couldn't copy the link. Copy it from the address bar after opening it instead." });
+    }
+  };
   const revoke = useMutation({
     mutationFn: (invitationID: number) =>
       apiRequest<AuthMessageResponse>("/api/workspace/team", { method: "DELETE", body: JSON.stringify({ invitation_id: invitationID }) }),
@@ -310,6 +327,29 @@ export function TeamWorkspace() {
                   </p>
                 </div>
                 {canInvite ? (
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    {invitation.accept_path ? (
+                      <button
+                        type="button"
+                        aria-label={`Copy the invite link for ${invitation.email}`}
+                        className="console-btn console-btn-secondary"
+                        onClick={() => void copyLink(invitation)}
+                      >
+                        {copied === invitation.id ? "Copied" : "Copy link"}
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      aria-label={`Send the invite to ${invitation.email} again`}
+                      className="console-btn console-btn-secondary"
+                      disabled={resend.isPending}
+                      onClick={() => {
+                        setNotice(null);
+                        resend.mutate({ email: invitation.email, role: invitation.role });
+                      }}
+                    >
+                      {resend.isPending && resend.variables?.email === invitation.email ? "Sending" : "Resend"}
+                    </button>
                   <button
                     type="button"
                     aria-label={`Revoke invite for ${invitation.email}`}
@@ -322,6 +362,7 @@ export function TeamWorkspace() {
                   >
                     {revoke.isPending && revoke.variables === invitation.id ? "Revoking" : "Revoke"}
                   </button>
+                  </div>
                 ) : null}
               </li>
             ))}

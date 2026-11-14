@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
 	"qnetward/internal/plans"
+	"qnetward/internal/platform/mailer"
 	"qnetward/internal/store"
 )
 
@@ -61,6 +64,9 @@ type authWorkspaceInvitation struct {
 	ExpiresAt     time.Time `json:"expires_at"`
 	CreatedAt     time.Time `json:"created_at"`
 	InviterName   string    `json:"inviter_name"`
+	// AcceptPath is the link the invitation email carries, for an owner or
+	// admin to copy and share another way. Set on pending invitations only.
+	AcceptPath string `json:"accept_path,omitempty"`
 }
 
 func (srv *Server) handleWorkspaces(w http.ResponseWriter, r *http.Request) {
@@ -183,7 +189,7 @@ func (srv *Server) handleWorkspaceTeam(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, workspaceTeamResponse{
 			Workspace:   toAuthWorkspace(workspace),
 			Members:     toAuthWorkspaceMembers(members),
-			Invitations: toAuthWorkspaceInvitations(invitations),
+			Invitations: srv.withAcceptPaths(ctx, toAuthWorkspaceInvitations(invitations)),
 		})
 	case http.MethodPost:
 		if !srv.isAllowedRequestOrigin(r) {
@@ -210,10 +216,16 @@ func (srv *Server) handleWorkspaceTeam(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if !srv.enforceRateLimit(w, r, "invite-email", fmt.Sprintf("%d|%s", workspace.ID, strings.ToLower(strings.TrimSpace(req.Email))), rateLimitConfig{Limit: 5, Window: time.Hour}) {
+			return
+		}
+
 		// Pending invitations count toward the member limit, so a plan can't be
-		// overrun by inviting more people than it allows.
+		// overrun by inviting more people than it allows. Sending again to
+		// someone already invited replaces their invitation, so it doesn't count.
 		plan := plans.For(workspace.Plan)
-		if usage, err := srv.store.GetWorkspaceUsage(ctx, workspace.ID); err == nil && usage.Members+usage.PendingInvitations >= plan.Limits.Members {
+		resending := srv.hasPendingInvitation(ctx, workspace.ID, user.ID, req.Email)
+		if usage, err := srv.store.GetWorkspaceUsage(ctx, workspace.ID); err == nil && !resending && usage.Members+usage.PendingInvitations >= plan.Limits.Members {
 			writeJSON(w, http.StatusConflict, apiError{Error: fmt.Sprintf("the %s plan allows %d members, counting pending invitations", plan.Name, plan.Limits.Members)})
 			return
 		}
@@ -233,10 +245,19 @@ func (srv *Server) handleWorkspaceTeam(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		srv.recordAudit(r, workspace.ID, user, "member.invited", idTarget("invitation", invitation.ID, invitation.Email), map[string]any{"role": invitation.Role})
+		srv.recordAudit(r, workspace.ID, user, "member.invited", idTarget("invitation", invitation.ID, invitation.Email), map[string]any{"role": invitation.Role, "resent": resending})
+		message := fmt.Sprintf("Invited %s as %s.", invitation.Email, invitation.Role)
+		if srv.mailer.Enabled() {
+			if err := srv.sendInvitationEmail(ctx, r, user, workspace.Name, invitation); err != nil {
+				log.Printf("invitation email to %s failed: %v", invitation.Email, err)
+				message = fmt.Sprintf("Invited %s as %s, but the email couldn't be sent. Copy the invite link and share it yourself.", invitation.Email, invitation.Role)
+			} else {
+				message = fmt.Sprintf("Invitation emailed to %s as %s.", invitation.Email, invitation.Role)
+			}
+		}
 		writeJSON(w, http.StatusCreated, authMessageResponse{
 			OK:      true,
-			Message: fmt.Sprintf("Invitation queued for %s as %s.", invitation.Email, invitation.Role),
+			Message: message,
 			Email:   invitation.Email,
 		})
 	case http.MethodPatch:
@@ -548,4 +569,61 @@ func (srv *Server) handleWorkspaceGeneral(w http.ResponseWriter, r *http.Request
 	default:
 		writeJSON(w, http.StatusMethodNotAllowed, apiError{Error: "method not allowed"})
 	}
+}
+
+// invitationAcceptPath is where an invitation's link leads: sign-in for
+// someone who already has an account, signup with their email filled in for
+// someone new, and either way on to the page that lists their invitations.
+func invitationAcceptPath(email string, hasAccount bool) string {
+	next := url.QueryEscape("/settings/workspaces")
+	if hasAccount {
+		return "/login?next=" + next
+	}
+	return "/signup?email=" + url.QueryEscape(email) + "&next=" + next
+}
+
+// sendInvitationEmail emails an invitation with a link to accept it.
+func (srv *Server) sendInvitationEmail(ctx context.Context, r *http.Request, inviter store.User, workspaceName string, invitation store.WorkspaceInvitation) error {
+	_, err := srv.store.GetUserByEmail(ctx, invitation.Email)
+	hasAccount := err == nil
+	name := strings.TrimSpace(inviter.Name)
+	if name == "" {
+		name = inviter.Email
+	}
+	return srv.mailer.SendInvitation(ctx, mailer.InvitationEmailInput{
+		To:            invitation.Email,
+		InviterName:   name,
+		WorkspaceName: workspaceName,
+		Role:          invitation.Role,
+		AcceptURL:     srv.appURL(r, invitationAcceptPath(invitation.Email, hasAccount)),
+		ExpiresAt:     invitation.ExpiresAt,
+	})
+}
+
+// hasPendingInvitation reports whether email already has a pending invitation
+// to this workspace.
+func (srv *Server) hasPendingInvitation(ctx context.Context, workspaceID, userID int64, email string) bool {
+	invitations, err := srv.store.ListWorkspaceInvitationsByWorkspaceIDAndUserID(ctx, workspaceID, userID)
+	if err != nil {
+		return false
+	}
+	for _, inv := range invitations {
+		if inv.Status == "pending" && strings.EqualFold(inv.Email, strings.TrimSpace(email)) {
+			return true
+		}
+	}
+	return false
+}
+
+// withAcceptPaths adds each pending invitation's link, the same one its email
+// carries.
+func (srv *Server) withAcceptPaths(ctx context.Context, invitations []authWorkspaceInvitation) []authWorkspaceInvitation {
+	for i := range invitations {
+		if invitations[i].Status != "pending" {
+			continue
+		}
+		_, err := srv.store.GetUserByEmail(ctx, invitations[i].Email)
+		invitations[i].AcceptPath = invitationAcceptPath(invitations[i].Email, err == nil)
+	}
+	return invitations
 }

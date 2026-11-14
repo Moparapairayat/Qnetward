@@ -589,3 +589,84 @@ func renderEmailSupportFooterText(replyTo string) string {
 	}
 	return fmt.Sprintf("\nNeed help? Reply to %s.\n", replyTo)
 }
+
+// InvitationEmailInput is an invitation to join a workspace.
+type InvitationEmailInput struct {
+	To            string
+	InviterName   string
+	WorkspaceName string
+	Role          string
+	// AcceptURL opens sign-in or signup, then the invitation.
+	AcceptURL string
+	ExpiresAt time.Time
+}
+
+// SendInvitation tells someone they've been invited to a workspace, with a
+// link that takes them through sign-in or signup to accept it.
+func (c *Client) SendInvitation(ctx context.Context, in InvitationEmailInput) error {
+	if c == nil || !c.Enabled() {
+		return nil
+	}
+	to := strings.TrimSpace(in.To)
+	if to == "" {
+		return errors.New("invitation recipient is required")
+	}
+	inviter := strings.TrimSpace(in.InviterName)
+	if inviter == "" {
+		inviter = "A teammate"
+	}
+	workspace := strings.TrimSpace(in.WorkspaceName)
+	if workspace == "" {
+		workspace = "their workspace"
+	}
+	role := strings.TrimSpace(in.Role)
+	if role == "" {
+		role = "member"
+	}
+	acceptURL := strings.TrimSpace(in.AcceptURL)
+	if acceptURL == "" {
+		acceptURL = "#"
+	}
+	expires := in.ExpiresAt.UTC().Format("2 January 2006")
+
+	theme := emailTheme{
+		Eyebrow:    "Workspace Invitation",
+		Title:      fmt.Sprintf("Join %s on Qnetward", workspace),
+		Subtitle:   fmt.Sprintf("%s invited you as %s.", inviter, article(role)),
+		AccentFrom: "#ff7aa6",
+		AccentTo:   "#ff3d7f",
+	}
+	htmlBody := renderEmailShell(theme, fmt.Sprintf(`
+<p style="margin:0 0 18px;color:#dbe6f3;font-size:15px;line-height:1.78">%s invited you to the <strong>%s</strong> workspace on Qnetward, where your team monitors its networks, servers, and security in one place.</p>
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 18px">
+  <tr>
+    <td style="border-radius:14px;background:linear-gradient(135deg,%s 0%%,%s 100%%);box-shadow:0 18px 30px rgba(255,61,127,0.24)">
+      <a href="%s" style="display:inline-block;padding:14px 22px;font-weight:700;font-size:14px;letter-spacing:0.02em;color:#ffffff;text-decoration:none;border-radius:14px">Accept invitation</a>
+    </td>
+  </tr>
+</table>
+<p style="margin:0 0 8px;color:#95a9c1;font-size:13px;line-height:1.7">Sign in or create an account with this email address (%s) to accept. The invitation expires on %s.</p>
+<p style="margin:0;color:#6f8299;font-size:12px;line-height:1.7">If you weren't expecting this, you can ignore it; nothing happens unless you accept.</p>
+`, escapeHTML(inviter), escapeHTML(workspace), theme.AccentFrom, theme.AccentTo, escapeHTML(acceptURL), escapeHTML(to), expires), renderEmailSupportFooter(c.replyTo))
+
+	payload := map[string]any{
+		"from":    c.from,
+		"to":      []string{to},
+		"subject": fmt.Sprintf("%s invited you to %s on Qnetward", inviter, workspace),
+		"html":    htmlBody,
+		"text": fmt.Sprintf("%s invited you to the %s workspace on Qnetward as %s.\n\nAccept the invitation:\n%s\n\nSign in or create an account with %s. It expires on %s.\nIf you weren't expecting this, ignore it.\n%s",
+			inviter, workspace, article(role), acceptURL, to, expires, renderEmailSupportFooterText(c.replyTo)),
+	}
+	if c.replyTo != "" {
+		payload["reply_to"] = []string{c.replyTo}
+	}
+	return c.send(ctx, payload)
+}
+
+// article puts "a" or "an" before a role name.
+func article(word string) string {
+	if word != "" && strings.ContainsRune("aeiou", rune(strings.ToLower(word)[0])) {
+		return "an " + word
+	}
+	return "a " + word
+}

@@ -72,12 +72,16 @@ export function SignupFlow() {
   const [step, setStep] = useState<Step>(0);
   const [pending, setPending] = useState<Pending | null>(null);
   const [previewCode, setPreviewCode] = useState<string | null>(null);
+  // An invitation link brings the invited address (?email=), filled in for them.
+  const [invitedEmail, setInvitedEmail] = useState<string | undefined>(undefined);
 
   // Pick up a signup that was waiting for its code before a refresh.
   useEffect(() => {
+    const email = new URLSearchParams(window.location.search).get("email")?.trim();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the URL is only readable after mount
+    if (email && email.length <= 254 && email.includes("@")) setInvitedEmail(email);
     const saved = readPending();
     if (saved) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- sessionStorage is only readable after mount
       setPending(saved);
       setStep(1);
     }
@@ -112,7 +116,7 @@ export function SignupFlow() {
         headerAction={step === 0 ? { prompt: "Already have an account?", label: "Sign in", href: "/login" } : undefined}
       >
         <Stepper steps={STEPS} step={step} className="mb-5 sm:short:mb-3" />
-        {step === 0 ? <AccountStep initialEmail={pending?.email} onCreated={toVerify} /> : null}
+        {step === 0 ? <AccountStep key={invitedEmail ?? "blank"} initialEmail={pending?.email ?? invitedEmail} onCreated={toVerify} /> : null}
         {step === 1 && pending ? (
           <VerifyStep
             pending={pending}

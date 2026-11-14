@@ -220,3 +220,39 @@ func TestHealthRecordsOutcomes(t *testing.T) {
 		t.Fatalf("a success should be recorded and the last error kept: %+v", h)
 	}
 }
+
+func TestSendInvitationBuildsResendRequest(t *testing.T) {
+	var got map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewDecoder(r.Body).Decode(&got)
+		_, _ = w.Write([]byte(`{"id":"email_1"}`))
+	}))
+	defer srv.Close()
+	client, err := Open(Config{APIKey: "test-key", From: "Qnetward <team@example.com>", Endpoint: srv.URL, Timeout: 5 * time.Second})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = client.SendInvitation(context.Background(), InvitationEmailInput{
+		To: "new@example.com", InviterName: "Mopara", WorkspaceName: "Kestrel <Labs>", Role: "admin",
+		AcceptURL: "https://q.example/signup?email=new%40example.com", ExpiresAt: time.Date(2026, 11, 21, 0, 0, 0, 0, time.UTC),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got["subject"] != "Mopara invited you to Kestrel <Labs> on Qnetward" {
+		t.Fatalf("subject: %v", got["subject"])
+	}
+	html, _ := got["html"].(string)
+	text, _ := got["text"].(string)
+	for _, want := range []string{"Kestrel &lt;Labs&gt;", "an admin", "https://q.example/signup?email=new%40example.com", "21 November 2026"} {
+		if !strings.Contains(html, want) {
+			t.Errorf("html should contain %q", want)
+		}
+	}
+	if strings.Contains(html, "<Labs>") {
+		t.Error("the workspace name must be escaped in HTML")
+	}
+	if !strings.Contains(text, "https://q.example/signup?email=new%40example.com") {
+		t.Error("the plain-text part needs the link too")
+	}
+}
