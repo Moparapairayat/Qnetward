@@ -95,7 +95,33 @@ func (srv *Server) requireActorFor(w http.ResponseWriter, r *http.Request, scope
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 		return actor{}, false
 	}
+	if !roleMayAct(workspace.Role, scope, r.Method) {
+		writeJSON(w, http.StatusForbidden, apiError{Error: "viewers can see this workspace but not change it; ask an owner or admin for the member role"})
+		return actor{}, false
+	}
 	return actor{User: user, WorkspaceID: workspace.ID, Role: workspace.Role, Plan: plans.For(workspace.Plan)}, true
+}
+
+// roleMayAct is the one place a workspace role meets what a request wants to
+// do. Viewers read: they may use read endpoints (including reads sent as POST,
+// such as Live mode or an export) but not change anything, run probes or scans,
+// or start work. Every workspace endpoint authenticates through requireActorFor,
+// so new endpoints follow the rule without remembering it. Team, API key,
+// channel, domain, and billing endpoints add their own owner/admin checks on
+// top.
+func roleMayAct(role, scope, method string) bool {
+	if role != "viewer" {
+		return true
+	}
+	switch scope {
+	case store.ScopeRead:
+		return true
+	case "":
+		// Session-only endpoints say nothing about intent; judge by the method.
+		return method == http.MethodGet || method == http.MethodHead
+	default:
+		return false
+	}
 }
 
 func (srv *Server) authenticateAPIKey(w http.ResponseWriter, r *http.Request, token, scope string) (actor, bool) {

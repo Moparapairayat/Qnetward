@@ -15,7 +15,7 @@ const ROLE_HELP: { role: string; summary: string }[] = [
   { role: "owner", summary: "Invites anyone, changes or removes admins, members, and viewers." },
   { role: "admin", summary: "Invites, changes, and removes members and viewers." },
   { role: "member", summary: "Uses the workspace but can't manage the team." },
-  { role: "viewer", summary: "Same access as a member for now. Read-only limits come with role-based permissions." },
+  { role: "viewer", summary: "Sees everything and can export it, but can't change anything or run probes and scans." },
 ];
 
 function canManageMember(actorRole: string, isDemo: boolean, member: WorkspaceMember) {

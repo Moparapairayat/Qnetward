@@ -11,6 +11,7 @@ import { Topbar } from "@/components/app/topbar";
 import { CommandPalette } from "@/components/app/command-palette";
 import { LiveToaster } from "@/components/app/live-toaster";
 import { ConsoleShellSkeleton } from "@/components/app/route-states";
+import { ViewerBanner } from "@/components/app/viewer-banner";
 import { clearNext, peekNext } from "@/lib/next-path";
 
 export function AuthGuard({ children }: { children: ReactNode }) {
@@ -67,7 +68,10 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar session={session.data} />
         <main id="main" className="flex-1 px-4 py-6 lg:px-8 lg:py-8">
-          <div className="mx-auto w-full max-w-[1280px]">{children}</div>
+          <div className="mx-auto w-full max-w-[1280px]">
+            <ViewerBanner />
+            {children}
+          </div>
         </main>
       </div>
     </div>
