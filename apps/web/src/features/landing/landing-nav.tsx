@@ -17,6 +17,7 @@ import {
   UsersThree,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Icon as PhIcon } from "@phosphor-icons/react/dist/lib/types";
+import { siApple, siDocker, siGo, siLinux, siPostgresql, siRaspberrypi, siRedis, siTimescale, type SimpleIcon } from "simple-icons";
 import { QnetwardMark } from "./qnetward-mark";
 
 type MenuItem = { href: string; label: string; hint: string; icon: PhIcon; external?: boolean; download?: boolean };
@@ -32,21 +33,28 @@ const developers: MenuItem[] = [
 const company: MenuItem[] = [
   { href: "/about", label: "About", hint: "Why we're building Qnetward", icon: Info },
   { href: "/team", label: "Team", hint: "The people behind it", icon: UsersThree },
-  { href: "/roadmap", label: "Roadmap", hint: "What's live and what's next", icon: MapTrifold },
   { href: "/about#contact", label: "Contact", hint: "Questions, sales, and support", icon: EnvelopeSimple },
 ];
 
+const companyCards: MenuItem[] = [
+  { href: "/roadmap", label: "Roadmap", hint: "What's live and next", icon: MapTrifold },
+  { href: "https://github.com/Quantum-Axis/Qnetward", label: "Open source", hint: "AGPL-3.0, on GitHub", icon: GithubLogo, external: true },
+];
+
+// What Qnetward runs on and is built with, shown as a grid of marks.
+const stack: SimpleIcon[] = [siLinux, siApple, siRaspberrypi, siDocker, siGo, siPostgresql, siTimescale, siRedis];
+
 type NavLink = { label: string; href: string };
-type NavMenuEntry = { label: string; items: MenuItem[]; footer?: NavLink };
+type NavMenuEntry = { label: string; items: MenuItem[]; cards?: MenuItem[]; logos?: SimpleIcon[] };
 type NavEntry = NavLink | NavMenuEntry;
 
 const nav: NavEntry[] = [
   { label: "Product", href: "/#products" },
-  { label: "Developers", items: developers, footer: { label: "Building something? Get an API key", href: "/signup" } },
+  { label: "Developers", items: developers, logos: stack },
   { label: "Security", href: "/#security" },
   { label: "Pricing", href: "/#pricing" },
   { label: "FAQ", href: "/#faq" },
-  { label: "Company", items: company },
+  { label: "Company", items: company, cards: companyCards },
 ];
 
 function MenuLink({ item, onPick, className, children }: { item: MenuItem; onPick: () => void; className: string; children: React.ReactNode }) {
@@ -66,7 +74,7 @@ function MenuLink({ item, onPick, className, children }: { item: MenuItem; onPic
 
 // A dropdown in the top bar: opens on hover or click, closes on Escape, a
 // click outside, leaving it, or a new page, and works from the keyboard.
-function NavMenu({ label, items, footer }: NavMenuEntry) {
+function NavMenu({ label, items, cards, logos }: NavMenuEntry) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -115,39 +123,46 @@ function NavMenu({ label, items, footer }: NavMenuEntry) {
         <CaretDown size={12} weight="bold" className={`transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
       </button>
       {open ? (
-        <div className="absolute left-1/2 top-full z-50 w-[340px] -translate-x-1/2 pt-3">
-          <div className="overflow-hidden rounded-xl border border-[var(--lp-border)] bg-[#17171b] shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
-            <ul className="p-1.5">
+        <div className="absolute left-1/2 top-full z-50 -translate-x-1/2 pt-3">
+          <div className="lp-menu-panel">
+            <ul className="flex min-w-[150px] flex-col gap-3">
               {items.map((item) => (
                 <li key={item.label}>
-                  <MenuLink
-                    item={item}
-                    onPick={close}
-                    className="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-white/[0.05] focus-visible:bg-white/[0.05]"
-                  >
-                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--lp-border)] text-[var(--lp-muted)] group-hover:text-[var(--lp-accent)]">
-                      <item.icon size={16} weight="bold" aria-hidden />
-                    </span>
-                    <span>
-                      <span className="block text-base text-[var(--lp-text)]">
-                        {item.label}
-                        {item.external ? <span className="ml-1 text-[var(--lp-subtle)]">↗</span> : null}
-                      </span>
-                      <span className="block text-sm text-[var(--lp-subtle)]">{item.hint}</span>
-                    </span>
+                  <MenuLink item={item} onPick={close} className="lp-menu-link">
+                    {item.label}
+                    {item.external ? <span className="ml-1 text-[0.85em]">↗</span> : null}
                   </MenuLink>
                 </li>
               ))}
             </ul>
-            {footer ? (
-              <Link
-                href={footer.href}
-                onClick={close}
-                className="flex items-center justify-between border-t border-[var(--lp-border)] bg-white/[0.02] px-4 py-3 text-sm text-[var(--lp-muted)] transition-colors hover:text-[var(--lp-text)]"
-              >
-                {footer.label}
-                <span aria-hidden>→</span>
-              </Link>
+            {cards ? (
+              <div className="flex w-[256px] flex-col gap-2">
+                {cards.map((card) => (
+                  <MenuLink key={card.label} item={card} onPick={close} className="lp-menu-card">
+                    <span className="lp-menu-card-art">
+                      <card.icon size={26} weight="duotone" aria-hidden />
+                    </span>
+                    <span>
+                      <span className="block text-sm font-medium text-[#f0f0f0]">{card.label}</span>
+                      <span className="block text-[13px] text-[#a1a4a5]">{card.hint}</span>
+                    </span>
+                  </MenuLink>
+                ))}
+              </div>
+            ) : null}
+            {logos ? (
+              <div>
+                <p className="mb-2 text-[13px] text-[#a1a4a5]">Runs on</p>
+                <ul className="grid grid-cols-4 gap-1">
+                  {logos.map((icon) => (
+                    <li key={icon.slug} className="lp-menu-logo" title={icon.title}>
+                      <svg role="img" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-label={icon.title}>
+                        <path d={icon.path} />
+                      </svg>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ) : null}
           </div>
         </div>
@@ -212,7 +227,7 @@ function MobileMenu({ top, container, onClose }: { top: number; container: HTMLE
                 </button>
                 {isOpen ? (
                   <ul id={`mobile-${entry.label}`} className="mb-2 ml-3 mt-0.5 border-l border-[var(--lp-border)] pl-2">
-                    {entry.items.map((item) => (
+                    {[...entry.items, ...(entry.cards ?? [])].map((item) => (
                       <li key={item.label}>
                         <MenuLink item={item} onPick={onClose} className="flex items-center gap-3 rounded-xl px-3 py-2.5 active:bg-white/[0.06] hover:bg-white/[0.04]">
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--lp-border)] text-[var(--lp-muted)]">
@@ -228,14 +243,6 @@ function MobileMenu({ top, container, onClose }: { top: number; container: HTMLE
                         </MenuLink>
                       </li>
                     ))}
-                    {entry.footer ? (
-                      <li>
-                        <Link href={entry.footer.href} onClick={onClose} className="flex items-center justify-between rounded-xl px-3 py-2.5 text-base text-[var(--lp-muted)]">
-                          {entry.footer.label}
-                          <span aria-hidden>→</span>
-                        </Link>
-                      </li>
-                    ) : null}
                   </ul>
                 ) : null}
               </li>
@@ -320,7 +327,7 @@ export function LandingNav() {
           {nav.map((entry) => (
             <li key={entry.label}>
               {"items" in entry ? (
-                <NavMenu label={entry.label} items={entry.items} footer={entry.footer} />
+                <NavMenu label={entry.label} items={entry.items} cards={entry.cards} logos={entry.logos} />
               ) : (
                 <a href={entry.href} className="text-base text-[color:var(--lp-muted)] transition-colors hover:text-[color:var(--lp-text)]">
                   {entry.label}

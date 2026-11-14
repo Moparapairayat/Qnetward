@@ -11,7 +11,7 @@ import type { PublicPlansResponse } from "@/lib/types";
 import { ProductShowcase } from "./product-showcase";
 import { MonitorStackVisual, MonitorVisual, ProbeVisual, WorkspaceVisual } from "./step-visuals";
 import { TechLogos } from "./tech-logos";
-import { ToolComparison } from "./tool-comparison";
+import { IntegrationsHub } from "./integrations-hub";
 import { WorldHexMap } from "./world-hex-map";
 
 const steps = [
@@ -209,10 +209,10 @@ export function LandingPage({ plans }: { plans: PublicPlansResponse | null }) {
           </div>
         </section>
 
-        {/* comparison */}
-        <section className="lp-divider py-20 sm:py-28">
+        {/* integrations */}
+        <section id="integrations" className="lp-divider scroll-mt-20 py-20 sm:py-[150px]">
           <div className="lp-container">
-            <ToolComparison />
+            <IntegrationsHub />
           </div>
         </section>
 
