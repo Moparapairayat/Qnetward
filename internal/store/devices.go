@@ -43,6 +43,9 @@ type NetworkDevice struct {
 	Sys             json.RawMessage `json:"sys,omitempty"`
 	Interfaces      json.RawMessage `json:"interfaces,omitempty"`
 	CreatedAt       time.Time       `json:"created_at"`
+	// OverPlan is set on lists when the workspace's plan doesn't cover this
+	// one, so it waits (see plan_caps.go).
+	OverPlan bool `json:"over_plan,omitempty"`
 }
 
 const deviceColumns = `d.id, d.workspace_id, COALESCE(d.created_by, 0), d.agent_id, COALESCE(a.name, ''),
@@ -242,7 +245,9 @@ func (s *Store) DeleteDevice(ctx context.Context, workspaceID, id int64) (Networ
 }
 
 // AgentDevices returns the enabled devices an agent polls.
-func (s *Store) AgentDevices(ctx context.Context, workspaceID, agentID int64) ([]NetworkDevice, error) {
+// limit is the plan's device limit: only the oldest enabled devices up to it
+// are polled (see plan_caps.go).
+func (s *Store) AgentDevices(ctx context.Context, workspaceID, agentID int64, limit int) ([]NetworkDevice, error) {
 	if s == nil {
 		return nil, errors.New("store is not available")
 	}
@@ -251,7 +256,8 @@ func (s *Store) AgentDevices(ctx context.Context, workspaceID, agentID int64) ([
 		return nil, err
 	}
 	defer func() { _ = tx.Rollback() }()
-	rows, err := tx.QueryContext(ctx, `SELECT `+deviceColumns+deviceFrom+` WHERE d.workspace_id = $1 AND d.agent_id = $2 AND d.enabled ORDER BY d.id`, workspaceID, agentID)
+	rows, err := tx.QueryContext(ctx, `SELECT `+deviceColumns+deviceFrom+` WHERE d.workspace_id = $1 AND d.agent_id = $2 AND d.enabled
+		AND d.id IN (SELECT id FROM network_devices WHERE workspace_id = $1 AND enabled ORDER BY id LIMIT $3) ORDER BY d.id`, workspaceID, agentID, limit)
 	if err != nil {
 		return nil, err
 	}

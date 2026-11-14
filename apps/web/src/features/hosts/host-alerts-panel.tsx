@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { OverPlanNote } from "@/components/app/over-plan-note";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "@/components/icons";
 import { apiRequest, ApiError } from "@/lib/api";
@@ -156,6 +157,11 @@ function RuleRow({ rule, hosts, canEdit }: { rule: HostAlertRule; hosts: Host[];
         >
           {!rule.enabled ? "Paused" : firing ? `Firing on ${rule.firing.length}` : "OK"}
         </span>
+        {rule.over_plan ? (
+          <span className="text-xs">
+            <OverPlanNote what="host alert rules" />
+          </span>
+        ) : null}
         <span className="text-sm">
           {metricLabel[rule.metric]} ≥ {rule.threshold}% for {rule.minutes} {rule.minutes === 1 ? "minute" : "minutes"}
         </span>

@@ -20,6 +20,14 @@ its dashboard rather than on every payment.
   `workspaces.plan_expires_at`; paying again adds after the current period.
   The hourly maintenance pass returns expired workspaces to Free, keeping
   their data. A plan set by an admin has no expiry.
+- What a plan covers is what runs (added 2026-11-14). A workspace back on Free
+  keeps every monitor, status page, device, and host alert rule, but only the
+  oldest ones up to Free's limits are checked, served, polled, or evaluated;
+  the rest wait, marked "over your plan's limit" in the console. Nothing is
+  deleted or flagged in the database (`internal/store/plan_caps.go` ranks by
+  age against the plan catalog), so paying again resumes them at once, and
+  turning one off lets the next one in. Without this, one paid month would
+  keep Pro's capacity running for good.
 - Checkout creates a `payments` row first (migration 0018), then an
   UddoktaPay charge whose metadata carries the payment and workspace IDs.
 - The outcome is only ever taken from UddoktaPay's `verify-payment` API, both

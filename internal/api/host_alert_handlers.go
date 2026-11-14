@@ -36,6 +36,12 @@ func (srv *Server) handleHostAlerts(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		defer cancel()
 		rules, err := srv.store.ListHostAlertRules(ctx, user.WorkspaceID)
+		if err == nil {
+			over := overPlan(len(rules), func(i int) (int64, bool) { return rules[i].ID, rules[i].Enabled }, user.Plan.Limits.HostAlertRules)
+			for i := range rules {
+				rules[i].OverPlan = over[i]
+			}
+		}
 		if err != nil {
 			writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 			return

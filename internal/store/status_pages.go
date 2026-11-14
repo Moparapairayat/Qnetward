@@ -40,6 +40,9 @@ type StatusPage struct {
 	Monitors    []StatusPageMonitor `json:"monitors"`
 	CreatedAt   time.Time           `json:"created_at"`
 	UpdatedAt   time.Time           `json:"updated_at"`
+	// OverPlan is set on lists when the workspace's plan doesn't cover this
+	// one, so it waits (see plan_caps.go).
+	OverPlan bool `json:"over_plan,omitempty"`
 }
 
 func validateStatusPage(p *StatusPage) error {
@@ -259,7 +262,7 @@ func (s *Store) GetPublicStatusPage(ctx context.Context, slug string) (PublicSta
 	}
 	var pageID int64
 	page := PublicStatusPage{Slug: slug, Components: []PublicComponent{}, UpdatedAt: time.Now().UTC()}
-	err := s.db.QueryRowContext(ctx, `SELECT id, title, description FROM status_pages WHERE slug = $1 AND published`, slug).Scan(&pageID, &page.Title, &page.Description)
+	err := s.db.QueryRowContext(ctx, `SELECT id, title, description FROM status_pages WHERE slug = $1 AND published AND `+withinPlanSQL("id", "status_pages", "t.published", statusPageCap), slug).Scan(&pageID, &page.Title, &page.Description)
 	if errors.Is(err, sql.ErrNoRows) {
 		return PublicStatusPage{}, ErrStatusPageNotFound
 	}
@@ -268,7 +271,8 @@ func (s *Store) GetPublicStatusPage(ctx context.Context, slug string) (PublicSta
 	}
 
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT m.id, COALESCE(NULLIF(l.label, ''), m.name), CASE WHEN m.enabled THEN m.status ELSE 'paused' END, m.last_checked_at
+		SELECT m.id, COALESCE(NULLIF(l.label, ''), m.name),
+			CASE WHEN m.enabled AND `+withinPlanSQL("m.id", "monitors", "t.enabled", monitorCap)+` THEN m.status ELSE 'paused' END, m.last_checked_at
 		FROM status_page_monitors l JOIN monitors m ON m.id = l.monitor_id
 		WHERE l.page_id = $1
 		ORDER BY l.position, m.id

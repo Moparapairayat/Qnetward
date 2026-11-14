@@ -1,6 +1,7 @@
 "use client";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { OverPlanNote } from "@/components/app/over-plan-note";
 import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -281,6 +282,12 @@ function DeviceDetail({ device, canEdit }: { device: NetworkDevice; canEdit: boo
           ) : null}
           {chosen ? `Interface ${chosen.name}` : "All interfaces"} ·{" "}
           {live.streaming ? "updating every 2 seconds" : device.last_polled_at ? `last poll ${formatDateTime(device.last_polled_at)}` : "not polled yet"}
+          {device.over_plan ? (
+            <>
+              {" · "}
+              <OverPlanNote what="devices" />
+            </>
+          ) : null}
         </span>
         <div className="flex flex-wrap items-center gap-2">
           {iface ? (

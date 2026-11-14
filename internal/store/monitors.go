@@ -59,6 +59,9 @@ type Monitor struct {
 	CreatedAt    time.Time      `json:"created_at"`
 	Uptime24h    *float64       `json:"uptime_24h,omitempty"`
 	RecentChecks []MonitorCheck `json:"recent_checks"`
+	// OverPlan is set on lists when the workspace's plan doesn't cover this
+	// one, so it waits (see plan_caps.go).
+	OverPlan bool `json:"over_plan,omitempty"`
 }
 
 type MonitorCheck struct {
@@ -460,6 +463,7 @@ func (s *Store) ClaimDueMonitors(ctx context.Context, limit int) ([]Monitor, err
 		WHERE m.id IN (
 			SELECT id FROM monitors
 			WHERE enabled AND cloud AND next_run_at <= NOW()
+				AND `+withinPlanSQL("id", "monitors", "t.enabled", monitorCap)+`
 			ORDER BY next_run_at
 			LIMIT $1
 			FOR UPDATE SKIP LOCKED

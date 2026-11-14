@@ -32,6 +32,9 @@ type HostAlertRule struct {
 	CreatedAt   time.Time `json:"created_at"`
 	// Firing lists the hosts this rule is firing for now.
 	Firing []HostAlertFiring `json:"firing"`
+	// OverPlan is set on lists when the workspace's plan doesn't cover this
+	// one, so it waits (see plan_caps.go).
+	OverPlan bool `json:"over_plan,omitempty"`
 }
 
 // HostAlertFiring is a host a rule is firing for.
@@ -235,7 +238,7 @@ func (s *Store) EvaluateHostAlerts(ctx context.Context, now time.Time) ([]HostAl
 				WHEN 'disk' THEN CASE WHEN m.disk_total > 0 THEN m.disk_used::float8 * 100 / m.disk_total ELSE 0 END
 				ELSE CASE WHEN m.swap_total > 0 THEN m.swap_used::float8 * 100 / m.swap_total ELSE 0 END
 			END AS value) v
-			WHERE r.enabled
+			WHERE r.enabled AND `+withinPlanSQL("r.id", "host_alert_rules", "t.enabled", hostRuleCap)+`
 			GROUP BY r.id, m.agent_id
 		)
 		SELECT r.id, r.workspace_id, COALESCE(r.created_by, 0), r.agent_id, r.metric, r.threshold, r.minutes, r.notify_email, r.enabled, r.created_at, w.agent_id, a.name, a.hostname, w.lo, w.hi, w.n, w.last, st.rule_id IS NOT NULL

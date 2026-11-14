@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { OverPlanNote } from "@/components/app/over-plan-note";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
@@ -542,7 +543,11 @@ function MonitorRow({
               <span className="text-[#fbbf24]">No agent is reporting, so this status is from {checked ?? "before"}</span>
             ) : null}
             {state === "down" && monitor.last_error ? <span className="max-w-full truncate text-[#ff8fb3]" title={monitor.last_error}>{monitor.last_error}</span> : null}
-            {monitor.enabled ? <span title={formatDateTime(monitor.next_run_at)}>Next {relativeTime(monitor.next_run_at, true) ?? "soon"}</span> : null}
+            {monitor.over_plan ? (
+              <OverPlanNote what="monitors" />
+            ) : monitor.enabled ? (
+              <span title={formatDateTime(monitor.next_run_at)}>Next {relativeTime(monitor.next_run_at, true) ?? "soon"}</span>
+            ) : null}
             <span>{monitor.notify_email ? `Emails ${monitor.notify_email}` : "No emails"}</span>
           </p>
         </div>

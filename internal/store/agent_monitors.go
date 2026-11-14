@@ -7,7 +7,9 @@ import (
 )
 
 // AgentMonitors returns the enabled monitors that run from this agent.
-func (s *Store) AgentMonitors(ctx context.Context, workspaceID, agentID int64) ([]Monitor, error) {
+// limit is the plan's monitor limit: only the oldest enabled monitors up to
+// it are handed out (see plan_caps.go).
+func (s *Store) AgentMonitors(ctx context.Context, workspaceID, agentID int64, limit int) ([]Monitor, error) {
 	if s == nil {
 		return nil, errors.New("store is not available")
 	}
@@ -20,7 +22,8 @@ func (s *Store) AgentMonitors(ctx context.Context, workspaceID, agentID int64) (
 	rows, err := tx.QueryContext(ctx, `SELECT `+monitorColumns+` FROM monitors
 		WHERE workspace_id = $1 AND enabled
 			AND EXISTS (SELECT 1 FROM monitor_locations l WHERE l.monitor_id = monitors.id AND l.agent_id = $2)
-		ORDER BY id`, workspaceID, agentID)
+			AND id IN (SELECT id FROM monitors WHERE workspace_id = $1 AND enabled ORDER BY id LIMIT $3)
+		ORDER BY id`, workspaceID, agentID, limit)
 	if err != nil {
 		return nil, err
 	}

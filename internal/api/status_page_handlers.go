@@ -32,6 +32,12 @@ func (srv *Server) handleStatusPages(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		pages, err := srv.store.ListStatusPages(ctx, user.WorkspaceID)
+		if err == nil {
+			over := overPlan(len(pages), func(i int) (int64, bool) { return pages[i].ID, pages[i].Published }, user.Plan.Limits.StatusPages)
+			for i := range pages {
+				pages[i].OverPlan = over[i]
+			}
+		}
 		if err != nil {
 			writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 			return

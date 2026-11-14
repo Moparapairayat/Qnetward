@@ -245,6 +245,12 @@ func (srv *Server) listDevices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	devices, err := srv.store.ListDevices(ctx, user.WorkspaceID)
+	if err == nil {
+		over := overPlan(len(devices), func(i int) (int64, bool) { return devices[i].ID, devices[i].Enabled }, user.Plan.Limits.Devices)
+		for i := range devices {
+			devices[i].OverPlan = over[i]
+		}
+	}
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 		return
@@ -258,7 +264,12 @@ func (srv *Server) listDevices(w http.ResponseWriter, r *http.Request) {
 
 // agentDeviceJobs are the devices an agent polls, with their credentials.
 func (srv *Server) agentDeviceJobs(ctx context.Context, agent store.Agent) []map[string]any {
-	devices, err := srv.store.AgentDevices(ctx, agent.WorkspaceID, agent.ID)
+	plan, err := srv.store.WorkspacePlan(ctx, agent.WorkspaceID)
+	if err != nil {
+		log.Printf("reading the plan for agent %d failed: %v", agent.ID, err)
+		return []map[string]any{}
+	}
+	devices, err := srv.store.AgentDevices(ctx, agent.WorkspaceID, agent.ID, plan.Limits.Devices)
 	if err != nil {
 		log.Printf("listing devices for agent %d failed: %v", agent.ID, err)
 		return []map[string]any{}

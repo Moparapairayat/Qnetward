@@ -210,7 +210,12 @@ func (srv *Server) handleAgentHeartbeat(w http.ResponseWriter, r *http.Request) 
 	if agent.BackOnline {
 		srv.agentBackOnline(agent)
 	}
-	monitors, err := srv.store.AgentMonitors(ctx, agent.WorkspaceID, agent.ID)
+	plan, err := srv.store.WorkspacePlan(ctx, agent.WorkspaceID)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
+		return
+	}
+	monitors, err := srv.store.AgentMonitors(ctx, agent.WorkspaceID, agent.ID, plan.Limits.Monitors)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, apiError{Error: "heartbeat failed"})
 		return

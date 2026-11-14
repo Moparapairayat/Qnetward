@@ -57,6 +57,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build the Render image
         run: docker build -f deploy/render/Dockerfile -t qnetward-render .
+      # The API image Docker Compose builds (deploy/docker-compose.production.yml).
+      - name: Build the Compose API image
+        run: docker build -f Dockerfile -t qnetward-api .
 
   frontend:
     runs-on: ubuntu-latest

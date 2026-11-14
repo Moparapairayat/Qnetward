@@ -331,3 +331,41 @@ func TestCreateEmailVerificationCodeKeepsSingleActiveRowPerUser(t *testing.T) {
 		t.Fatalf("expected exactly 1 email verification row, got %d", count)
 	}
 }
+
+// Wrong guesses spend a verification code: after MaxEmailCodeAttempts, even the
+// right code is refused until a new one is sent, which starts the count again.
+func TestEmailVerificationCodeAttempts(t *testing.T) {
+	st := openTestStore(t, Config{BatchSize: 1, FlushInterval: 5 * time.Millisecond})
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	email := fmt.Sprintf("guess_%d@example.com", time.Now().UnixNano())
+	user, err := st.CreateUser(ctx, "Guess Tester", email, "hash-1", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	right := fmt.Sprintf("right-%d", time.Now().UnixNano())
+	if err := st.CreateEmailVerificationCode(ctx, user.ID, right, time.Now().Add(time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < MaxEmailCodeAttempts; i++ {
+		if _, err := st.VerifyUserEmailCode(ctx, email, fmt.Sprintf("wrong-%d", i)); !errors.Is(err, ErrVerificationCode) {
+			t.Fatalf("wrong guess %d: expected ErrVerificationCode, got %v", i+1, err)
+		}
+	}
+	if _, err := st.VerifyUserEmailCode(ctx, email, right); !errors.Is(err, ErrVerificationCode) {
+		t.Fatalf("after %d wrong guesses the code should be spent, got %v", MaxEmailCodeAttempts, err)
+	}
+
+	// A new code works, and its count starts from zero.
+	fresh := fmt.Sprintf("fresh-%d", time.Now().UnixNano())
+	if err := st.CreateEmailVerificationCode(ctx, user.ID, fresh, time.Now().Add(time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.VerifyUserEmailCode(ctx, email, "wrong-again"); !errors.Is(err, ErrVerificationCode) {
+		t.Fatalf("expected ErrVerificationCode, got %v", err)
+	}
+	if _, err := st.VerifyUserEmailCode(ctx, email, fresh); err != nil {
+		t.Fatalf("a new code should verify after one wrong guess: %v", err)
+	}
+}

@@ -63,6 +63,12 @@ func (srv *Server) handleMonitors(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		defer cancel()
 		monitors, err := srv.store.ListMonitors(ctx, user.WorkspaceID)
+		if err == nil {
+			over := overPlan(len(monitors), func(i int) (int64, bool) { return monitors[i].ID, monitors[i].Enabled }, user.Plan.Limits.Monitors)
+			for i := range monitors {
+				monitors[i].OverPlan = over[i]
+			}
+		}
 		if err != nil {
 			writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 			return

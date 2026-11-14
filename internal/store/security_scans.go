@@ -16,16 +16,16 @@ const SecurityScanRetention = 180 * 24 * time.Hour
 // SecurityScan is one passive check of a domain. Report is the engine's JSON,
 // filled only when a single scan is fetched.
 type SecurityScan struct {
-	ID          int64           `json:"id"`
-	WorkspaceID int64           `json:"-"`
-	UserID      int64           `json:"-"`
-	Kind        string          `json:"kind"`
-	Domain      string          `json:"domain"`
-	Grade       string          `json:"grade"`
-	Score       int             `json:"score"`
-	High        int             `json:"high"`
-	Medium      int             `json:"medium"`
-	Low         int             `json:"low"`
+	ID          int64  `json:"id"`
+	WorkspaceID int64  `json:"-"`
+	UserID      int64  `json:"-"`
+	Kind        string `json:"kind"`
+	Domain      string `json:"domain"`
+	Grade       string `json:"grade"`
+	Score       int    `json:"score"`
+	High        int    `json:"high"`
+	Medium      int    `json:"medium"`
+	Low         int    `json:"low"`
 	// Status is running while an attack surface scan works, then done or
 	// failed (with Error). Passive scans are saved done.
 	Status    string          `json:"status"`

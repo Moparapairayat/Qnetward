@@ -321,6 +321,7 @@ func (s *Store) CreateEmailVerificationCode(ctx context.Context, userID int64, c
 		DO UPDATE
 		SET code_hash = EXCLUDED.code_hash,
 			expires_at = EXCLUDED.expires_at,
+			attempts = 0,
 			created_at = NOW()
 	`, userID, codeHash, expiresAt.UTC())
 	return err
@@ -356,6 +357,10 @@ func (s *Store) DeleteEmailVerificationCode(ctx context.Context, userID int64) e
 	return err
 }
 
+// MaxEmailCodeAttempts is how many wrong guesses one email verification code
+// takes before it is spent.
+const MaxEmailCodeAttempts = 5
+
 func (s *Store) VerifyUserEmailCode(ctx context.Context, email string, codeHash string) (User, error) {
 	email, err := NormalizeEmail(email)
 	if err != nil {
@@ -379,9 +384,27 @@ func (s *Store) VerifyUserEmailCode(ctx context.Context, email string, codeHash 
 			AND u.verification_required = TRUE
 			AND evc.code_hash = $2
 			AND evc.expires_at > NOW()
+			AND evc.attempts < $3
 		FOR UPDATE
-	`, email, codeHash).Scan(&user.ID, &user.Name, &user.Email, &user.VerificationRequired, &user.EmailVerifiedAt, &user.CreatedAt)
+	`, email, codeHash, MaxEmailCodeAttempts).Scan(&user.ID, &user.Name, &user.Email, &user.VerificationRequired, &user.EmailVerifiedAt, &user.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
+		// A wrong code counts against the one that was sent; once it has had
+		// MaxEmailCodeAttempts wrong guesses it is spent, and a new one must be
+		// requested. Guessing all million codes is then out of reach, from any
+		// number of addresses.
+		if _, err := tx.ExecContext(ctx, `
+			UPDATE email_verification_codes SET attempts = attempts + 1
+			WHERE user_id = (SELECT id FROM users WHERE email = $1)`, email); err != nil {
+			return User{}, err
+		}
+		if _, err := tx.ExecContext(ctx, `
+			DELETE FROM email_verification_codes
+			WHERE attempts >= $2 AND user_id = (SELECT id FROM users WHERE email = $1)`, email, MaxEmailCodeAttempts); err != nil {
+			return User{}, err
+		}
+		if err := tx.Commit(); err != nil {
+			return User{}, err
+		}
 		return User{}, ErrVerificationCode
 	}
 	if err != nil {

@@ -1,6 +1,7 @@
 "use client";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { OverPlanNote } from "@/components/app/over-plan-note";
 import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -204,6 +205,11 @@ function PageCard({ page, monitors, onEdit }: { page: StatusPage; monitors: Map<
             <span className="rounded border border-[var(--lp-border-strong)] px-1.5 text-2xs font-normal text-[var(--lp-subtle)]">Draft</span>
           )}
         </p>
+        {page.over_plan ? (
+          <p className="mt-0.5 text-xs">
+            <OverPlanNote what="public status pages" /> <span className="text-[var(--lp-subtle)]">· its link shows a not-found page for now</span>
+          </p>
+        ) : null}
         <p className="lp-mono mt-0.5 truncate text-xs text-[var(--lp-subtle)]">/status/{page.slug}</p>
         <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--lp-muted)]">
           <span>

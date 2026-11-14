@@ -122,7 +122,7 @@ export function UpgradeWorkspace() {
         <p className="mt-2 max-w-2xl text-base leading-relaxed text-[var(--lp-muted)]">
           {current === "pro" && billing?.plan_expires_at
             ? `This workspace is on Pro, paid through ${formatDate(billing.plan_expires_at)}. Buying more adds to the end of it.`
-            : "Pro is paid ahead, a month or a year at a time, and never renews by itself. When it ends, the workspace goes back to Free and keeps everything."}
+            : "Pro is paid ahead, a month or a year at a time, and never renews by itself. When it ends, the workspace goes back to Free and keeps everything; what Free doesn't cover waits until you pay again."}
         </p>
       </div>
       {billingQuery.isError ? <p className="text-sm text-[#ff8fb3]">{(billingQuery.error as ApiError).message || "Couldn't load this workspace's plan."}</p> : null}

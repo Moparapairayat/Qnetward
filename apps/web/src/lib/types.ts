@@ -504,6 +504,8 @@ export type Monitor = {
   recent_checks: MonitorCheck[];
   /** The places the monitor runs from, Qnetward's servers first. */
   locations: MonitorLocation[];
+  /** The plan doesn't cover this one now, so it waits. */
+  over_plan?: boolean;
 };
 
 export type MonitorLocation = {
@@ -650,6 +652,8 @@ export type StatusPage = {
   monitors: StatusPageMonitor[];
   created_at: string;
   updated_at: string;
+  /** The plan doesn't cover this one now, so it waits. */
+  over_plan?: boolean;
 };
 
 export type StatusPageListResponse = { pages: StatusPage[]; limit: number };
@@ -1002,6 +1006,8 @@ export type HostAlertRule = {
   enabled: boolean;
   created_at: string;
   firing: { agent_id: number; firing_since: string; value: number }[];
+  /** The plan doesn't cover this one now, so it waits. */
+  over_plan?: boolean;
 };
 
 export type HostAlertRuleList = { rules: HostAlertRule[]; limit: number };
@@ -1042,6 +1048,8 @@ export type NetworkDevice = {
   interfaces?: DeviceInterface[] | null;
   created_at: string;
   credentials: { community_set?: boolean; username?: string; auth_protocol?: string; priv_protocol?: string };
+  /** The plan doesn't cover this one now, so it waits. */
+  over_plan?: boolean;
 };
 
 export type DeviceListResponse = { devices: NetworkDevice[]; limit: number };
