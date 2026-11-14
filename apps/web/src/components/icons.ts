@@ -9,6 +9,8 @@ import type { Icon, IconProps } from "@phosphor-icons/react/dist/lib/types";
 import {
   ArrowElbowDownLeft as PhArrowElbowDownLeft,
   ArrowLeft as PhArrowLeft,
+  Crown as PhCrown,
+  DotsThree as PhDotsThree,
   ArrowRight as PhArrowRight,
   ArrowSquareOut as PhArrowSquareOut,
   ArrowUpRight as PhArrowUpRight,
@@ -121,6 +123,8 @@ export const Activity = bold(PhPulse);
 export const AlertTriangle = bold(PhWarning);
 export const Info = bold(PhInfo);
 export const ArrowLeft = bold(PhArrowLeft);
+export const Crown = bold(PhCrown);
+export const MoreHorizontal = bold(PhDotsThree);
 export const ArrowRight = bold(PhArrowRight);
 export const ArrowUpRight = bold(PhArrowUpRight);
 export const BadgeCheck = bold(PhSealCheck);
