@@ -1,87 +1,127 @@
 /**
- * The public roadmap, shared by the landing preview and /roadmap. Keep it at
- * feature level: no dates, no internal technology choices. Move an item to
- * "now" only when it ships in the console.
+ * The public roadmap, shown on /roadmap. Keep it at feature level: no dates
+ * and no internal technology choices. Phases follow the order the work
+ * actually happens in; mark an item "shipped" only once it works in the
+ * console.
  */
 
-export type Horizon = "now" | "next" | "later";
+export type ItemStatus = "shipped" | "building" | "planned";
+export type PhaseStatus = "shipped" | "building" | "next" | "later";
 
-export type RoadmapItem = {
-  name: string;
-  body: string;
-  horizon: Horizon;
-};
+export type RoadmapItem = { name: string; status: ItemStatus };
 
-export type RoadmapTheme = {
-  id: string;
+export type RoadmapPhase = {
+  number: number;
   name: string;
   summary: string;
+  status: PhaseStatus;
   items: RoadmapItem[];
 };
 
-export const horizonMeta: Record<Horizon, { label: string; caption: string }> = {
-  now: { label: "Now", caption: "In the console today" },
-  next: { label: "Next", caption: "What we're building toward" },
-  later: { label: "Later", caption: "Planned, order may change" },
+export const phaseStatusLabel: Record<PhaseStatus, string> = {
+  shipped: "Shipped",
+  building: "Building",
+  next: "Next",
+  later: "Later",
 };
 
-export const roadmap: RoadmapTheme[] = [
+export const itemStatusLabel: Record<ItemStatus, string> = {
+  shipped: "In the console today",
+  building: "Being built now",
+  planned: "Planned",
+};
+
+export const roadmap: RoadmapPhase[] = [
   {
-    id: "diagnose",
+    number: 1,
     name: "Diagnose",
     summary: "Find out what's wrong, right now, from a browser tab.",
+    status: "shipped",
     items: [
-      { name: "Ping and TCP ping", body: "Streamed replies with a live latency chart, loss, and jitter.", horizon: "now" },
-      { name: "Port scan", body: "Up to 4,096 ports per run, with service names and handshake times.", horizon: "now" },
-      { name: "DNS lookup", body: "Every record type, any resolver, with DNSSEC and mail checks.", horizon: "now" },
-      { name: "Traceroute", body: "Hop-by-hop paths with loss and latency per hop, and reverse DNS names.", horizon: "now" },
+      { name: "Ping and TCP ping", status: "shipped" },
+      { name: "Port scan", status: "shipped" },
+      { name: "DNS lookup and traceroute", status: "shipped" },
+      { name: "History and CSV / JSON export", status: "shipped" },
+      { name: "Workspaces, roles, audit log", status: "shipped" },
+      { name: "Two-factor sign-in and passkeys", status: "shipped" },
+      { name: "API keys and an OpenAPI spec", status: "shipped" },
     ],
   },
   {
-    id: "monitor",
-    name: "Monitor",
-    summary: "Know before your users do.",
+    number: 2,
+    name: "Monitor everywhere",
+    summary: "Know before your users do, from inside your own networks too.",
+    status: "shipped",
     items: [
-      { name: "Alert rules", body: "Latency and loss thresholds with cooldowns, delivered by email.", horizon: "now" },
-      { name: "History and export", body: "Stored results you can chart, filter, and export as CSV or JSON.", horizon: "now" },
-      { name: "Uptime monitors", body: "HTTP(S), TCP, and ping checks every 30 seconds to every hour, with an email when a target goes down and when it's back.", horizon: "now" },
-      { name: "Certificate expiry", body: "HTTPS monitors warn you two weeks before a certificate runs out.", horizon: "now" },
-      { name: "Chat and webhook alerts", body: "Send monitor, certificate, and alert rule alerts to Slack, Discord, Telegram, or your own signed webhook.", horizon: "now" },
-      { name: "Status pages", body: "A public page with each service's status and 30 days of history, under names you choose.", horizon: "now" },
-      { name: "Incidents and on-call", body: "Group related alerts into one incident and page whoever is on call.", horizon: "later" },
+      { name: "Uptime monitors and alert rules", status: "shipped" },
+      { name: "Slack, Discord, Telegram, webhook alerts", status: "shipped" },
+      { name: "Public status pages", status: "shipped" },
+      { name: "Probe agents for private networks", status: "shipped" },
+      { name: "Monitors from several locations", status: "shipped" },
+      { name: "Live updates across the console", status: "shipped" },
     ],
   },
   {
-    id: "reach",
-    name: "Reach every network",
-    summary: "See inside private networks and the gear you already run.",
-    items: [
-      { name: "Probe agents", body: "An outbound-only agent that runs your monitors from private networks and remote sites.", horizon: "now" },
-      { name: "Device collector", body: "SNMP, gNMI, Redfish, and syslog from routers, switches, and servers.", horizon: "later" },
-      { name: "Topology", body: "A live map of your network built from neighbour discovery.", horizon: "later" },
-    ],
-  },
-  {
-    id: "secure",
-    name: "Secure",
+    number: 3,
+    name: "Security scanning",
     summary: "Scan only what you're allowed to, and keep a record of it.",
+    status: "shipped",
     items: [
-      { name: "Passive checks", body: "Grade any domain's certificates, security headers, and email spoofing protection from public signals only.", horizon: "now" },
-      { name: "Attack surface", body: "Discovery of subdomains, open services, and certificates on domains you've verified.", horizon: "now" },
-      { name: "Deep scans", body: "Authorized, intrusive checks with signed consent and manual approval.", horizon: "later" },
+      { name: "Passive checks for any domain", status: "shipped" },
+      { name: "Domain ownership verification", status: "shipped" },
+      { name: "Attack surface discovery", status: "shipped" },
+      { name: "Vulnerabilities with risk scores", status: "shipped" },
+      { name: "Authorized deep scans", status: "shipped" },
+      { name: "Compliance mapping", status: "shipped" },
     ],
   },
   {
-    id: "team",
-    name: "Team and platform",
-    summary: "Run it with your team, your way.",
+    number: 4,
+    name: "Infrastructure & devices",
+    summary: "See the servers and network gear you already run.",
+    status: "building",
     items: [
-      { name: "Workspaces and roles", body: "Invitations, owner, admin, member, and viewer roles, and workspace switching.", horizon: "now" },
-      { name: "Account security", body: "Two-factor sign-in with recovery codes, password changes, sessions, and account deletion.", horizon: "now" },
-      { name: "Audit log", body: "An append-only record of sign-ins, member changes, monitors, scans, and exports.", horizon: "now" },
-      { name: "API keys", body: "Scoped workspace keys for scripts, CI, and Terraform, with an OpenAPI spec.", horizon: "now" },
-      { name: "SSO and SCIM", body: "Enterprise sign-in and user provisioning.", horizon: "later" },
-      { name: "Root-cause hints", body: "Point at the most likely cause when a storm of alerts arrives.", horizon: "later" },
+      { name: "Host metrics and alerts", status: "shipped" },
+      { name: "Network devices over SNMP", status: "shipped" },
+      { name: "Device alerts", status: "building" },
+      { name: "Live network topology", status: "planned" },
+      { name: "Traffic flows", status: "planned" },
+      { name: "Logs and cloud accounts", status: "planned" },
+    ],
+  },
+  {
+    number: 5,
+    name: "Automation & AI",
+    summary: "Fewer alerts, faster answers.",
+    status: "next",
+    items: [
+      { name: "Incidents that group related alerts", status: "planned" },
+      { name: "On-call schedules and paging", status: "planned" },
+      { name: "Automations on alerts", status: "planned" },
+      { name: "An assistant that suggests the cause", status: "planned" },
+    ],
+  },
+  {
+    number: 6,
+    name: "Developer platform",
+    summary: "Build on Qnetward from your own code.",
+    status: "later",
+    items: [
+      { name: "Versioned public API", status: "planned" },
+      { name: "SDKs for TypeScript, Python, Go", status: "planned" },
+      { name: "Terraform provider", status: "planned" },
+    ],
+  },
+  {
+    number: 7,
+    name: "Enterprise",
+    summary: "Run it your organization's way.",
+    status: "later",
+    items: [
+      { name: "SSO (SAML, OIDC) and SCIM", status: "planned" },
+      { name: "Dedicated or self-hosted", status: "planned" },
+      { name: "Audit export and data residency", status: "planned" },
+      { name: "Priority support and an SLA", status: "planned" },
     ],
   },
 ];
