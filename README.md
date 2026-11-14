@@ -14,6 +14,7 @@ Diagnostics, uptime monitoring, infrastructure metrics, and security scanning fo
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![OpenAPI](https://img.shields.io/badge/API-OpenAPI_3-6BA539?style=flat-square&logo=openapiinitiative&logoColor=white)](apps/web/public/openapi.yaml)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-A42E2B?style=flat-square&logo=gnu&logoColor=white)](LICENSE)
 
 <br />
 
@@ -46,6 +47,7 @@ Diagnostics, uptime monitoring, infrastructure metrics, and security scanning fo
 - [Deployment](#-deployment)
 - [Testing and CI](#-testing-and-ci)
 - [Project status](#-project-status)
+- [License](#-license)
 
 ## ◉ What it does
 
@@ -401,6 +403,14 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:3002 pnpm --dir apps/web test:e2e
 | 7 | Enterprise: SSO, SCIM, self-hosted | Later |
 
 The details are on the [roadmap](https://qnetward.moparapairayat.one/roadmap). Design decisions are written up as [architecture decision records](docs/adr/README.md); the console has its own [development guide](apps/web/README.md).
+
+## ⚖ License
+
+Qnetward is free software, licensed under the **[GNU Affero General Public License v3.0](LICENSE)** (AGPL-3.0-only).
+
+In short: you can use, study, change, and self-host it, for any purpose, including commercially. If you change it and let others use it over a network, such as running it as a hosted service, you must offer them the source of your changed version under the same license. Running it unchanged, or only for yourself and your team, asks nothing of you.
+
+Copyright © 2026 the Qnetward contributors.
 
 <div align="center">
 
