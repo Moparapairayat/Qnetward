@@ -5,35 +5,53 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
+  BellRinging,
   BookOpenText,
   CaretDown,
+  ClockCounterClockwise,
   EnvelopeSimple,
-  FileCode,
   GithubLogo,
+  GlobeHemisphereWest,
   Info,
-  Lightning,
   MapTrifold,
+  Plugs,
+  Pulse,
+  Question,
+  ShieldCheck,
   TerminalWindow,
   UsersThree,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Icon as PhIcon } from "@phosphor-icons/react/dist/lib/types";
-import { siApple, siDocker, siGo, siLinux, siPostgresql, siRaspberrypi, siRedis, siTimescale, type SimpleIcon } from "simple-icons";
+import { siCurl, siDocker, siExpress, siGithubactions, siGo, siNextdotjs, siNodedotjs, siPython, type SimpleIcon } from "simple-icons";
 import { QnetwardMark } from "./qnetward-mark";
 
 type MenuItem = { href: string; label: string; hint: string; icon: PhIcon; external?: boolean; download?: boolean };
 
-const developers: MenuItem[] = [
-  { href: "/docs/api", label: "API reference", hint: "Every endpoint, with examples to try", icon: BookOpenText },
-  { href: "/openapi.yaml", label: "OpenAPI spec", hint: "For Postman, SDKs, and code generators", icon: FileCode, download: true },
-  { href: "/#developers", label: "CLI", hint: "One binary, --json on every command", icon: TerminalWindow },
-  { href: "/#developers", label: "Live stream", hint: "Results over a WebSocket as they happen", icon: Lightning },
-  { href: "https://github.com/Quantum-Axis/Qnetward", label: "GitHub", hint: "Source code and issues", icon: GithubLogo, external: true },
+const product: MenuItem[] = [
+  { href: "/#products", label: "Diagnostics", hint: "Ping, port scan, DNS, and traceroute", icon: Pulse },
+  { href: "/#products", label: "Uptime monitors", hint: "Checks that run with the tab closed", icon: Pulse },
+  { href: "/#integrations", label: "Alerts", hint: "Slack, Discord, Telegram, and webhooks", icon: BellRinging },
+  { href: "/#security", label: "Security", hint: "Scans gated by proof and consent", icon: ShieldCheck },
+  { href: "/#network", label: "Global network", hint: "Probe from more than one place", icon: GlobeHemisphereWest },
+];
+
+const productCards: MenuItem[] = [
+  { href: "/#features", label: "Every tool", hint: "All in one console", icon: Pulse },
+  { href: "/#integrations", label: "Alert channels", hint: "Slack, Discord, and more", icon: Plugs },
+];
+
+const docs: MenuItem[] = [
+  { href: "/docs", label: "Getting started", hint: "Your first request in five minutes", icon: BookOpenText },
+  { href: "/docs/api", label: "API reference", hint: "Every endpoint, with examples to try", icon: TerminalWindow },
+  { href: "/#integrations", label: "Integrations", hint: "Slack, Discord, Telegram, and webhooks", icon: Plugs },
+  { href: "/changelog", label: "Changelog", hint: "What shipped, newest first", icon: ClockCounterClockwise },
 ];
 
 const company: MenuItem[] = [
   { href: "/about", label: "About", hint: "Why we're building Qnetward", icon: Info },
   { href: "/team", label: "Team", hint: "The people behind it", icon: UsersThree },
   { href: "/about#contact", label: "Contact", hint: "Questions, sales, and support", icon: EnvelopeSimple },
+  { href: "/#faq", label: "FAQ", hint: "Common questions", icon: Question },
 ];
 
 const companyCards: MenuItem[] = [
@@ -41,19 +59,17 @@ const companyCards: MenuItem[] = [
   { href: "https://github.com/Quantum-Axis/Qnetward", label: "Open source", hint: "AGPL-3.0, on GitHub", icon: GithubLogo, external: true },
 ];
 
-// What Qnetward runs on and is built with, shown as a grid of marks.
-const stack: SimpleIcon[] = [siLinux, siApple, siRaspberrypi, siDocker, siGo, siPostgresql, siTimescale, siRedis];
+// The languages and tools the docs have working examples for.
+const docsStack: SimpleIcon[] = [siNodedotjs, siNextdotjs, siExpress, siPython, siGo, siCurl, siGithubactions, siDocker];
 
 type NavLink = { label: string; href: string };
 type NavMenuEntry = { label: string; items: MenuItem[]; cards?: MenuItem[]; logos?: SimpleIcon[] };
 type NavEntry = NavLink | NavMenuEntry;
 
 const nav: NavEntry[] = [
-  { label: "Product", href: "/#products" },
-  { label: "Developers", items: developers, logos: stack },
-  { label: "Security", href: "/#security" },
+  { label: "Product", items: product, cards: productCards },
+  { label: "Docs", items: docs, logos: docsStack },
   { label: "Pricing", href: "/#pricing" },
-  { label: "FAQ", href: "/#faq" },
   { label: "Company", items: company, cards: companyCards },
 ];
 
@@ -152,7 +168,6 @@ function NavMenu({ label, items, cards, logos }: NavMenuEntry) {
             ) : null}
             {logos ? (
               <div>
-                <p className="mb-2 text-[13px] text-[#a1a4a5]">Runs on</p>
                 <ul className="grid grid-cols-4 gap-1">
                   {logos.map((icon) => (
                     <li key={icon.slug} className="lp-menu-logo" title={icon.title}>
@@ -254,7 +269,6 @@ function MobileMenu({ top, container, onClose }: { top: number; container: HTMLE
                     ) : null}
                     {entry.logos ? (
                       <div>
-                        <p className="mb-1 text-[13px] text-[#a1a4a5]">Runs on</p>
                         <ul className="grid grid-cols-4 gap-1">
                           {entry.logos.map((icon) => (
                             <li key={icon.slug} className="lp-menu-logo w-auto" title={icon.title}>

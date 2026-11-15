@@ -26,8 +26,10 @@ const columns: { title: string; links: [string, string][] }[] = [
   {
     title: "Developers",
     links: [
-      ["CLI", "/#developers"],
+      ["Docs", "/docs"],
       ["API reference", "/docs/api"],
+      ["Changelog", "/changelog"],
+      ["CLI", "/#developers"],
       ["OpenAPI spec", "/openapi.yaml"],
       ["Live WebSocket", "/#developers"],
       ["GitHub", "https://github.com/Quantum-Axis/Qnetward"],
