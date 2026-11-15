@@ -22,7 +22,7 @@ import {
   UsersThree,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Icon as PhIcon } from "@phosphor-icons/react/dist/lib/types";
-import { siCurl, siDocker, siExpress, siGithubactions, siGo, siNextdotjs, siNodedotjs, siPython, type SimpleIcon } from "simple-icons";
+import { siCurl, siDiscord, siDocker, siExpress, siGithubactions, siGo, siNextdotjs, siNodedotjs, siOpenapiinitiative, siPython, siTelegram } from "simple-icons";
 import { QnetwardMark } from "./qnetward-mark";
 
 type MenuItem = { href: string; label: string; hint: string; icon: PhIcon; external?: boolean; download?: boolean };
@@ -59,11 +59,17 @@ const companyCards: MenuItem[] = [
   { href: "https://github.com/Quantum-Axis/Qnetward", label: "Open source", hint: "AGPL-3.0, on GitHub", icon: GithubLogo, external: true },
 ];
 
-// The languages and tools the docs have working examples for.
-const docsStack: SimpleIcon[] = [siNodedotjs, siNextdotjs, siExpress, siPython, siGo, siCurl, siGithubactions, siDocker];
+// A single-colour mark, as Simple Icons draws them.
+type Mark = { slug: string; title: string; path: string };
+
+// Simple Icons no longer carries Slack, so its mark comes from our own logo file.
+const slack: Mark = { slug: "slack", title: "Slack", path: "M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z" };
+
+// First row: where alerts go and CI. Then the languages and tools the docs have examples for.
+const docsStack: Mark[] = [slack, siDiscord, siTelegram, siGithubactions, siNodedotjs, siNextdotjs, siExpress, siPython, siGo, siCurl, siDocker, siOpenapiinitiative];
 
 type NavLink = { label: string; href: string };
-type NavMenuEntry = { label: string; items: MenuItem[]; cards?: MenuItem[]; logos?: SimpleIcon[] };
+type NavMenuEntry = { label: string; items: MenuItem[]; cards?: MenuItem[]; logos?: Mark[] };
 type NavEntry = NavLink | NavMenuEntry;
 
 const nav: NavEntry[] = [
