@@ -8,7 +8,7 @@ import { useMemo } from "react";
 // like part of Qnetward rather than an embedded tool.
 const customCss = `
 .dark-mode {
-  --scalar-background-1: #111114;
+  --scalar-background-1: #09090b;
   --scalar-background-2: #18181c;
   --scalar-background-3: #202026;
   --scalar-background-accent: rgba(255, 61, 127, 0.1);
@@ -26,7 +26,7 @@ const customCss = `
   --scalar-color-blue: #60a5fa;
   --scalar-color-orange: #fb923c;
   --scalar-color-purple: #a78bfa;
-  --scalar-sidebar-background-1: #0d0d10;
+  --scalar-sidebar-background-1: #09090b;
   --scalar-sidebar-item-hover-background: rgba(255, 255, 255, 0.04);
   --scalar-sidebar-item-active-background: rgba(255, 61, 127, 0.1);
   --scalar-sidebar-color-active: #ff4d8b;
@@ -35,7 +35,7 @@ const customCss = `
   --scalar-sidebar-search-border-color: rgba(255, 255, 255, 0.08);
 }
 .light-mode, .dark-mode {
-  --scalar-font: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --scalar-font: var(--font-inter), var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --scalar-font-code: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --scalar-radius: 8px;
   --scalar-radius-lg: 12px;

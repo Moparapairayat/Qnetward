@@ -1,0 +1,369 @@
+/* Docs: guides and the API reference header. Quiet surfaces, one accent, and
+   motion that only ever eases content into place. */
+
+.docs-root {
+  --d-bg: #09090b;
+  --d-panel: #0f0f12;
+  --d-raised: #141418;
+  --d-surface: #18181d;
+  --d-border: rgba(255, 255, 255, 0.07);
+  --d-border-strong: rgba(255, 255, 255, 0.12);
+  --d-text: #ededf0;
+  --d-muted: #a1a1aa;
+  --d-subtle: #71717a;
+  --d-accent: #ff3d7f;
+  --d-accent-soft: rgba(255, 61, 127, 0.12);
+  background: var(--d-bg);
+  color: var(--d-text);
+  font-family: var(--font-inter), var(--font-geist), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The page sits in a raised panel beside the sidebar. */
+@media (min-width: 1024px) {
+  .docs-panel {
+    margin: 0 8px 8px 0;
+    min-height: calc(100dvh - 64px);
+    border: 1px solid var(--d-border);
+    border-radius: 16px;
+    background: var(--d-panel);
+  }
+}
+
+.docs-pop {
+  animation: docs-pop-in 0.18s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes docs-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+.docs-mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* Page entrance: each block rises a few pixels and fades in, one after another. */
+.docs-enter > * {
+  animation: docs-up 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.docs-enter > *:nth-child(1) { animation-delay: 0ms; }
+.docs-enter > *:nth-child(2) { animation-delay: 40ms; }
+.docs-enter > *:nth-child(3) { animation-delay: 80ms; }
+.docs-enter > *:nth-child(4) { animation-delay: 120ms; }
+.docs-enter > *:nth-child(5) { animation-delay: 160ms; }
+.docs-enter > *:nth-child(6) { animation-delay: 200ms; }
+.docs-enter > *:nth-child(n + 7) { animation-delay: 240ms; }
+
+@keyframes docs-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Sidebar */
+.docs-side-link {
+  display: block;
+  padding: 6px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--d-muted);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.docs-side-link:hover {
+  color: var(--d-text);
+  background: rgba(255, 255, 255, 0.03);
+}
+.docs-side-link[aria-current="page"] {
+  font-weight: 500;
+  color: var(--d-text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* On this page */
+.docs-toc-link {
+  display: block;
+  padding: 6px 0 6px 16px;
+  border-left: 1px solid var(--d-border);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--d-muted);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.docs-toc-link:hover {
+  color: var(--d-text);
+}
+.docs-toc-link[data-active="true"] {
+  font-weight: 500;
+  color: var(--d-text);
+  border-left-color: var(--d-text);
+}
+
+/* Prose */
+.docs-prose h2 {
+  scroll-margin-top: 88px;
+}
+.docs-anchor {
+  opacity: 0;
+  margin-left: 8px;
+  color: var(--d-subtle);
+  transition: opacity 0.15s ease;
+}
+.docs-h2:hover .docs-anchor,
+.docs-anchor:focus-visible {
+  opacity: 1;
+}
+.docs-inline {
+  padding: 1px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--d-border);
+  background: var(--d-surface);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.86em;
+  color: #f4f4f5;
+}
+.docs-link {
+  color: var(--d-text);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 61, 127, 0.5);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s ease;
+}
+.docs-link:hover {
+  text-decoration-color: var(--d-accent);
+}
+
+/* Code */
+.docs-code {
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--d-border);
+  background: #0b0b0e;
+}
+.docs-code-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 40px;
+  padding: 0 6px 0 12px;
+  border-bottom: 1px solid var(--d-border);
+  background: var(--d-raised);
+}
+.docs-tab {
+  position: relative;
+  height: 40px;
+  padding: 0 10px;
+  font-size: 13px;
+  color: var(--d-subtle);
+  transition: color 0.15s ease;
+}
+.docs-tab:hover {
+  color: var(--d-muted);
+}
+.docs-tab[aria-selected="true"] {
+  color: var(--d-text);
+}
+.docs-tab::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: -1px;
+  height: 1.5px;
+  border-radius: 2px;
+  background: var(--d-accent);
+  transform: scaleX(0);
+  transition: transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.docs-tab[aria-selected="true"]::after {
+  transform: scaleX(1);
+}
+.docs-pre {
+  margin: 0;
+  padding: 16px 18px;
+  overflow-x: auto;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #d4d4d8;
+  tab-size: 2;
+}
+.docs-pre-fade {
+  animation: docs-fade 0.25s ease both;
+}
+@keyframes docs-fade {
+  from {
+    opacity: 0;
+  }
+}
+.tok-comment { color: #6b6b75; font-style: italic; }
+.tok-string { color: #a7f3d0; }
+.tok-keyword { color: #ff8fb3; }
+.tok-number { color: #fcd34d; }
+.tok-key { color: #93c5fd; }
+.tok-fn { color: #c4b5fd; }
+.tok-flag { color: #fdba74; }
+
+.docs-copy {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  border-radius: 7px;
+  color: var(--d-subtle);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.docs-copy:hover {
+  color: var(--d-text);
+  background: rgba(255, 255, 255, 0.06);
+}
+.docs-copy-done {
+  color: #86efac;
+  animation: docs-pop 0.3s cubic-bezier(0.2, 0.7, 0.2, 1.4);
+}
+@keyframes docs-pop {
+  from {
+    transform: scale(0.6);
+  }
+}
+
+/* Methods */
+.docs-method {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 6px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.docs-method-get { color: #93c5fd; background: rgba(96, 165, 250, 0.12); }
+.docs-method-post { color: #86efac; background: rgba(74, 222, 128, 0.12); }
+.docs-method-delete { color: #fda4af; background: rgba(251, 113, 133, 0.12); }
+
+/* Cards */
+.docs-card {
+  position: relative;
+  display: block;
+  padding: 20px 22px;
+  border-radius: 16px;
+  border: 1px solid var(--d-border);
+  background: transparent;
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+.docs-card:hover {
+  border-color: var(--d-border-strong);
+  background: var(--d-surface);
+  transform: translateY(-2px);
+}
+.docs-card-arrow {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.docs-card:hover .docs-card-arrow {
+  transform: translateX(3px);
+  color: var(--d-accent);
+}
+
+/* Steps: numbered, joined by a rail that draws down as the page loads. */
+.docs-steps {
+  counter-reset: step;
+}
+.docs-step {
+  position: relative;
+  padding-left: 44px;
+  padding-bottom: 36px;
+}
+.docs-step:last-child {
+  padding-bottom: 0;
+}
+.docs-step::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--d-border-strong);
+  background: var(--d-raised);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--d-text);
+}
+.docs-step::after {
+  content: "";
+  position: absolute;
+  left: 13.5px;
+  top: 34px;
+  bottom: 6px;
+  width: 1px;
+  background: linear-gradient(var(--d-border-strong), transparent);
+  transform-origin: top;
+  animation: docs-rail 0.8s 0.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.docs-step:last-child::after {
+  display: none;
+}
+@keyframes docs-rail {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* The terminal on the introduction: request, then the response line by line. */
+.docs-term-line {
+  animation: docs-up 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.docs-caret::after {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: var(--d-accent);
+  animation: docs-blink 1.1s steps(1) infinite;
+}
+@keyframes docs-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.docs-glow {
+  background:
+    radial-gradient(40% 60% at 85% 0%, rgba(255, 61, 127, 0.12), transparent 70%),
+    radial-gradient(30% 50% at 10% 10%, rgba(96, 165, 250, 0.06), transparent 70%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .docs-enter > *,
+  .docs-term-line,
+  .docs-step::after,
+  .docs-pre-fade,
+  .docs-pop,
+  .docs-copy-done {
+    animation: none;
+  }
+  .docs-caret::after {
+    animation: none;
+  }
+  .docs-card:hover {
+    transform: none;
+  }
+}

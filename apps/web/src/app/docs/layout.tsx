@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
+import "@/features/docs/docs.css";
 
 export default function DocsLayout({ children }: { children: ReactNode }) {
-  return <div className="min-h-screen bg-[#111114] text-[#ededf0]">{children}</div>;
+  return <div className="docs-root min-h-screen">{children}</div>;
 }
